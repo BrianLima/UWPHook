@@ -18,7 +18,10 @@ namespace UWPHook
         public GameModel()
         {
             games = new ObservableCollection<Game>();
-            var y = JsonConvert.DeserializeObject<GameModel>("games.json");
+            using (StreamReader read = new StreamReader("games.json"))
+            {
+                games = JsonConvert.DeserializeObject<ObservableCollection<Game>>(read.ReadToEnd());
+            }
         }
 
         private ObservableCollection<Game> _games;
@@ -37,8 +40,10 @@ namespace UWPHook
         public void Store()
         {
             JsonSerializer serializer = new JsonSerializer();
-            using (StreamWriter sw = new StreamWriter(@"games.json")) {
-                using (JsonWriter writer = new JsonTextWriter(sw)){
+            using (StreamWriter sw = new StreamWriter(@"games.json"))
+            {
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
                     serializer.Serialize(writer, _games);
                 }
             }
