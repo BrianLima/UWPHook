@@ -46,6 +46,7 @@ namespace UWPHook
 
         private void addButton_Click(object sender, RoutedEventArgs e)
         {
+            games.Store();
             games.Add(new Game{ game_alias = alias_textBox.Text, game_path = path_textBox.Text });
         }
     }

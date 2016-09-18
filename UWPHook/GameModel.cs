@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using UWPHook.Properties;
 
 namespace UWPHook
 {
@@ -15,6 +18,7 @@ namespace UWPHook
         public GameModel()
         {
             games = new ObservableCollection<Game>();
+            var y = JsonConvert.DeserializeObject<GameModel>("games.json");
         }
 
         private ObservableCollection<Game> _games;
@@ -25,19 +29,23 @@ namespace UWPHook
             set { _games = value; }
         }
 
-
-
         public void Add(Game game)
         {
             this.games.Add(game);
         }
 
-        public string game_alias { get; set; }
-        public string game_path { get; set; }
-
+        public void Store()
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamWriter sw = new StreamWriter(@"games.json")) {
+                using (JsonWriter writer = new JsonTextWriter(sw)){
+                    serializer.Serialize(writer, _games);
+                }
+            }
+        }
     }
 
-    public class Game:INotifyPropertyChanged
+    public class Game : INotifyPropertyChanged
     {
         private string _game_alias;
 
@@ -55,7 +63,6 @@ namespace UWPHook
             set { _game_path = value; }
         }
 
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged(string Obj)
@@ -65,6 +72,5 @@ namespace UWPHook
                 this.PropertyChanged(this, new PropertyChangedEventArgs(Obj));
             }
         }
-
     }
 }
