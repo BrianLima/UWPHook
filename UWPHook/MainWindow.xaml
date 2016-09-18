@@ -17,7 +17,7 @@
             <ColumnDefinition Width="11*"/>
         </Grid.ColumnDefinitions>
         <Grid Margin="0,10,9,0" Grid.Column="1" Grid.ColumnSpan="2">
-            <ListView x:Name="listView" RenderTransformOrigin="0.496,0.409">
+            <ListView x:Name="listView" RenderTransformOrigin="0.496,0.409" MouseDoubleClick="listView_MouseDoubleClick">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Width="100" Header="alias" DisplayMemberBinding="{Binding game_alias}"/>

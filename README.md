@@ -51,15 +51,27 @@ Go to "C:\Users\<user>\AppData\Local\Packages"
 
 Find the App you want to add, copy the whole folder name and add "!App" to the end on UWPHook, should look like this:
 
+![](http://imgur.com/NMx9IAR.png)
+
+![](http://imgur.com/2RlKi1X.png)
+
 Repeat previous steps to add the game to Steam.
 
 If you can't find the app, there's a easier way to determine its folder name:
 
 Press "Windows+R" and type "shell:appsfolder", you will be taken to a folder containing every metro app and other things on your PC
 
+![](http://imgur.com/W1kH0R4.png)
+
 Find the game you want, right click it and create shortcut, Windows will place a shortcut on your desktop.
 
+![](http://imgur.com/Z9p80Hy.png)
+
 Right click the shortcut, on targettype will be the app's folder name, making it easier to find the game on Packages folder.
+
+![](http://imgur.com/HU3I2NU.png)
+
+To remove a game form the list, double click the desired game
 
 # Troubleshooting #
 
