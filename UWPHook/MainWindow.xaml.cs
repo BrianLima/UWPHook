@@ -20,8 +20,7 @@ namespace UWPHook
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<GameModel> games;
-
+        GameModel games;
         public MainWindow()
         {
             InitializeComponent();
@@ -30,23 +29,24 @@ namespace UWPHook
             {
             }
 
-            games = new List<GameModel>();
-            for (int i = 0; i < 10; i++)
-            {
-                games.Add(new GameModel { game_alias = "sajufhsaduifhuisdsdgbuigduisaguidsguisaguiasguidasg", game_path = "sajufhsaduifhuisdsdgbuigduisaguidsguisaguiasguidasgx" });
-            }
+           // games = new List<GameModel>();
+           // for (int i = 0; i < 10; i++)
+           // {
+           //     games.Add(new GameModel { game_alias = "sajufhsaduifhuisdsdgbuigduisaguidsguisaguiasguidasg", game_path = "sajufhsaduifhuisdsdgbuigduisaguidsguisaguiasguidasgx" });
+           // }
             
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            listView.ItemsSource = games;
+            games = new GameModel();
+            listView.ItemsSource = games.games;
             
         }
 
         private void addButton_Click(object sender, RoutedEventArgs e)
         {
-            games.Add(new GameModel { game_alias = alias_textBox.Text, game_path = path_textBox.Text });
+            games.Add(new Game{ game_alias = alias_textBox.Text, game_path = path_textBox.Text });
         }
     }
 }

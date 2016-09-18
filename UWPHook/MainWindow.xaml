@@ -20,7 +20,6 @@
             <ListView x:Name="listView" RenderTransformOrigin="0.496,0.409">
                 <ListView.View>
                     <GridView>
-
                         <GridViewColumn Width="75" Header="alias" DisplayMemberBinding="{Binding game_alias}"/>
                         <GridViewColumn Width="300" Header="Name" DisplayMemberBinding="{Binding game_path}"/>
                     </GridView>

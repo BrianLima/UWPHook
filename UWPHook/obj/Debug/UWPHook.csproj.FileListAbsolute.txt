@@ -12,5 +12,3 @@ c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\U
 c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\UWPHook.csproj.GenerateResource.Cache
 c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\UWPHook.exe
 c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\UWPHook.pdb
-c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\GameControl.g.cs
-c:\users\brian\documents\visual studio 2015\Projects\UWPHook\UWPHook\obj\Debug\GameControl.baml
