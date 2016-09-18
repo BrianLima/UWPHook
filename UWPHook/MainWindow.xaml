@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UWPHook"
         mc:Ignorable="d"
-        Title="UWPHook" Height="350" Width="525" Loaded="Window_Loaded">
+        Title="UWPHook" Height="350" Width="525" Loaded="Window_Loaded" Icon="1_cJz_icon.ico">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20*"/>
@@ -38,7 +38,7 @@
             <Label x:Name="label" Content="Alias" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="26" Width="35"/>
             <TextBox x:Name="path_textBox" Height="23" Margin="10,36,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Column="1"/>
             <Label x:Name="label_Copy" Content="Path" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Column="1" Height="26" Width="33"/>
-            <Button x:Name="helpButton" Content="Help" Grid.Column="2" Margin="8,35,8,0" VerticalAlignment="Top" Height="20"/>
+            <Button x:Name="helpButton" Content="Help" Grid.Column="2" Margin="8,35,8,0" VerticalAlignment="Top" Height="20" Click="helpButton_Click"/>
         </Grid>
     </Grid>
 </Window>

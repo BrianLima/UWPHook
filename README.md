@@ -1,4 +1,7 @@
 # UWPHook
+
+![](http://imgur.com/gWwR02D.png)
+
 Small project to link UWP games to Steam
 
 If you want to add Windows Store Games to Steam to show up on your Status you need to do a bit of a warkaround because Steam can't see UWP apps, this program aims to simplify a little bit the process where it is possible by automating the scripting and launching.
