@@ -25,6 +25,11 @@ namespace UWPHook
         }
 
         private ObservableCollection<Game> _games;
+        
+        public int length()
+        {
+            return this._games.Count;
+        }
 
         public ObservableCollection<Game> games
         {
