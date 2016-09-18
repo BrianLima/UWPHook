@@ -46,10 +46,9 @@ namespace UWPHook
                     if (game.game_alias.ToLower() == argumentGame.ToLower().Trim())
                     {
                         Process.Start(@"shell:AppsFolder\" + game.game_path);
-                    }
+                    }                        
                 }
             }
-
         }
 
         private void addButton_Click(object sender, RoutedEventArgs e)
