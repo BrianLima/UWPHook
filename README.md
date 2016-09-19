@@ -12,7 +12,7 @@ Download UWPHook, it's files and store them somewhere on your PC.
 
 ![](http://i.imgur.com/sH61SYT.png)
 
-Create a shortcut to UWPHook by right clicking it and choosing "Create Shortcut" and name it something simple that resembles the game you want to add to Steam.
+Create a shortcut to UWPHook on the same directory where you installed it, by right clicking it and choosing "Create Shortcut" and name it something simple that resembles the game you want to add to Steam.
 
 ![](http://i.imgur.com/mPWKhkt.png) 
 
