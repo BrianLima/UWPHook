@@ -81,6 +81,9 @@ To remove a game form the list, double click the desired game
 - **I added the game's url to UWPHook but it won't start whatsoever**
 - Some games use another string at the end besides "!App" like Forza Motorsport 6: Apex for example, if you can't figure it out, someone at our subreddit might help you.
 
+- **Steam Big Picture Mode isn't working!**
+- Unfortunately, it's a Steam limitation and no overlays work yet with UWP games. 
+
 - **My question isn't listed here!**
 - Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can
  **[https://www.reddit.com/r/uwphook](https://www.reddit.com/r/uwphook)**
