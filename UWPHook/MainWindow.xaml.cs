@@ -36,7 +36,7 @@ namespace UWPHook
                         Process.Start(@"shell:AppsFolder\" + game.game_path);
                         this.Title = "UWPHook - Now Playing :" + game.game_alias;
                         break;
-                    }                        
+                    }
                 }
             }
         }
@@ -47,15 +47,15 @@ namespace UWPHook
             gamesView.Store();
         }
 
-        private void listView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            gamesView.games.RemoveAt(listView.SelectedIndex);
-            gamesView.Store();
-        }
-
         private void helpButton_Click(object sender, RoutedEventArgs e)
         {
             Process.Start("https://www.reddit.com/r/UWPHook/comments/53eaj9/welcome_to_uwphook_link_your_uwp_games_to_steam/");
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            gamesView.games.RemoveAt(listView.SelectedIndex);
+            gamesView.Store();
         }
     }
 }
