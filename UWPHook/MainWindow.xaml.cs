@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
 using System.Windows;
 
 namespace UWPHook
@@ -10,33 +12,61 @@ namespace UWPHook
     public partial class MainWindow : Window
     {
         GameModel gamesView;
+        AppManager manager;
+
         public MainWindow()
         {
             InitializeComponent();
+            gamesView = new GameModel();
+
+            if (Environment.GetCommandLineArgs() != null)
+            {
+                if (Environment.GetCommandLineArgs().Length > 1)
+                {
+                    manager = new AppManager();
+                    try
+                    {
+                        this.Hide();
+
+                        Launch_Game(String.Join(" ", Environment.GetCommandLineArgs()));
+                        while (manager.IsRunning())
+                        {
+                            Thread.Sleep(5000);
+                        }
+
+                        this.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        this.Show();
+                        MessageBox.Show(e.Message);
+                    }
+                }
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            gamesView = new GameModel();
             listView.ItemsSource = gamesView.games;
+        }
 
-            var argument = Environment.GetCommandLineArgs();
-            string argumentGame = "";
-            for (int i = 1; i < argument.Length; i++)
+        private void Launch_Game(string game_name)
+        {
+            //Remove startup path from parameters to get the game name sent from startup options from Steam
+            game_name = game_name.Remove(0, (System.Reflection.Assembly.GetExecutingAssembly().Location + " ").Length);
+            foreach (Game game in gamesView.games)
             {
-                argumentGame += argument[i] + " ";
-            }
-
-            if (argument != null)
-            {
-                foreach (Game game in gamesView.games)
+                if (game.game_alias.ToLower() == game_name.ToLower())
                 {
-                    if (game.game_alias.ToLower() == argumentGame.ToLower().Trim())
+                    try
                     {
-                        Process.Start(@"shell:AppsFolder\" + game.game_path);
-                        this.Title = "UWPHook - Now Playing :" + game.game_alias;
-                        break;
+                        manager.LaunchUWPApp(game.game_path);
                     }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error while trying to launch your game" + Environment.NewLine + ex.Message);
+                    }
+                    break;
                 }
             }
         }

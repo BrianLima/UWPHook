@@ -7,5 +7,6 @@ namespace UWPHook
     /// </summary>
     public partial class App : Application
     {
+
     }
 }
