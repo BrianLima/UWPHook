@@ -38,7 +38,7 @@ Click "Set Launch Options" and write the alias of the game you want to play, you
 
 ![](http://imgur.com/FtGqaiR.png)
 
-Click Play and enjoy your UWP game showing up on your Steam Status, as long as UWPHook is running
+Click Play and enjoy your UWP game showing up on your Steam Status, UWPHook will run on the background checking every 5 seconds if your game is running and close it self automatically if the game is not running.
 
 ----------
 
