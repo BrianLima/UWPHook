@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -38,6 +40,25 @@ namespace UWPHook
             }
 
             return true;
+        }
+
+        public List<String> GetInstalledApps()
+        {
+            List<String> result = null;
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "UWPHook.Resources.GetAUMIDScript.txt";
+
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    ScriptManager script = new ScriptManager();
+                    var r = script.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
+
+                }
+            }
+
+            return result;
         }
     }
 

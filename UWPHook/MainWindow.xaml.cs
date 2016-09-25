@@ -79,6 +79,7 @@ namespace UWPHook
 
         private void helpButton_Click(object sender, RoutedEventArgs e)
         {
+            manager.InstalledApps();
             Process.Start("https://www.reddit.com/r/UWPHook/comments/53eaj9/welcome_to_uwphook_link_your_uwp_games_to_steam/");
         }
 
