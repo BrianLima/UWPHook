@@ -154,6 +154,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\GetAUMIDScript.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharpSteam\SharpSteam\SharpSteam.csproj">
+      <Project>{d0a686fb-b373-4fbc-a0dd-c3417276a816}</Project>
+      <Name>SharpSteam</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
