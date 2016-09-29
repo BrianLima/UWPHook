@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UWPHook", "UWPHook\UWPHook.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpSteam", "..\SharpSteam\SharpSteam\SharpSteam.csproj", "{D0A686FB-B373-4FBC-A0DD-C3417276A816}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VDFParser", "..\..\..\Downloads\SharpSteam-master\SharpSteam-master\VDFParser\VDFParser\VDFParser.csproj", "{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D0A686FB-B373-4FBC-A0DD-C3417276A816}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0A686FB-B373-4FBC-A0DD-C3417276A816}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0A686FB-B373-4FBC-A0DD-C3417276A816}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace UWPHook
 {
-    class AppManager
+    static class AppManager
     {
-        private int id;
+        private static int id;
 
-        public void LaunchUWPApp(string uri)
+        public static void LaunchUWPApp(string uri)
         {
             var mgr = new ApplicationActivationManager();
             uint processId;
@@ -24,7 +24,7 @@ namespace UWPHook
             id = (int)processId;
         }
 
-        public Boolean IsRunning()
+        public static Boolean IsRunning()
         {
             if (id == 0)
             {
@@ -42,7 +42,7 @@ namespace UWPHook
             return true;
         }
 
-        public List<String> GetInstalledApps()
+        public static List<String> GetInstalledApps()
         {
             List<String> result = null;
             var assembly = Assembly.GetExecutingAssembly();

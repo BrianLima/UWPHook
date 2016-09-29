@@ -56,6 +56,14 @@
     <StartupObject>UWPHook.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MaterialDesignColors, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.1.2\lib\net45\MaterialDesignColors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=2.1.0.657, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.2.1.0.657\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -85,7 +93,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AppEntry.cs" />
+    <Compile Include="AppEntryModel.cs" />
+    <Compile Include="GamesWindow.xaml.cs">
+      <DependentUpon>GamesWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ScriptManager.cs" />
+    <Page Include="GamesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -155,6 +172,10 @@
     <EmbeddedResource Include="Resources\GetAUMIDScript.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Downloads\SharpSteam-master\SharpSteam-master\VDFParser\VDFParser\VDFParser.csproj">
+      <Project>{9543fb59-1eb6-4638-b24c-b12b9d4a15fc}</Project>
+      <Name>VDFParser</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharpSteam\SharpSteam\SharpSteam.csproj">
       <Project>{d0a686fb-b373-4fbc-a0dd-c3417276a816}</Project>
       <Name>SharpSteam</Name>

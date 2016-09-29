@@ -1,8 +1,12 @@
-﻿using System;
+﻿using SharpSteam;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows;
+using VDFParser;
+using VDFParser.Models;
 
 namespace UWPHook
 {
@@ -23,13 +27,13 @@ namespace UWPHook
             {
                 if (Environment.GetCommandLineArgs().Length > 1)
                 {
-                    manager = new AppManager();
+                    //manager = new AppManager();
                     try
                     {
                         this.Hide();
 
                         Launch_Game(String.Join(" ", Environment.GetCommandLineArgs()));
-                        while (manager.IsRunning())
+                        //while (manager.IsRunning())
                         {
                             Thread.Sleep(5000);
                         }
@@ -60,7 +64,7 @@ namespace UWPHook
                 {
                     try
                     {
-                        manager.LaunchUWPApp(game.game_path);
+                        //manager.LaunchUWPApp(game.game_path);
                     }
                     catch (Exception ex)
                     {
@@ -79,7 +83,6 @@ namespace UWPHook
 
         private void helpButton_Click(object sender, RoutedEventArgs e)
         {
-            manager.InstalledApps();
             Process.Start("https://www.reddit.com/r/UWPHook/comments/53eaj9/welcome_to_uwphook_link_your_uwp_games_to_steam/");
         }
 
