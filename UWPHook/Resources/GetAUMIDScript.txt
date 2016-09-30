@@ -5,7 +5,7 @@ foreach ($app in $installedapps)
 {
     foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
     {
-        $aumidList += $app.packagefamilyname + "!" + $id + ";"
+        $aumidList += $app.name + "|" + $app.packagefamilyname + "!" + $id + ";"
     }
 }
 

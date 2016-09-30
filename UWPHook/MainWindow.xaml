@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UWPHook"
         mc:Ignorable="d"
-        Title="UWPHook" Height="600" Width="800" Loaded="Window_Loaded" Icon="hook_icon.ico">
+        Title="UWPHook" Height="600" Width="800" Loaded="Window_Loaded">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="147*"/>

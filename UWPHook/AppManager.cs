@@ -15,6 +15,10 @@ namespace UWPHook
     {
         private static int id;
 
+        /// <summary>
+        /// Launch a UWP App using a shell command and sets a internal id, to it's proccess id
+        /// </summary>
+        /// <param name="uri"></param>
         public static void LaunchUWPApp(string uri)
         {
             var mgr = new ApplicationActivationManager();
@@ -24,6 +28,10 @@ namespace UWPHook
             id = (int)processId;
         }
 
+        /// <summary>
+        /// Checks if the launched app is running
+        /// </summary>
+        /// <returns></returns>
         public static Boolean IsRunning()
         {
             if (id == 0)
@@ -42,6 +50,10 @@ namespace UWPHook
             return true;
         }
 
+        /// <summary>
+        /// Gets a list of installed UWP Apps on the system, containing each app name + AUMID, separated by '|' 
+        /// </summary>
+        /// <returns>List of installed UWP Apps</returns>
         public static List<String> GetInstalledApps()
         {
             List<String> result = null;
@@ -53,7 +65,7 @@ namespace UWPHook
                 using (StreamReader reader = new StreamReader(stream))
                 {
                     ScriptManager script = new ScriptManager();
-                    var r = script.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
+                    result = script.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
 
                 }
             }

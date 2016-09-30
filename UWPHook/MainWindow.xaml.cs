@@ -16,7 +16,6 @@ namespace UWPHook
     public partial class MainWindow : Window
     {
         GameModel gamesView;
-        AppManager manager;
 
         public MainWindow()
         {

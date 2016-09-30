@@ -5,6 +5,22 @@ namespace UWPHook
 {
     public class AppEntry : INotifyPropertyChanged
     {
+        private bool _isSelected;
+        /// <summary>
+        /// Gets or sets if the application is selected
+        /// </summary>
+        public bool Selected
+        {
+            get { return _isSelected; }
+            set
+            {
+                if (_isSelected == value) return;
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         private string _name;
         /// <summary>
         /// Gets or sets the name of the application
@@ -23,21 +39,6 @@ namespace UWPHook
         {
             get { return _aumid; }
             set { _aumid = value; }
-        }
-
-        private bool _isSelected;
-        /// <summary>
-        /// Gets or sets if the application is selected
-        /// </summary>
-        public bool IsSelected
-        {
-            get { return _isSelected; }
-            set
-            {
-                if (_isSelected == value) return;
-                _isSelected = value;
-                OnPropertyChanged();
-            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

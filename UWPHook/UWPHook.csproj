@@ -50,7 +50,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>hook_icon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\hook_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>UWPHook.App</StartupObject>
@@ -151,7 +151,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="hook_icon.ico" />
+    <Resource Include="Resources\hook_icon.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\delete.png" />
@@ -172,14 +172,25 @@
     <EmbeddedResource Include="Resources\GetAUMIDScript.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Downloads\SharpSteam-master\SharpSteam-master\VDFParser\VDFParser\VDFParser.csproj">
-      <Project>{9543fb59-1eb6-4638-b24c-b12b9d4a15fc}</Project>
-      <Name>VDFParser</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\SharpSteam\SharpSteam\SharpSteam.csproj">
       <Project>{d0a686fb-b373-4fbc-a0dd-c3417276a816}</Project>
       <Name>SharpSteam</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\SharpSteam\VDFParser\VDFParser\VDFParser.csproj">
+      <Project>{9543fb59-1eb6-4638-b24c-b12b9d4a15fc}</Project>
+      <Name>VDFParser</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\hook_black_transparent.png" />
+    <Resource Include="Resources\hook_white_background.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\hook_white_transparent.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\4.png" />
+    <Resource Include="Resources\5.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
