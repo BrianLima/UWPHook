@@ -68,7 +68,7 @@ namespace UWPHook.Properties {
         ///{
         ///    foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
         ///    {
-        ///        $aumidList += $app.packagefamilyname + &quot;!&quot; + $id
+        ///        $aumidList += $app.name + &quot;|&quot; + $app.packagefamilyname + &quot;!&quot; + $id + &quot;;&quot;
         ///    }
         ///}
         ///
@@ -77,6 +77,16 @@ namespace UWPHook.Properties {
         public static string GetAUMIDScript {
             get {
                 return ResourceManager.GetString("GetAUMIDScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        public static System.Drawing.Icon hook_icon {
+            get {
+                object obj = ResourceManager.GetObject("hook_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }

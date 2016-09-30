@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using VDFParser;
 using VDFParser.Models;
 using SharpSteam;
+using System.IO;
 
 namespace UWPHook
 {
@@ -29,21 +30,30 @@ namespace UWPHook
             InitializeComponent();
             Apps = new AppEntryModel();
             listGames.ItemsSource = Apps.Entries;
+            this.Title = string.Join(";", Environment.GetCommandLineArgs());
         }
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             string steam_folder = SteamManager.GetSteamFolder();
-            var users = SteamManager.GetUsers(steam_folder);
-            foreach (var user in users)
+            if (!String.IsNullOrEmpty(steam_folder))
             {
-                var shortcuts = SteamManager.ReadShortcuts(user);
-                if (shortcuts != null)
+                var users = SteamManager.GetUsers(steam_folder);
+                var selected_apps = from app in Apps.Entries
+                                    where app.Selected = true
+                                    select new AppEntry() { Aumid = app.Aumid, Name = app.Name, Selected = app.Selected };
+
+                foreach (var user in users)
                 {
-                    //foreach (var item in Apps.Entries.Select<)
-                    //{
-                    //
-                    //}
+                    VDFEntry[] shortcuts = SteamManager.ReadShortcuts(user);
+                    if (shortcuts != null)
+                    {
+                        foreach (var app in selected_apps)
+                        {
+                            //Resize this array so it fits the new entries
+                            //    Array.Resize(ref shortcuts, shortcuts.Length);
+                        }
+                    }
                 }
             }
         }
@@ -67,7 +77,6 @@ namespace UWPHook
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
-
         }
     }
 }

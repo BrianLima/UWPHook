@@ -9,6 +9,39 @@ using System.Threading.Tasks;
 
 namespace UWPHook
 {
+    class AppManager
+    {
+        private int id;
+
+        public void LaunchUWPApp(string uri)
+        {
+            var mgr = new ApplicationActivationManager();
+            uint processId;
+            mgr.ActivateApplication(uri, null, ActivateOptions.None, out processId);
+
+            id = (int)processId;
+        }
+
+        public Boolean IsRunning()
+        {
+            if (id == 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                Process.GetProcessById(id);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     public enum ActivateOptions
     {
         None = 0x00000000,  // No flags set
@@ -55,31 +88,5 @@ namespace UWPHook
     [Guid("b63ea76d-1f85-456f-a19c-48159efa858b")]
     interface IShellItemArray
     {
-    }
-
-    class ProcessManager
-    {
-        int StartProccess(string uri)
-        {
-            var mgr = new ApplicationActivationManager();
-            uint processId;
-            var name = "Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App";
-            mgr.ActivateApplication(name, null, ActivateOptions.None, out processId);
-
-            return ((int)processId);
-        }
-
-        Boolean ProcessIsRunning(int id)
-        {
-            try
-            {
-                Process.
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-        }
     }
 }
