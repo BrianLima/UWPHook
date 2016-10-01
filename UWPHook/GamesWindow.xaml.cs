@@ -39,20 +39,36 @@ namespace UWPHook
             if (!String.IsNullOrEmpty(steam_folder))
             {
                 var users = SteamManager.GetUsers(steam_folder);
-                var selected_apps = from app in Apps.Entries
-                                    where app.Selected = true
-                                    select new AppEntry() { Aumid = app.Aumid, Name = app.Name, Selected = app.Selected };
-
+                var selected_apps = Apps.Entries.Where(app => app.Selected);
                 foreach (var user in users)
                 {
                     VDFEntry[] shortcuts = SteamManager.ReadShortcuts(user);
-                    if (shortcuts != null)
+
+                    //TODO: Figure out what to do when user has no shortcuts whatsoever
+                    if (shortcuts != null && shortcuts.Length > 0)
                     {
                         foreach (var app in selected_apps)
                         {
+                            VDFEntry newApp = new VDFEntry()
+                            {
+                                AppName = app.Name,
+                                Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
+                                StartDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                                AllowDesktopConfig = 1,
+                                Icon = "",
+                                Index = shortcuts.Length,
+                                IsHidden = 0,
+                                OpenVR = 0,
+                                ShortcutPath = "",
+                                Tags = new string[0]
+                            };
+
                             //Resize this array so it fits the new entries
-                            //    Array.Resize(ref shortcuts, shortcuts.Length);
+                            Array.Resize(ref shortcuts, shortcuts.Length + 1);
+                            shortcuts[shortcuts.Length - 1] = newApp;
                         }
+
+                        File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
                     }
                 }
             }
