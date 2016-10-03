@@ -1,5 +1,6 @@
 ﻿using SharpSteam;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,8 +23,19 @@ namespace UWPHook
             Apps = new AppEntryModel();
             listGames.ItemsSource = Apps.Entries;
 
+            if (Properties.Settings.Default.ChangeLanguage)
+            {
+                this.Title = "true ";
+            }
+            else
+            {
+                this.Title = "false ";
+            }
+
+            this.Title += Properties.Settings.Default.TargetLanguage;
+
             //If null or 1, the app was launched normally
-            if (Environment.GetCommandLineArgs() != null)
+            if (Environment.GetCommandLineArgs() == null)
             {
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
@@ -115,6 +127,8 @@ namespace UWPHook
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
+            SettingsWindow window = new SettingsWindow();
+            window.ShowDialog();
         }
     }
 }

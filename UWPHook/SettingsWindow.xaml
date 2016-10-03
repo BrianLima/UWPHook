@@ -23,7 +23,42 @@
         </Grid.RowDefinitions>
         <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2"/>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Grid Margin="10" Grid.Row="1"/>
-        <Grid Grid.Column="1" Margin="10" Grid.Row="1"/>
+        <Grid Margin="10" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="4*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="52*"/>
+                <ColumnDefinition Width="301*"/>
+                <ColumnDefinition Width="113*"/>
+            </Grid.ColumnDefinitions>
+            <GroupBox x:Name="groupBox" Header="Settings" Grid.ColumnSpan="3" Grid.RowSpan="2"/>
+            <ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="4,56,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Checked="ToggleButton_Checked" Height="18" HorizontalAlignment="Left" Width="46" />
+            <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label1" Content="Set system language when launching an app*" Margin="5,48,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1"/>
+            <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,48,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="93"/>
+            <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" Margin="0,15,10,0" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="2" Grid.Row="1"/>
+        </Grid>
+        <GroupBox Header="About" Grid.Column="1" Margin="10" Grid.Row="1"  materialDesign:ColorZoneAssist.Mode="Accent">
+            <Grid Margin="0,0,0,2" Width="270">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Margin="0,0,116,10" HorizontalAlignment="Right"
+                        ToolTip="My Twitter" Height="40" VerticalAlignment="Bottom">
+                    <materialDesign:PackIcon Kind="Twitter" Height="24" Width="24" />
+                </Button>
+                <Button   Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Margin="0,0,0,10" HorizontalAlignment="Right"
+                        ToolTip="Donate on Paypal" Height="40" VerticalAlignment="Bottom">
+                    <materialDesign:PackIcon Kind="Cash" Height="24" Width="24" />
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                        Margin="0,0,0,10"
+                        ToolTip="My GitHub" Width="40" Height="40" VerticalAlignment="Bottom" HorizontalAlignment="Left">
+                    <materialDesign:PackIcon Kind="GithubCircle" Height="24" Width="24" />
+                </Button>
+                <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Margin="0,166,0,0" VerticalAlignment="Top" Height="120" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" HorizontalAlignment="Left" Width="270"/>
+            </Grid>
+        </GroupBox>
+        <Image x:Name="image1" Source="Resources/briano.jpg" Margin="82,57,0,283" HorizontalAlignment="Left" Width="152" Grid.Column="1" Grid.Row="1"/>
     </Grid>
 </Window>

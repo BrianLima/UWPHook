@@ -11,7 +11,7 @@
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
         mc:Ignorable="d"
-        Title="GamesWindow" Height="600" Width="800" Icon="Resources/hook_icon.ico">
+        Title="GamesWindow" Height="600" Width="800">
     <Grid x:Name="grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="28*"/>
