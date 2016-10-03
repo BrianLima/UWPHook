@@ -19,11 +19,11 @@
             <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
         <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80"/>
-        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/4.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
         <Button Click="HelpButton_Click"  Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                         Margin="0,6,10,0" HorizontalAlignment="Right"
-                        ToolTip="About" VerticalAlignment="Top">
-            <materialDesign:PackIcon Kind="Help" Height="24" Width="24" />
+                        ToolTip="Settings/About" VerticalAlignment="Top">
+            <materialDesign:PackIcon Kind="Settings" Height="24" Width="24" />
         </Button>
         <Button Click="LoadButton_Click" Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                         Margin="0,51,10,0" HorizontalAlignment="Right"
