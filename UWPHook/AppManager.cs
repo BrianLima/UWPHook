@@ -23,7 +23,15 @@ namespace UWPHook
         {
             var mgr = new ApplicationActivationManager();
             uint processId;
-            mgr.ActivateApplication(uri, null, ActivateOptions.None, out processId);
+
+            try
+            {
+                mgr.ActivateApplication(uri, null, ActivateOptions.None, out processId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error while trying to launch your app." + Environment.NewLine + e.Message);
+            }
 
             id = (int)processId;
         }

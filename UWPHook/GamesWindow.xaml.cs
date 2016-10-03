@@ -15,6 +15,7 @@ using VDFParser;
 using VDFParser.Models;
 using SharpSteam;
 using System.IO;
+using System.Threading;
 
 namespace UWPHook
 {
@@ -30,7 +31,37 @@ namespace UWPHook
             InitializeComponent();
             Apps = new AppEntryModel();
             listGames.ItemsSource = Apps.Entries;
-            this.Title = string.Join(";", Environment.GetCommandLineArgs());
+
+            //If null or 1, the app was launched normally
+            if (Environment.GetCommandLineArgs() != null)
+            {
+                //When length is 1, the only argument is the path where the app is installed
+                if (Environment.GetCommandLineArgs().Length > 1)
+                {
+                    Launcher();
+                }
+            }
+        }
+
+        private void Launcher()
+        {
+            this.Title = "UWPHook: Playing a game";
+            //Hide the window so the app is launched seamless
+            this.Hide();
+            try
+            {
+                //The only other parameter Steam will send is the app AUMID
+                AppManager.LaunchUWPApp(Environment.GetCommandLineArgs()[1]);
+                while (AppManager.IsRunning())
+                {
+                    Thread.Sleep(5000);
+                }
+            }
+            catch (Exception e)
+            {
+                this.Show();
+                MessageBox.Show(e.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)
@@ -80,6 +111,7 @@ namespace UWPHook
 
             foreach (var app in installedApps)
             {
+                //Remove end lines from the String and split both values
                 var valor = app.Replace("\r\n", "").Split('|');
                 if (!String.IsNullOrEmpty(valor[0]))
                 {

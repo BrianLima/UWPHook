@@ -67,7 +67,6 @@ namespace UWPHook
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception("Error while trying to launch your game" + Environment.NewLine + ex.Message);
                     }
                     break;
                 }

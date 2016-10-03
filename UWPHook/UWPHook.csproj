@@ -99,6 +99,7 @@
       <DependentUpon>GamesWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ScriptManager.cs" />
+    <Compile Include="Settings.cs" />
     <Page Include="GamesWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
