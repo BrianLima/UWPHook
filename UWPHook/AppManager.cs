@@ -70,9 +70,7 @@ namespace UWPHook
             {
                 using (StreamReader reader = new StreamReader(stream))
                 {
-                    ScriptManager script = new ScriptManager();
-                    result = script.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
-
+                    result = ScriptManager.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
                 }
             }
 

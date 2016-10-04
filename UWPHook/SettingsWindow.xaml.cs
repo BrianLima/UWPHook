@@ -1,18 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace UWPHook
 {
@@ -25,24 +13,53 @@ namespace UWPHook
         {
             InitializeComponent();
 
-            Properties.Settings.Default.ChangeLanguage = true;
+            this.Title = "UWPHook version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
             foreach (var culture in CultureInfo.GetCultures(CultureTypes.AllCultures))
             {
                 cultures_comboBox.Items.Add(culture.TextInfo.CultureName);
             }
-        }
 
-        private void ToggleButton_Checked(object sender, RoutedEventArgs e)
-        {
+            for (int i = 1; i < 10; i++)
+            {
+                seconds_comboBox.Items.Add(i + " seconds");
+                if (i == Properties.Settings.Default.Seconds)
+                {
+                    seconds_comboBox.SelectedIndex = i - 1;
+                }
+            }
 
+            cultures_comboBox.SelectedItem = Properties.Settings.Default.TargetLanguage;
+            language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.ChangeLanguage = (bool)language_toggle.IsChecked;
             Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem.ToString();
+            Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
             Properties.Settings.Default.Save();
+            this.Close();
+        }
+
+        private void Chip_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://twitter.com/brianostorm");
+        }
+
+        private void Chip1_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://github.com/brianlima");
+        }
+
+        private void Chip2_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
+        }
+
+        private void update_button_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/BrianLima/UWPHook/releases");
         }
     }
 }

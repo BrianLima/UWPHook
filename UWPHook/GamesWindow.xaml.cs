@@ -23,17 +23,6 @@ namespace UWPHook
             Apps = new AppEntryModel();
             listGames.ItemsSource = Apps.Entries;
 
-            if (Properties.Settings.Default.ChangeLanguage)
-            {
-                this.Title = "true ";
-            }
-            else
-            {
-                this.Title = "false ";
-            }
-
-            this.Title += Properties.Settings.Default.TargetLanguage;
-
             //If null or 1, the app was launched normally
             if (Environment.GetCommandLineArgs() == null)
             {
@@ -50,8 +39,14 @@ namespace UWPHook
             this.Title = "UWPHook: Playing a game";
             //Hide the window so the app is launched seamless
             this.Hide();
+            string currentLanguage = CultureInfo.CurrentCulture.ToString();
             try
             {
+                if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
+                {
+                    string script = "";
+                    ScriptManager.RunScript("Set - WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
+                }
                 //The only other parameter Steam will send is the app AUMID
                 AppManager.LaunchUWPApp(Environment.GetCommandLineArgs()[1]);
                 while (AppManager.IsRunning())
@@ -63,6 +58,13 @@ namespace UWPHook
             {
                 this.Show();
                 MessageBox.Show(e.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
+                {
+                    ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
+                }
             }
         }
 

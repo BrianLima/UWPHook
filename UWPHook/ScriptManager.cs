@@ -5,9 +5,9 @@ using System.Text;
 
 namespace UWPHook
 {
-    class ScriptManager
+    static class ScriptManager
     {
-        public string RunScript(string scriptText)
+        public static string RunScript(string scriptText)
         {
             // create Powershell runspace
             Runspace runspace = RunspaceFactory.CreateRunspace();

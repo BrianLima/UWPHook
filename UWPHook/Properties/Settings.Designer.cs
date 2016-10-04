@@ -46,5 +46,17 @@ namespace UWPHook.Properties {
                 this["TargetLanguage"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int Seconds {
+            get {
+                return ((int)(this["Seconds"]));
+            }
+            set {
+                this["Seconds"] = value;
+            }
+        }
     }
 }
