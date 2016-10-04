@@ -61,5 +61,10 @@ namespace UWPHook
         {
             System.Diagnostics.Process.Start("https://github.com/BrianLima/UWPHook/releases");
         }
+
+        private void help_button_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://reddit.com/r/UWPHook/");
+        }
     }
 }

@@ -11,7 +11,7 @@
         TextElement.FontWeight="Medium"
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
-        Title="Settings" Height="600" Width="800">
+        Title="Settings" Height="600" Width="800" Icon="Resources/hook.ico">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="27*"/>
@@ -42,13 +42,14 @@
             <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" Margin="0,95,10,0" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="2" Grid.Row="1"/>
             <Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,0,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1"/>
             <ComboBox x:Name="seconds_comboBox" Margin="0,10,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
-            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Grid.Column="1" Margin="96,0,45,10" Grid.Row="1" VerticalAlignment="Bottom"/>
+            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Grid.Column="1" Margin="10,0,131,10" Grid.Row="1" VerticalAlignment="Bottom"/>
+            <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="1" Margin="175,0,74,10" Grid.Row="1" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
         </Grid>
         <Grid Margin="10,10,10,0" Grid.Column="1" Grid.Row="1">
             <materialDesign:Chip Content="Projects @ GitHub"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="75,299,59,149" Click="Chip1_Click" HorizontalAlignment="Stretch">
+                                 Margin="71,266,51,174" Click="Chip1_Click" HorizontalAlignment="Stretch" Height="Auto">
                 <materialDesign:Chip.Icon>
                     <materialDesign:PackIcon Kind="GithubCircle"></materialDesign:PackIcon>
                 </materialDesign:Chip.Icon>
@@ -56,7 +57,7 @@
             <materialDesign:Chip Content="Paypal donate"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="75,337,81,111" Click="Chip2_Click" HorizontalAlignment="Stretch">
+                                 Margin="71,311,51,129" Click="Chip2_Click" HorizontalAlignment="Stretch" Height="Auto">
                 <materialDesign:Chip.Icon>
                     <materialDesign:PackIcon Kind="Coffee"></materialDesign:PackIcon>
                 </materialDesign:Chip.Icon>
@@ -64,16 +65,17 @@
             <materialDesign:Chip Content="@brianostorm"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="75,263,81,185" Click="Chip_Click" HorizontalAlignment="Stretch">
+                                 Margin="71,356,51,84" Click="Chip_Click" HorizontalAlignment="Stretch" Height="Auto">
                 <materialDesign:Chip.Icon>
                     <materialDesign:PackIcon Kind="Twitter" />
                 </materialDesign:Chip.Icon>
             </materialDesign:Chip>
-            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Margin="0,185,0,0" VerticalAlignment="Top" Height="120" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" HorizontalAlignment="Left" Width="286" TextAlignment="Justify"/>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Margin="0,185,0,0" VerticalAlignment="Top" Height="76" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" HorizontalAlignment="Left" Width="286" TextAlignment="Justify"/>
             <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27">
                 <Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
             <Image x:Name="image2" Height="150" VerticalAlignment="Top" Source="Resources/briano.png" Stretch="UniformToFill" Margin="71,32,65,0"/>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" Margin="0,401,0,0" VerticalAlignment="Top" Height="79" Text="This project uses the MaterialDesignXAMLToolkit. Special thanks to /r/Forza community at Reddit" HorizontalAlignment="Left" Width="286" TextAlignment="Justify"/>
         </Grid>
     </Grid>
 </Window>

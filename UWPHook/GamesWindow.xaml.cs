@@ -24,7 +24,7 @@ namespace UWPHook
             listGames.ItemsSource = Apps.Entries;
 
             //If null or 1, the app was launched normally
-            if (Environment.GetCommandLineArgs() == null)
+            if (Environment.GetCommandLineArgs() != null)
             {
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
@@ -44,14 +44,15 @@ namespace UWPHook
             {
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
-                    string script = "";
-                    ScriptManager.RunScript("Set - WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
+                    ScriptManager.RunScript("Set-WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
                 }
+
                 //The only other parameter Steam will send is the app AUMID
                 AppManager.LaunchUWPApp(Environment.GetCommandLineArgs()[1]);
+
                 while (AppManager.IsRunning())
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(Properties.Settings.Default.Seconds * 1000);
                 }
             }
             catch (Exception e)
@@ -65,6 +66,7 @@ namespace UWPHook
                 {
                     ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
                 }
+                this.Close();
             }
         }
 

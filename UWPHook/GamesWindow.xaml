@@ -11,14 +11,16 @@
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
         mc:Ignorable="d"
-        Title="GamesWindow" Height="600" Width="800">
+        Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook.ico">
     <Grid x:Name="grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="28*"/>
             <RowDefinition Height="144*"/>
             <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80"/>
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80">
+            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+        </materialDesign:ColorZone>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
         <Button Click="HelpButton_Click"  Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                         Margin="0,6,10,0" HorizontalAlignment="Right"
