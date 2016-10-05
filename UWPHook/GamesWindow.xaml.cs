@@ -1,5 +1,6 @@
 ﻿using SharpSteam;
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace UWPHook
     public partial class GamesWindow : Window
     {
         AppEntryModel Apps;
+        BackgroundWorker bwr;
 
         public GamesWindow()
         {
@@ -113,6 +115,25 @@ namespace UWPHook
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
+            bwr = new BackgroundWorker();
+            bwr.DoWork += Bwr_DoWork;
+            bwr.RunWorkerCompleted += Bwr_RunWorkerCompleted;
+
+            grid.IsEnabled = false;
+            progressBar.Visibility = Visibility.Visible;
+            
+        }
+
+        private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            grid.IsEnabled = true;
+            listGames.Columns[2].IsReadOnly = true;
+            progressBar.Visibility = Visibility.Collapsed;
+            label.Content = "Installed Apps";
+        }
+
+        private void Bwr_DoWork(object sender, DoWorkEventArgs e)
+        {
             var installedApps = AppManager.GetInstalledApps();
 
             foreach (var app in installedApps)
@@ -124,9 +145,6 @@ namespace UWPHook
                     Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
                 }
             }
-
-            listGames.Columns[2].IsReadOnly = true;
-            label.Content = "Installed Apps";
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
