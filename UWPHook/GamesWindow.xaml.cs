@@ -145,7 +145,9 @@ namespace UWPHook
                 var valor = app.Replace("\r\n", "").Split('|');
                 if (!String.IsNullOrEmpty(valor[0]))
                 {
-                    Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
+                    App.Current.Dispatcher.BeginInvoke((Action)delegate () {
+                        Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
+                        });
                 }
             }
         }
