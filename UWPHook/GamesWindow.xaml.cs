@@ -39,11 +39,14 @@ namespace UWPHook
         private void Launcher()
         {
             this.Title = "UWPHook: Playing a game";
-            //Hide the window so the app is launched seamless
+            //Hide the window so the app is launched seamless and UWPHook runs in the background without bothering the user
             this.Hide();
             string currentLanguage = CultureInfo.CurrentCulture.ToString();
+
             try
             {
+                //Some apps have their language locked to the UI language of the system, so overriding it might change the language of the game
+                //I my self couldn't get this to work on neither Forza Horizon 3 or Halo 5 Forge, @AbGedreht reported it works tho
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
                     ScriptManager.RunScript("Set-WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
@@ -52,6 +55,7 @@ namespace UWPHook
                 //The only other parameter Steam will send is the app AUMID
                 AppManager.LaunchUWPApp(Environment.GetCommandLineArgs()[1]);
 
+                //While the current launched app is running, sleep for n seconds and then check again
                 while (AppManager.IsRunning())
                 {
                     Thread.Sleep(Properties.Settings.Default.Seconds * 1000);
@@ -68,6 +72,8 @@ namespace UWPHook
                 {
                     ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
                 }
+
+                //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
                 this.Close();
             }
         }
@@ -107,6 +113,7 @@ namespace UWPHook
                             shortcuts[shortcuts.Length - 1] = newApp;
                         }
 
+                        //Write the file with all the shortcuts
                         File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
                     }
                 }
@@ -136,7 +143,6 @@ namespace UWPHook
 
         private void Bwr_DoWork(object sender, DoWorkEventArgs e)
         {
-            Thread.Sleep(60000);
             var installedApps = AppManager.GetInstalledApps();
 
             foreach (var app in installedApps)
@@ -145,9 +151,10 @@ namespace UWPHook
                 var valor = app.Replace("\r\n", "").Split('|');
                 if (!String.IsNullOrEmpty(valor[0]))
                 {
-                    App.Current.Dispatcher.BeginInvoke((Action)delegate () {
+                    Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
+                    {
                         Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
-                        });
+                    });
                 }
             }
         }
