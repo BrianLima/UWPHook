@@ -92,7 +92,7 @@ namespace UWPHook
                             {
                                 AppName = app.Name,
                                 Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
-                                StartDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                                StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                                 AllowDesktopConfig = 1,
                                 Icon = "",
                                 Index = shortcuts.Length,
@@ -111,6 +111,8 @@ namespace UWPHook
                     }
                 }
             }
+
+            MessageBox.Show("UWPHook", "Your apps were successfuly exported, please restart Steam in order to see your app on it.", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
@@ -121,7 +123,7 @@ namespace UWPHook
 
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
-            
+            bwr.RunWorkerAsync();
         }
 
         private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -134,6 +136,7 @@ namespace UWPHook
 
         private void Bwr_DoWork(object sender, DoWorkEventArgs e)
         {
+            Thread.Sleep(60000);
             var installedApps = AppManager.GetInstalledApps();
 
             foreach (var app in installedApps)
