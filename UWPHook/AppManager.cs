@@ -9,22 +9,25 @@ using System.Runtime.InteropServices;
 
 namespace UWPHook
 {
+    /// <summary>
+    /// Functions to manage UWP apps
+    /// </summary>
     static class AppManager
     {
         private static int id;
 
         /// <summary>
-        /// Launch a UWP App using a shell command and sets a internal id, to it's proccess id
+        /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
         /// </summary>
-        /// <param name="uri"></param>
-        public static void LaunchUWPApp(string uri)
+        /// <param name="aumid">The AUMID of the app to launch</param>
+        public static void LaunchUWPApp(string aumid)
         {
             var mgr = new ApplicationActivationManager();
             uint processId;
 
             try
             {
-                mgr.ActivateApplication(uri, null, ActivateOptions.None, out processId);
+                mgr.ActivateApplication(aumid, null, ActivateOptions.None, out processId);
             }
             catch (Exception e)
             {
@@ -37,9 +40,10 @@ namespace UWPHook
         /// <summary>
         /// Checks if the launched app is running
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if the perviously launched app is running, false otherwise</returns>
         public static Boolean IsRunning()
         {
+            //If 0, no app was launched most probably
             if (id == 0)
             {
                 return false;
@@ -64,14 +68,22 @@ namespace UWPHook
         {
             List<String> result = null;
             var assembly = Assembly.GetExecutingAssembly();
+            //Load the powershell script to get installed apps
             var resourceName = "UWPHook.Resources.GetAUMIDScript.txt";
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            try
             {
-                using (StreamReader reader = new StreamReader(stream))
+                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                 {
-                    result = ScriptManager.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        //Every entry is listed separated by ;
+                        result = ScriptManager.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error trying to get installed apps on your PC " + Environment.NewLine + e.Message, e.InnerException);
             }
 
             return result;

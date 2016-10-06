@@ -39,7 +39,7 @@ namespace UWPHook
         private void Launcher()
         {
             this.Title = "UWPHook: Playing a game";
-            //Hide the window so the app is launched seamless and UWPHook runs in the background without bothering the user
+            //Hide the window so the app is launched seamless making UWPHook run in the background without bothering the user
             this.Hide();
             string currentLanguage = CultureInfo.CurrentCulture.ToString();
 
@@ -87,7 +87,15 @@ namespace UWPHook
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
                 foreach (var user in users)
                 {
-                    VDFEntry[] shortcuts = SteamManager.ReadShortcuts(user);
+                    VDFEntry[] shortcuts;
+                    try
+                    {
+                        shortcuts = SteamManager.ReadShortcuts(user);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                    }
 
                     //TODO: Figure out what to do when user has no shortcuts whatsoever
                     if (shortcuts != null && shortcuts.Length > 0)
@@ -113,8 +121,16 @@ namespace UWPHook
                             shortcuts[shortcuts.Length - 1] = newApp;
                         }
 
-                        //Write the file with all the shortcuts
-                        File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                        try
+                        {  
+                            //Write the file with all the shortcuts
+                            File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                        }
+                        catch (Exception ex)
+                        {
+
+                            throw new Exception("Error while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                        }
                     }
                 }
             }
@@ -143,19 +159,26 @@ namespace UWPHook
 
         private void Bwr_DoWork(object sender, DoWorkEventArgs e)
         {
-            var installedApps = AppManager.GetInstalledApps();
-
-            foreach (var app in installedApps)
+            try
             {
-                //Remove end lines from the String and split both values
-                var valor = app.Replace("\r\n", "").Split('|');
-                if (!String.IsNullOrEmpty(valor[0]))
+                var installedApps = AppManager.GetInstalledApps();
+                foreach (var app in installedApps)
                 {
-                    Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
+                    //Remove end lines from the String and split both values, I split the appname and the AUMID using |
+                    //I hope no apps have that in their name. Ever.
+                    var valor = app.Replace("\r\n", "").Split('|');
+                    if (!String.IsNullOrEmpty(valor[0]))
                     {
-                        Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
-                    });
+                        Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
+                        {
+                            Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
+                        });
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace UWPHook
 {
+    /// <summary>
+    /// Functions related to Windows powershell
+    /// </summary>
     static class ScriptManager
     {
         public static string RunScript(string scriptText)
