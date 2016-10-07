@@ -11,7 +11,7 @@
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
         mc:Ignorable="d"
-        Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook.ico">
+        Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook2.ico">
     <Grid x:Name="grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="28*"/>
@@ -37,7 +37,7 @@
                        materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"/>
             <Label x:Name="label" Content="Press 'Load installed apps' to get a list of installed apps on your system." HorizontalAlignment="Left" Margin="0,-10,0,0" VerticalAlignment="Top"/>
         </Grid>
-        <Button Content="Export selected Apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
+        <Button Content="Export selected apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
         <ProgressBar Visibility="Collapsed" x:Name="progressBar" Margin="10,215,10,174" Grid.Row="1" IsIndeterminate="True" />
     </Grid>
 </Window>

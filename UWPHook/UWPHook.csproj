@@ -50,7 +50,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\hook_icon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\hook2.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>UWPHook.App</StartupObject>
@@ -143,9 +143,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\hook_icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
@@ -189,7 +186,7 @@
     <Resource Include="Resources\briano.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\hook.ico" />
+    <Resource Include="Resources\hook2.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
