@@ -98,7 +98,7 @@ namespace UWPHook
                     }
 
                     //TODO: Figure out what to do when user has no shortcuts whatsoever
-                    if (shortcuts != null && shortcuts.Length > 0)
+                    if (shortcuts != null )
                     {
                         foreach (var app in selected_apps)
                         {
@@ -135,7 +135,7 @@ namespace UWPHook
                 }
             }
 
-            MessageBox.Show("UWPHook", "Your apps were successfuly exported, please restart Steam in order to see your app on it.", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps in it.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
