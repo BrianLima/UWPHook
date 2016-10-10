@@ -3,10 +3,15 @@
 $aumidList = @()
 foreach ($app in $installedapps)
 {
-    foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
-    {
-        $aumidList += $app.name + "|" + $app.packagefamilyname + "!" + $id + ";"
-    }
+    try {
+        foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
+        {
+            $aumidList += $app.name + "|" + $app.packagefamilyname + "!" + $id + ";"
+        }
+    } catch {
+        $ErrorMessage = $_.Exception.Message
+        $FailedItem = $_.Exception.ItemName
+    }
 }
 
 $aumidList
