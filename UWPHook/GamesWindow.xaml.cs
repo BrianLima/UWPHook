@@ -87,52 +87,58 @@ namespace UWPHook
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
                 foreach (var user in users)
                 {
-                    VDFEntry[] shortcuts;
                     try
                     {
-                        shortcuts = SteamManager.ReadShortcuts(user);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
-                    }
-
-                    //TODO: Figure out what to do when user has no shortcuts whatsoever
-                    if (shortcuts != null )
-                    {
-                        foreach (var app in selected_apps)
-                        {
-                            VDFEntry newApp = new VDFEntry()
-                            {
-                                AppName = app.Name,
-                                Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
-                                StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-                                AllowDesktopConfig = 1,
-                                Icon = "",
-                                Index = shortcuts.Length,
-                                IsHidden = 0,
-                                OpenVR = 0,
-                                ShortcutPath = "",
-                                Tags = new string[0]
-                            };
-
-                            //Resize this array so it fits the new entries
-                            Array.Resize(ref shortcuts, shortcuts.Length + 1);
-                            shortcuts[shortcuts.Length - 1] = newApp;
-                        }
-
+                        VDFEntry[] shortcuts;
                         try
-                        {  
-                            //Write the file with all the shortcuts
-                            File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                        {
+                            shortcuts = SteamManager.ReadShortcuts(user);
                         }
                         catch (Exception ex)
                         {
+                            throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                        }
 
-                            throw new Exception("Error while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                        if (shortcuts != null)
+                        {
+                            foreach (var app in selected_apps)
+                            {
+                                VDFEntry newApp = new VDFEntry()
+                                {
+                                    AppName = app.Name,
+                                    Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
+                                    StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                                    AllowDesktopConfig = 1,
+                                    Icon = "",
+                                    Index = shortcuts.Length,
+                                    IsHidden = 0,
+                                    OpenVR = 0,
+                                    ShortcutPath = "",
+                                    Tags = new string[0]
+                                };
+
+                                //Resize this array so it fits the new entries
+                                Array.Resize(ref shortcuts, shortcuts.Length + 1);
+                                shortcuts[shortcuts.Length - 1] = newApp;
+                            }
+
+                            try
+                            {
+                                //Write the file with all the shortcuts
+                                File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("Error while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                    }
                 }
+
             }
 
             MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps in it.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
