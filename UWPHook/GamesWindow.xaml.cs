@@ -89,14 +89,18 @@ namespace UWPHook
                 {
                     try
                     {
-                        VDFEntry[] shortcuts;
+                        VDFEntry[] shortcuts = new VDFEntry[0];
                         try
                         {
                             shortcuts = SteamManager.ReadShortcuts(user);
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                            //If it's a short VDF, let's just overwrite it
+                            if (ex.GetType() != typeof(VDFTooShortException))
+                            {
+                                throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                            }
                         }
 
                         if (shortcuts != null)
@@ -173,6 +177,8 @@ namespace UWPHook
                     //Remove end lines from the String and split both values, I split the appname and the AUMID using |
                     //I hope no apps have that in their name. Ever.
                     var valor = app.Replace("\r\n", "").Split('|');
+
+                    //Frameworks by Microsoft don fill the displayname at all ot have ms-resource as a name instead, this excludes them making the list less bloated
                     if (!String.IsNullOrWhiteSpace(valor[0]) && !valor[0].Contains("ms-resource"))
                     {
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()

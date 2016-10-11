@@ -7,7 +7,7 @@ foreach ($app in $installedapps)
         foreach ($appx in (Get-AppxPackageManifest $app))
         {
             
-            $aumidList += $appx.Package.Applications.Application.VisualElements.DisplayName + "  |  "+ 
+            $aumidList += $appx.Package.Properties.DisplayName + "  |  "+ 
             $app.packagefamilyname + "!" + $appx.package.applications.application.id + ";"
             
         }
