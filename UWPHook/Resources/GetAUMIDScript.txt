@@ -4,9 +4,12 @@ $aumidList = @()
 foreach ($app in $installedapps)
 {
     try {
-        foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
+        foreach ($appx in (Get-AppxPackageManifest $app))
         {
-            $aumidList += $app.name + "|" + $app.packagefamilyname + "!" + $id + ";"
+            
+            $aumidList += $appx.Package.Applications.Application.VisualElements.DisplayName + "  |  "+ 
+            $app.packagefamilyname + "!" + $appx.package.applications.application.id + ";"
+            
         }
     } catch {
         $ErrorMessage = $_.Exception.Message
@@ -14,4 +17,4 @@ foreach ($app in $installedapps)
     }
 }
 
-$aumidList
+$aumidList;
