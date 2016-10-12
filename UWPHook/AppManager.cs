@@ -28,6 +28,8 @@ namespace UWPHook
             try
             {
                 mgr.ActivateApplication(aumid, null, ActivateOptions.None, out processId);
+                //Bring the launched app to the foreground, this fixes in-home streaming
+                BringProcess();
             }
             catch (Exception e)
             {
@@ -88,6 +90,46 @@ namespace UWPHook
 
             return result;
         }
+
+        [DllImport("user32.dll")]
+        private static extern
+        bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern
+        bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        private static extern
+        bool IsIconic(IntPtr hWnd);
+
+        public static void BringProcess()
+        {
+            /*
+            const int SW_HIDE = 0;
+            const int SW_SHOWNORMAL = 1;
+            const int SW_SHOWMINIMIZED = 2;
+            const int SW_SHOWMAXIMIZED = 3;
+            const int SW_SHOWNOACTIVATE = 4;
+            const int SW_RESTORE = 9;
+            const int SW_SHOWDEFAULT = 10;
+            */
+
+            var me = Process.GetCurrentProcess();
+            var arrProcesses = Process.GetProcessById(id);
+
+            // get the window handle
+            IntPtr hWnd = arrProcesses.MainWindowHandle;
+
+            // if iconic, we need to restore the window
+            if (IsIconic(hWnd))
+            {
+                ShowWindowAsync(hWnd, 9);
+            }
+
+            // bring it to the foreground
+            SetForegroundWindow(hWnd);
+
+        }
+
     }
 
     public enum ActivateOptions

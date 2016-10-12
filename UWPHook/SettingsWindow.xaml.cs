@@ -31,6 +31,7 @@ namespace UWPHook
 
             cultures_comboBox.SelectedItem = Properties.Settings.Default.TargetLanguage;
             language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
+            streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
@@ -38,6 +39,7 @@ namespace UWPHook
             Properties.Settings.Default.ChangeLanguage = (bool)language_toggle.IsChecked;
             Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem.ToString();
             Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
+            Properties.Settings.Default.StreamMode = (bool)streaming_toggle.IsChecked;
             Properties.Settings.Default.Save();
             this.Close();
         }

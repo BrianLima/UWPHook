@@ -18,13 +18,12 @@ namespace UWPHook
     public partial class GamesWindow : Window
     {
         AppEntryModel Apps;
-        BackgroundWorker bwr;
+        BackgroundWorker bwrLoad, bwrSave;
 
         public GamesWindow()
         {
             InitializeComponent();
             Apps = new AppEntryModel();
-            listGames.ItemsSource = Apps.Entries;
 
             //If null or 1, the app was launched normally
             if (Environment.GetCommandLineArgs() != null)
@@ -39,6 +38,14 @@ namespace UWPHook
 
         private void Launcher()
         {
+            if (Properties.Settings.Default.StreamMode)
+            {
+                this.Show();
+                this.WindowStyle = WindowStyle.None;
+                this.WindowState = WindowState.Maximized;
+                Thread.Sleep(1000);
+            }
+
             this.Title = "UWPHook: Playing a game";
             //Hide the window so the app is launched seamless making UWPHook run in the background without bothering the user
             this.Hide();
@@ -80,6 +87,24 @@ namespace UWPHook
         }
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
+            bwrSave = new BackgroundWorker();
+            bwrSave.DoWork += BwrSave_DoWork;
+            bwrSave.RunWorkerCompleted += BwrSave_RunWorkerCompleted;
+            grid.IsEnabled = false;
+            progressBar.Visibility = Visibility.Visible;
+
+            bwrSave.RunWorkerAsync();
+        }
+
+        private void BwrSave_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            grid.IsEnabled = true;
+            progressBar.Visibility = Visibility.Collapsed;
+            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps in it.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BwrSave_DoWork(object sender, DoWorkEventArgs e)
         {
             string steam_folder = SteamManager.GetSteamFolder();
             if (!String.IsNullOrEmpty(steam_folder))
@@ -145,26 +170,29 @@ namespace UWPHook
                 }
 
             }
-
-            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps in it.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            bwr = new BackgroundWorker();
-            bwr.DoWork += Bwr_DoWork;
-            bwr.RunWorkerCompleted += Bwr_RunWorkerCompleted;
+            bwrLoad = new BackgroundWorker();
+            bwrLoad.DoWork += Bwr_DoWork;
+            bwrLoad.RunWorkerCompleted += Bwr_RunWorkerCompleted;
 
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
-            bwr.RunWorkerAsync();
+            Apps.Entries = new System.Collections.ObjectModel.ObservableCollection<AppEntry>();
+
+            bwrLoad.RunWorkerAsync();
         }
 
         private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            grid.IsEnabled = true;
-            listGames.Columns[1].IsReadOnly = true;
+            listGames.ItemsSource = Apps.Entries;
+
             listGames.Columns[2].IsReadOnly = true;
+            listGames.Columns[3].IsReadOnly = true;
+
+            grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
             label.Content = "Installed Apps";
         }
@@ -174,19 +202,19 @@ namespace UWPHook
             try
             {
                 //Get all installed apps on the system excluding frameworks
-                List<String>  installedApps = AppManager.GetInstalledApps();
+                List<String> installedApps = AppManager.GetInstalledApps();
 
                 //Alfabetic sort
                 installedApps.Sort();
 
                 //Split every app that we couldn't resolve the app name
-                var x = (from s in installedApps where s.Contains("double click") select s).ToList<String>();
+                var nameNotFound = (from s in installedApps where s.Contains("double click") select s).ToList<String>();
 
                 //Remove them from the original list
                 installedApps.RemoveAll(item => item.Contains("double click"));
 
                 //Rejoin them in the original list, but putting them into last
-                installedApps = installedApps.Union(x).ToList<String>();
+                installedApps = installedApps.Union(nameNotFound).ToList<String>();
 
                 foreach (var app in installedApps)
                 {
@@ -199,11 +227,10 @@ namespace UWPHook
                         string logosPath = Path.GetDirectoryName(valor[1]);
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                         {
-                            Apps.Entries.Add(new AppEntry() { Name = valor[0], Icon = logosPath, Aumid = valor[2], Selected = false});
+                            Apps.Entries.Add(new AppEntry() { Name = valor[0], IconPath = logosPath, Aumid = valor[2], Selected = false });
                         });
                     }
                 }
-
             }
             catch (Exception ex)
             {

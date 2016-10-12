@@ -58,5 +58,17 @@ namespace UWPHook.Properties {
                 this["Seconds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StreamMode {
+            get {
+                return ((bool)(this["StreamMode"]));
+            }
+            set {
+                this["StreamMode"] = value;
+            }
+        }
     }
 }

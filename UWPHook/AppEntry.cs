@@ -44,12 +44,12 @@ namespace UWPHook
             set { _aumid = value; }
         }
 
-        private string _icon;
+        private string _icon_path;
 
-        public string Icon
+        public string IconPath
         {
-            get { return _icon; }
-            set { _icon = value; }
+            get { return _icon_path; }
+            set { _icon_path = value; }
         }
 
         public string widestSquareIcon()
@@ -58,9 +58,8 @@ namespace UWPHook
             Size size = new Size(0, 0);
             List<string> images = new List<string>();
 
-            //Get every file on the directory
-            images.AddRange( Directory.GetFiles(_icon, "*.jpg", SearchOption.AllDirectories));
-            images.AddRange(Directory.GetFiles(_icon, "*.png", SearchOption.AllDirectories));
+            //Get every png in this directory, Steam only allows for .png's
+            images.AddRange(Directory.GetFiles(_icon_path, "*.png"));
 
             //Decide which is the largest
             foreach (string image in images)
@@ -76,7 +75,6 @@ namespace UWPHook
 
             return result;
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 
