@@ -1,5 +1,6 @@
 ﻿using SharpSteam;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
@@ -113,7 +114,7 @@ namespace UWPHook
                                     Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
                                     StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                                     AllowDesktopConfig = 1,
-                                    Icon = "",
+                                    Icon = app.widestSquareIcon(),
                                     Index = shortcuts.Length,
                                     IsHidden = 0,
                                     OpenVR = 0,
@@ -162,6 +163,7 @@ namespace UWPHook
         private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             grid.IsEnabled = true;
+            listGames.Columns[1].IsReadOnly = true;
             listGames.Columns[2].IsReadOnly = true;
             progressBar.Visibility = Visibility.Collapsed;
             label.Content = "Installed Apps";
@@ -171,22 +173,37 @@ namespace UWPHook
         {
             try
             {
-                var installedApps = AppManager.GetInstalledApps();
+                //Get all installed apps on the system excluding frameworks
+                List<String>  installedApps = AppManager.GetInstalledApps();
+
+                //Alfabetic sort
+                installedApps.Sort();
+
+                //Split every app that we couldn't resolve the app name
+                var x = (from s in installedApps where s.Contains("double click") select s).ToList<String>();
+
+                //Remove them from the original list
+                installedApps.RemoveAll(item => item.Contains("double click"));
+
+                //Rejoin them in the original list, but putting them into last
+                installedApps = installedApps.Union(x).ToList<String>();
+
                 foreach (var app in installedApps)
                 {
                     //Remove end lines from the String and split both values, I split the appname and the AUMID using |
                     //I hope no apps have that in their name. Ever.
                     var valor = app.Replace("\r\n", "").Split('|');
-
-                    //Frameworks by Microsoft don fill the displayname at all ot have ms-resource as a name instead, this excludes them making the list less bloated
-                    if (!String.IsNullOrWhiteSpace(valor[0]) && !valor[0].Contains("ms-resource"))
+                    if (!String.IsNullOrWhiteSpace(valor[0]))
                     {
+                        //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
+                        string logosPath = Path.GetDirectoryName(valor[1]);
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                         {
-                            Apps.Entries.Add(new AppEntry() { Name = valor[0], Aumid = valor[1], Selected = false });
+                            Apps.Entries.Add(new AppEntry() { Name = valor[0], Icon = logosPath, Aumid = valor[2], Selected = false});
                         });
                     }
                 }
+
             }
             catch (Exception ex)
             {

@@ -5,9 +5,9 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UWPHook", "UWPHook\UWPHook.csproj", "{AFE09BCF-28A4-48EE-876B-FEF080D04D5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpSteam", "..\SharpSteam\SharpSteam\SharpSteam.csproj", "{D0A686FB-B373-4FBC-A0DD-C3417276A816}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpSteam", "..\..\Visual Studio 2015\Projects\SharpSteam\SharpSteam\SharpSteam.csproj", "{D0A686FB-B373-4FBC-A0DD-C3417276A816}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VDFParser", "..\SharpSteam\VDFParser\VDFParser\VDFParser.csproj", "{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VDFParser", "..\..\Visual Studio 2015\Projects\SharpSteam\VDFParser\VDFParser\VDFParser.csproj", "{9543FB59-1EB6-4638-B24C-B12B9D4A15FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -158,16 +158,6 @@
     <EmbeddedResource Include="Resources\GetAUMIDScript.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SharpSteam\SharpSteam\SharpSteam.csproj">
-      <Project>{d0a686fb-b373-4fbc-a0dd-c3417276a816}</Project>
-      <Name>SharpSteam</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SharpSteam\VDFParser\VDFParser\VDFParser.csproj">
-      <Project>{9543fb59-1eb6-4638-b24c-b12b9d4a15fc}</Project>
-      <Name>VDFParser</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\WhiteTransparent.png" />
     <Resource Include="Resources\BlackTransparent.png" />
   </ItemGroup>
@@ -187,6 +177,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\hook2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Visual Studio 2015\Projects\SharpSteam\SharpSteam\SharpSteam.csproj">
+      <Project>{d0a686fb-b373-4fbc-a0dd-c3417276a816}</Project>
+      <Name>SharpSteam</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Visual Studio 2015\Projects\SharpSteam\VDFParser\VDFParser\VDFParser.csproj">
+      <Project>{9543fb59-1eb6-4638-b24c-b12b9d4a15fc}</Project>
+      <Name>VDFParser</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
