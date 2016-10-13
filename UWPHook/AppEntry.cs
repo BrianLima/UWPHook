@@ -64,12 +64,25 @@ namespace UWPHook
             //Decide which is the largest
             foreach (string image in images)
             {
-                Image i = Image.FromFile(image);
+                Image icon = null;
 
-                if (i.Width == i.Height && (i.Size.Height > size.Height))
+                //Try to load the image, if it's a invalid file, skip it
+                try
                 {
-                    size = i.Size;
-                    result = image;
+                    icon = Image.FromFile(image);
+                }
+                catch (System.Exception)
+                {
+
+                }
+
+                if (icon != null)
+                {
+                    if (icon.Width == icon.Height && (icon.Size.Height > size.Height))
+                    {
+                        size = icon.Size;
+                        result = image;
+                    }
                 }
             }
 
