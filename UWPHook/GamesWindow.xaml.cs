@@ -244,6 +244,28 @@ namespace UWPHook
             }
         }
 
+        private void textBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (Apps.Entries != null)
+            {
+                if (!String.IsNullOrEmpty(textBox.Text) && Apps.Entries.Count > 0)
+                {
+                    listGames.Items.Filter = new Predicate<object>(Contains);
+                }
+                else
+                {
+                    listGames.Items.Filter = null;
+                }
+            }
+        }
+
+        public bool Contains(object o)
+        {
+            AppEntry appEntry = o as AppEntry;
+            //Return members whose Orders have not been filled
+            return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
+        }
+
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow window = new SettingsWindow();
