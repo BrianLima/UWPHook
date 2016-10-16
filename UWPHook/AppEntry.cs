@@ -44,6 +44,21 @@ namespace UWPHook
             set { _aumid = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the icon for the app
+        /// </summary>
+        private string _icon;
+
+        public string Icon
+        {
+            get { return _icon; }
+            set { _icon = value; }
+        }
+
+
+        /// <summary>
+        /// Sets the path where icons for the app is 
+        /// </summary>
         private string _icon_path;
 
         public string IconPath
@@ -78,6 +93,8 @@ namespace UWPHook
 
                 if (icon != null)
                 {
+                    //UWP apps usually store live tile images inside the same directory
+                    //Let's check if the image is square for use as icon on Steam and pick the largest one
                     if (icon.Width == icon.Height && (icon.Size.Height > size.Height))
                     {
                         size = icon.Size;

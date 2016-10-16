@@ -111,6 +111,13 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
+
+                //To make things faster, decide icons before looping users
+                foreach (var app in selected_apps)
+                {
+                    app.Icon = app.widestSquareIcon();
+                }
+
                 foreach (var user in users)
                 {
                     try
@@ -139,7 +146,7 @@ namespace UWPHook
                                     Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
                                     StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                                     AllowDesktopConfig = 1,
-                                    Icon = app.widestSquareIcon(),
+                                    Icon = app.Icon,
                                     Index = shortcuts.Length,
                                     IsHidden = 0,
                                     OpenVR = 0,
@@ -168,7 +175,6 @@ namespace UWPHook
                         MessageBox.Show("Error exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
-
             }
         }
 
