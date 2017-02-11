@@ -38,17 +38,24 @@ namespace UWPHook
 
         private void Launcher()
         {
+            //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
             if (Properties.Settings.Default.StreamMode)
             {
                 this.Show();
                 this.WindowStyle = WindowStyle.None;
                 this.WindowState = WindowState.Maximized;
-                Thread.Sleep(1000);
+                this.Title = "UWPHook: Streaming a game";
+                this.label.Content = "UWPHook is streaming your game, fasten your seatbelts.";
+
+                Thread.Sleep(10000);
+            }
+            else
+            {
+                this.Title = "UWPHook: Playing a game";
+                this.Hide();
             }
 
-            this.Title = "UWPHook: Playing a game";
             //Hide the window so the app is launched seamless making UWPHook run in the background without bothering the user
-            this.Hide();
             string currentLanguage = CultureInfo.CurrentCulture.ToString();
 
             try

@@ -28,15 +28,16 @@ namespace UWPHook
             try
             {
                 mgr.ActivateApplication(aumid, null, ActivateOptions.None, out processId);
+                
                 //Bring the launched app to the foreground, this fixes in-home streaming
+                id = (int)processId;
+
                 BringProcess();
             }
             catch (Exception e)
             {
                 throw new Exception("Error while trying to launch your app." + Environment.NewLine + e.Message);
             }
-
-            id = (int)processId;
         }
 
         /// <summary>
@@ -122,7 +123,7 @@ namespace UWPHook
             // if iconic, we need to restore the window
             if (IsIconic(hWnd))
             {
-                ShowWindowAsync(hWnd, 9);
+                ShowWindowAsync(hWnd, 3);
             }
 
             // bring it to the foreground
