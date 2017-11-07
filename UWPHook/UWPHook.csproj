@@ -65,7 +65,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="SharpSteam">
-      <HintPath>..\..\SharpSteam\SharpSteam\bin\Release\SharpSteam.dll</HintPath>
+      <HintPath>..\..\SharpSteam\SharpSteam\bin\Debug\SharpSteam.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -84,7 +84,7 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="VDFParser">
-      <HintPath>..\..\SharpSteam\SharpSteam\bin\Release\VDFParser.dll</HintPath>
+      <HintPath>..\..\SharpSteam\SharpSteam\bin\Debug\VDFParser.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
