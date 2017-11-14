@@ -9,12 +9,13 @@ namespace UWPHook
     public partial class App : Application
     {
         public static TrayIcon icon;
+        public static EventsHook eventsHook;
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             icon = new TrayIcon();
 
-            EventsHook eventsHook = new EventsHook();
+            eventsHook = new EventsHook();
 
             eventsHook.StartHooking();
 

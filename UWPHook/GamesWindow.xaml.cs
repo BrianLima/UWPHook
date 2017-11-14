@@ -47,6 +47,7 @@ namespace UWPHook
                 this.Title = "UWPHook: Streaming a game";
                 this.label.Content = "UWPHook is streaming your game, fasten your seatbelts.";
 
+
                 Thread.Sleep(10000);
             }
             else

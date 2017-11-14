@@ -1,0 +1,49 @@
+﻿<Window x:Class="UWPHook.JoystickSetup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:UWPHook"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.FontWeight="Medium"
+        TextElement.FontSize="14"
+        FontFamily="Segoe UI Light"
+        mc:Ignorable="d"
+        Title="JoystickSetup" Height="600" Width="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="83*"/>
+            <RowDefinition Height="486*"/>
+        </Grid.RowDefinitions>
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80">
+            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+        </materialDesign:ColorZone>
+        <Grid HorizontalAlignment="Left" Height="466" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="572">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="572"/>
+            </Grid.ColumnDefinitions>
+            <Button Margin="10,10,0,0" Content="Button A" VerticalAlignment="Top" Height="28" HorizontalAlignment="Left" Width="111"/>
+            <Button Margin="126,10,0,0" VerticalAlignment="Top" Height="28"  Content="Button B" HorizontalAlignment="Left" Width="105"/>
+            <Button Margin="236,10,0,0" VerticalAlignment="Top" Height="28"  Content="Button X" HorizontalAlignment="Left" Width="105"/>
+            <Button Margin="346,10,0,0" VerticalAlignment="Top" Height="28"  Content="Button Y" HorizontalAlignment="Left" Width="105"/>
+            <Button Margin="456,10,10,0" VerticalAlignment="Top" Height="28" Content="Start"/>
+            <Button Margin="456,43,10,0" VerticalAlignment="Top" Height="28" Content="Select"/>
+            <Button Margin="10,43,451,0" VerticalAlignment="Top" Height="28" Content="Up Arrow"/>
+            <Button Margin="345,43,121,0" VerticalAlignment="Top" Height="28" Content="Down Arrow"/>
+            <Button Margin="126,43,341,0" VerticalAlignment="Top" Height="28" Content="Left Arrow"/>
+            <Button Margin="236,43,231,0" VerticalAlignment="Top" Height="28" Content="Right Arrow"/>
+            <Button Margin="236,76,231,0" VerticalAlignment="Top" Height="28" Content="Left Trigger"/>
+            <Button Margin="346,76,121,0" VerticalAlignment="Top" Height="28" Content="Left Bumper"/>
+            <Button Margin="126,76,341,0" VerticalAlignment="Top" Content="Right Trigger" Height="28"/>
+            <Button Margin="10,76,451,0" VerticalAlignment="Top" Content="Right Bumper" Height="28"/>
+            <Button Margin="10,109,451,0" VerticalAlignment="Top" Height="28" Content="LS X Axys"/>
+            <Button Margin="126,109,341,0" VerticalAlignment="Top" Height="28" Content="LS Y Axys"/>
+            <Button Margin="236,109,231,0" VerticalAlignment="Top" Height="28" Content="RS X Axys"/>
+            <Button Margin="346,109,121,0" VerticalAlignment="Top" Height="28" Content="RS Y Axys"/>
+            <Button Margin="456,76,11,0" VerticalAlignment="Top" Height="28" Content="Xbox Button"/>
+        </Grid>
+
+    </Grid>
+</Window>

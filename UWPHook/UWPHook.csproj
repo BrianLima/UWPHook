@@ -119,6 +119,10 @@
       <DependentUpon>GamesWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EventsHook.cs" />
+    <Compile Include="JoystickSetup.xaml.cs">
+      <DependentUpon>JoystickSetup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="KeyboardToController.cs" />
     <Compile Include="ScriptManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
@@ -136,6 +140,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AppManager.cs" />
+    <Page Include="JoystickSetup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

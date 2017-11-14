@@ -8,11 +8,12 @@ using ScpDriverInterface;
 
 namespace UWPHook
 {
-    class EventsHook
+    public class EventsHook
     {
         private X360Controller controller;
         private ScpBus _scpBus;
         private byte[] _outputReport = new byte[8];
+        KeyboardToController keyboardToController;
 
         public void StartHooking()
         {
@@ -44,15 +45,16 @@ namespace UWPHook
 
         private void KeyboardWatcher_OnKeyInput(object sender, KeyInputEventArgs e)
         {
-            switch (e.KeyData.Keyname)
-            {
-                case "A":
-                    controller.Buttons ^= X360Buttons.A;
-                    _scpBus.Report((int)1, controller.GetReport(), _outputReport);
-                    break;
-                default:
-                    break;
-            }
+            KeyToXboxButton button = (KeyToXboxButton)keyboardToController.ListButtons.Select(x => x.Key == e.KeyData.Keyname);
+
+            controller.Buttons ^= button.x360Buttons;
+            _scpBus.Report((int)1, controller.GetReport(), _outputReport);
+        }
+
+        internal void StopHooking()
+        {
+            KeyboardWatcher.Stop();
+            MouseWatcher.Stop();
         }
     }
 }
