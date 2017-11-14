@@ -56,13 +56,31 @@
     <StartupObject>UWPHook.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EventHook, Version=1.4.39.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\EventHook.1.4.39\lib\net45\EventHook.dll</HintPath>
+    </Reference>
+    <Reference Include="Hardcodet.Wpf.TaskbarNotification, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.8\lib\net451\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
+    </Reference>
     <Reference Include="MaterialDesignColors, Version=1.1.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignColors.1.1.3\lib\net45\MaterialDesignColors.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MaterialDesignThemes.Wpf, Version=2.1.0.657, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MaterialDesignThemes.2.1.0.657\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=2.3.1.953, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.2.3.1.953\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
+    </Reference>
+    <Reference Include="ScpDriverInterface, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\ScpDriverInterface.dll</HintPath>
     </Reference>
     <Reference Include="SharpSteam">
       <HintPath>..\..\SharpSteam\SharpSteam\bin\Release\SharpSteam.dll</HintPath>
@@ -100,10 +118,14 @@
     <Compile Include="GamesWindow.xaml.cs">
       <DependentUpon>GamesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="EventsHook.cs" />
     <Compile Include="ScriptManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TrayIcon.xaml.cs">
+      <DependentUpon>TrayIcon.xaml</DependentUpon>
     </Compile>
     <Page Include="GamesWindow.xaml">
       <SubType>Designer</SubType>
@@ -115,6 +137,10 @@
     </Compile>
     <Compile Include="AppManager.cs" />
     <Page Include="SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TrayIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -183,6 +209,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\hook2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="References\ScpDriverInterface.dll" />
+    <Content Include="References\SharpSteam.dll" />
+    <Content Include="References\VDFParser.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

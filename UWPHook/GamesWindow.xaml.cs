@@ -36,7 +36,7 @@ namespace UWPHook
             }
         }
 
-        private void Launcher()
+        public void Launcher()
         {
             //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
             if (Properties.Settings.Default.StreamMode)
@@ -90,8 +90,10 @@ namespace UWPHook
 
                 //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
                 this.Close();
+                App.icon.Close();
             }
         }
+
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -271,6 +273,11 @@ namespace UWPHook
             AppEntry appEntry = o as AppEntry;
             //Return members whose Orders have not been filled
             return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            App.icon.Close();
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
