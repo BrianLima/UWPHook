@@ -49,10 +49,12 @@ namespace UWPHook
 
         private void KeyboardWatcher_OnKeyInput(object sender, KeyInputEventArgs e)
         {
-            KeyToXboxButton button = (KeyToXboxButton)keyboardToController.ListButtons.Select(x => x.Key == e.KeyData.Keyname);
-
-            controller.Buttons ^= button.x360Buttons;
-            _scpBus.Report((int)1, controller.GetReport(), _outputReport);
+            KeyToXboxButton button = keyboardToController.ListButtons.FirstOrDefault(x => x.Key == e.KeyData.Keyname);
+            if (button != null) //We do have a bind for this key
+            {
+                controller.Buttons ^= button.x360Buttons;
+                _scpBus.Report((int)1, controller.GetReport(), _outputReport);
+            }
         }
 
         internal void StopHooking()

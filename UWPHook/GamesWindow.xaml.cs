@@ -49,9 +49,12 @@ namespace UWPHook
                 this.WindowStyle = WindowStyle.None;
                 this.WindowState = WindowState.Maximized;
                 this.Title = "UWPHook: Streaming a game";
-                this.label.Content = "UWPHook is streaming your game, fasten your seatbelts.";
+                this.labelStatus.Content = "UWPHook is streaming your game, fasten your seatbelts.";
 
                 //The user is trying to Stream his game probably, so let's start to emulate his controller
+                //Steam's in-home streaming treats UWPHook with it's "Desktop mode" config, causing all types of
+                //Weird conflicts, every time a button on the remote computer's controller is pressed, the client 
+                //Receives a keyboard button instead. This should be a good approach
                 KeyboardToController Joystick = null;
 
                 if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json"))
@@ -64,15 +67,7 @@ namespace UWPHook
                 {
                     this.listJoystick = JsonConvert.DeserializeObject<List<KeyboardToController>>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json"));
                     //Try to load the config for this game
-                    foreach (var item in listJoystick)
-                    {
-                        if (item.Game == Environment.GetCommandLineArgs()[1])
-                        {
-                            Joystick = item;
-                            break;
-                        }
-                    }
-                    //Joystick = (KeyboardToController)(listJoystick.q(x => x.Game == "X"/*Environment.GetCommandLineArgs()[1]*/)[0]);
+                    Joystick = listJoystick.FirstOrDefault(x => x.Game == "X"/*Environment.GetCommandLineArgs()[1]*/);
                 }
 
                 var json = JsonConvert.SerializeObject(listJoystick);
@@ -254,7 +249,7 @@ namespace UWPHook
 
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
-            label.Content = "Installed Apps";
+            labelStatus.Content = Apps.Entries.Count + " Installed Apps";
         }
 
         private void Bwr_DoWork(object sender, DoWorkEventArgs e)
@@ -323,6 +318,12 @@ namespace UWPHook
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             App.icon.Close();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            JoystickSetup setup = new JoystickSetup();
+            setup.Show();
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
