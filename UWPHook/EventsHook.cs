@@ -15,6 +15,11 @@ namespace UWPHook
         private byte[] _outputReport = new byte[8];
         KeyboardToController keyboardToController;
 
+        public EventsHook(KeyboardToController _keyboardToController)
+        {
+            keyboardToController = _keyboardToController;
+        }
+
         public void StartHooking()
         {
             KeyboardWatcher.Start();
@@ -36,7 +41,6 @@ namespace UWPHook
 
                 throw;
             }
-
         }
 
         private void MouseWatcher_OnMouseInput(object sender, MouseEventArgs e)

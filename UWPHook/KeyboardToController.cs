@@ -4,7 +4,7 @@ using ScpDriverInterface;
 
 namespace UWPHook
 {
-    class KeyboardToController
+    public class KeyboardToController
     {
         private string _game;
 
@@ -23,7 +23,7 @@ namespace UWPHook
         }
     }
 
-    class KeyToXboxButton
+    public class KeyToXboxButton
     {
         private string _key;
 

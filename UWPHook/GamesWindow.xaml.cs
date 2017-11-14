@@ -1,4 +1,6 @@
-﻿using SharpSteam;
+﻿using Newtonsoft.Json;
+using ScpDriverInterface;
+using SharpSteam;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,6 +21,8 @@ namespace UWPHook
     {
         AppEntryModel Apps;
         BackgroundWorker bwrLoad, bwrSave;
+        EventsHook hook;
+        List<KeyboardToController> listJoystick;
 
         public GamesWindow()
         {
@@ -47,6 +51,41 @@ namespace UWPHook
                 this.Title = "UWPHook: Streaming a game";
                 this.label.Content = "UWPHook is streaming your game, fasten your seatbelts.";
 
+                //The user is trying to Stream his game probably, so let's start to emulate his controller
+                KeyboardToController Joystick = null;
+
+                if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json"))
+                {
+                    File.Create(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json");
+                    this.listJoystick = new List<KeyboardToController>();
+                    //TODO: Launch joystick setup for this game
+                }
+                else
+                {
+                    this.listJoystick = JsonConvert.DeserializeObject<List<KeyboardToController>>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json"));
+                    //Try to load the config for this game
+                    foreach (var item in listJoystick)
+                    {
+                        if (item.Game == Environment.GetCommandLineArgs()[1])
+                        {
+                            Joystick = item;
+                            break;
+                        }
+                    }
+                    //Joystick = (KeyboardToController)(listJoystick.q(x => x.Game == "X"/*Environment.GetCommandLineArgs()[1]*/)[0]);
+                }
+
+                var json = JsonConvert.SerializeObject(listJoystick);
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/Joysticks.json", json);
+
+
+                if (Joystick == null)
+                {
+                    //TODO: Launch joystick setup for this game
+                }
+
+                hook = new EventsHook(Joystick);
+                hook.StartHooking();
 
                 Thread.Sleep(10000);
             }
@@ -87,6 +126,11 @@ namespace UWPHook
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
                     ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
+                }
+
+                if (Properties.Settings.Default.StreamMode)
+                {
+                    hook.StopHooking();
                 }
 
                 //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
