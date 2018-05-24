@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using VDFParser;
 using VDFParser.Models;
@@ -19,6 +20,7 @@ namespace UWPHook
     {
         AppEntryModel Apps;
         BackgroundWorker bwrLoad, bwrSave;
+        Timer ticker;
 
         public GamesWindow()
         {
@@ -31,23 +33,31 @@ namespace UWPHook
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
                 {
-                    Launcher();
+                    LauncherAsync();
                 }
             }
         }
 
-        private void Launcher()
+        /// <summary>
+        /// We have to wait a little untill Steam catches up, otherwise it will stream a black screen
+        /// </summary>
+        /// <returns></returns>
+        async Task LaunchDelay()
         {
+            await Task.Delay(10000);
+        }
+
+        private async Task LauncherAsync()
+        {
+            FullScreenLauncher launcher = null;
             //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
             if (Properties.Settings.Default.StreamMode)
             {
-                this.Show();
-                this.WindowStyle = WindowStyle.None;
-                this.WindowState = WindowState.Maximized;
-                this.Title = "UWPHook: Streaming a game";
-                this.label.Content = "UWPHook is streaming your game, fasten your seatbelts.";
+                this.Hide();
+                launcher = new FullScreenLauncher();
+                launcher.Show();
 
-                Thread.Sleep(10000);
+                await LaunchDelay();
             }
             else
             {
@@ -86,6 +96,11 @@ namespace UWPHook
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
                     ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
+                }
+
+                if (launcher != null)
+                {
+                    launcher.Close();
                 }
 
                 //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 

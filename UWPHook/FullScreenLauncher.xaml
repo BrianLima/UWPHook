@@ -1,0 +1,43 @@
+﻿<Window x:Class="UWPHook.FullScreenLauncher"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:UWPHook"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.FontWeight="Medium"
+        TextElement.FontSize="14"
+        FontFamily="Segoe UI Light"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        WindowState="Maximized"
+        Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook2.ico">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="29*"/>
+            <RowDefinition Height="147*"/>
+            <RowDefinition Height="65.6"/>
+        </Grid.RowDefinitions>
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80" Margin="0,0,-0.4,0">
+            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+        </materialDesign:ColorZone>
+        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+        <ProgressBar
+		    IsIndeterminate="True"
+		    Style="{StaticResource MaterialDesignCircularProgressBar}"
+		    Value="50" Height="Auto" Width="Auto" Grid.Row="1" Margin="347,205.8,346.6,116"/>
+        <TextBlock x:Name="textLaunch" Margin="10,72.8,9.6,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" TextAlignment="Center" FontSize="24" Height="32"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,9,0,0" Grid.Row="2" TextWrapping="Wrap" Text="Made for you with &lt;3, code and coffee by Brian Lima @brianostorm, do you like my work? Support me by downloading my other projects or by paying me a coffee via paypal!" VerticalAlignment="Top" Width="633" Height="47" TextAlignment="Justify"/>
+        <materialDesign:Chip Content="Paypal donate"                                  
+                                 IconBackground="{DynamicResource PrimaryHueDarkBrush}"
+                                 IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
+                                 Margin="0,12,9.6,18.6" Click="Chip2_Click" HorizontalAlignment="Right" Height="Auto" Grid.Row="2" Width="136">
+            <materialDesign:Chip.Icon>
+                <materialDesign:PackIcon Kind="Coffee"></materialDesign:PackIcon>
+            </materialDesign:Chip.Icon>
+        </materialDesign:Chip>
+
+    </Grid>
+</Window>

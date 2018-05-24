@@ -19,7 +19,7 @@ namespace UWPHook.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -62,17 +62,19 @@ namespace UWPHook.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to $installedapps = get-AppxPackage
-        ///
+        ///$invalidNames = &apos;*ms-resource*&apos;, &apos;*DisplayName*&apos;
         ///$aumidList = @()
+        ///
         ///foreach ($app in $installedapps)
         ///{
-        ///    foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
-        ///    {
-        ///        $aumidList += $app.name + &quot;|&quot; + $app.packagefamilyname + &quot;!&quot; + $id + &quot;;&quot;
-        ///    }
-        ///}
+        ///    try {
+        ///            if(-not $app.IsFramework){
+        ///            foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
+        ///            {
+        ///                    $appx = Get-AppxPackageManifest $app;
+        ///                    $name = $appx.Package.Properties.DisplayName;
         ///
-        ///$aumidList.
+        ///                    if($name -like &apos;*DisplayName*&apos; -or $name  -like &apos;*ms-resourc [rest of string was truncated]&quot;;.
         /// </summary>
         public static string GetAUMIDScript {
             get {
