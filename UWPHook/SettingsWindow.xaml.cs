@@ -68,5 +68,10 @@ namespace UWPHook
         {
             System.Diagnostics.Process.Start("https://reddit.com/r/UWPHook/");
         }
+
+        private void update_button_Copy_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/BrianLima/OverFy/releases");
+        }
     }
 }

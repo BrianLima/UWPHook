@@ -18,16 +18,17 @@
             <ColumnDefinition Width="17*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="83*"/>
-            <RowDefinition Height="490*"/>
+            <RowDefinition Height="41*"/>
+            <RowDefinition Height="179*"/>
+            <RowDefinition Height="131.2"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2"/>
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2" Margin="0,0,-0.4,0"/>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Grid Margin="10" Grid.Row="1">
+        <Grid Margin="10,9.4,10.2,10.2" Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="93*"/>
-                <RowDefinition Height="49*"/>
-                <RowDefinition Height="325*"/>
+                <RowDefinition Height="93.6"/>
+                <RowDefinition Height="48.8"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="52*"/>
@@ -49,7 +50,7 @@
             <ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,17,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
             <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,10,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"/>
         </Grid>
-        <Grid Margin="10,10,10,0" Grid.Column="1" Grid.Row="1">
+        <Grid Margin="9.8,9.6,9.6,0.4" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="63*"/>
                 <ColumnDefinition Width="164*"/>
@@ -91,7 +92,12 @@
                 <Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
             <Image x:Name="image2" Height="150" VerticalAlignment="Top" Source="Resources/briano.png" Stretch="UniformToFill" Margin="8,32,0,0" HorizontalAlignment="Left" Width="150" Grid.Column="1"/>
-            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" Text="This project uses the MaterialDesignXAMLToolkit. Special thanks to /r/Forza and /r/Steam communities at Reddit." TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"/>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" Text="Special thanks to /r/Forza and /r/Steam communities at Reddit." TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"/>
+        </Grid>
+        <Grid Margin="10,9.8,10.2,0.4" Grid.Row="2">
+            <Image HorizontalAlignment="Left" Height="111" VerticalAlignment="Top" Width="111" Source="Resources/square.png"/>
+            <TextBlock Margin="116,0,0,0" TextWrapping="Wrap" Text="Checkout OverFy, my new app, it add Spotify's now playing status into Rivatuner/MSI Afterburner overlay, Free and Open Source!" VerticalAlignment="Top" Height="63" TextAlignment="Justify" HorizontalAlignment="Left" Width="341"/>
+            <Button x:Name="update_button_Copy" Click="update_button_Copy_Click" Content="Get OverFy!" Margin="206,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="162"/>
         </Grid>
     </Grid>
 </Window>
