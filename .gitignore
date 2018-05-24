@@ -263,3 +263,7 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Advanced Installer
+./Setup/UWPHook setup.exe
+./Setup/Setup-cache
