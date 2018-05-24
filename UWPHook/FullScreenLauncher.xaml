@@ -24,10 +24,12 @@
             <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
         </materialDesign:ColorZone>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <ProgressBar
-		    IsIndeterminate="True"
-		    Style="{StaticResource MaterialDesignCircularProgressBar}"
-		    Value="50" Height="Auto" Width="Auto" Grid.Row="1" Margin="347,205.8,346.6,116"/>
+        <Grid Margin="10,9.8,9.6,0" Grid.Row="1" Height="421" VerticalAlignment="Top">
+            <ProgressBar
+                IsIndeterminate="True"
+                Style="{StaticResource MaterialDesignCircularProgressBar}"
+                Value="50" Height="100" Width="100"/>
+        </Grid>
         <TextBlock x:Name="textLaunch" Margin="10,72.8,9.6,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" TextAlignment="Center" FontSize="24" Height="32"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,9,0,0" Grid.Row="2" TextWrapping="Wrap" Text="Made for you with &lt;3, code and coffee by Brian Lima @brianostorm, do you like my work? Support me by downloading my other projects or by paying me a coffee via paypal!" VerticalAlignment="Top" Width="633" Height="47" TextAlignment="Justify"/>
         <materialDesign:Chip Content="Paypal donate"                                  

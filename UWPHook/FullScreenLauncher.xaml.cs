@@ -44,7 +44,7 @@ namespace UWPHook
             }
             else if (n > 10 && n <= 20)
             {
-                return "Waiting Steam in-home Streamming to catch up";
+                return "Waiting Steam in-home Streaming to catch up";
             }
             else if (n > 20 && n <= 30)
             {

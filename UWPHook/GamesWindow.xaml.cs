@@ -20,7 +20,6 @@ namespace UWPHook
     {
         AppEntryModel Apps;
         BackgroundWorker bwrLoad, bwrSave;
-        Timer ticker;
 
         public GamesWindow()
         {
