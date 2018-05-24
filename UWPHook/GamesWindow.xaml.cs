@@ -248,15 +248,26 @@ namespace UWPHook
                 {
                     //Remove end lines from the String and split both values, I split the appname and the AUMID using |
                     //I hope no apps have that in their name. Ever.
-                    var valor = app.Replace("\r\n", "").Split('|');
-                    if (!String.IsNullOrWhiteSpace(valor[0]))
+                    var values = app.Replace("\r\n", "").Split('|');
+                    if (!String.IsNullOrWhiteSpace(values[0]))
                     {
                         //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
-                        string logosPath = Path.GetDirectoryName(valor[1]);
+                        string logosPath = Path.GetDirectoryName(values[1]);
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                         {
-                            Apps.Entries.Add(new AppEntry() { Name = valor[0], IconPath = logosPath, Aumid = valor[2], Selected = false });
+                            Apps.Entries.Add(new AppEntry() { Name = values[0], IconPath = logosPath, Aumid = values[2], Selected = false });
                         });
+                    }
+                    if (values.Length > 2)
+                    {
+                        if (values[2].Contains("Microsoft.SeaofThieves"))
+                        {
+                            values[2] = "Sea of Thieves";
+                        }
+                        else if (values[2].Contains("Microsoft.DeltaPC"))
+                        {
+                            values[2] = "Gears of War: Ultimate Edition";
+                        }
                     }
                 }
             }

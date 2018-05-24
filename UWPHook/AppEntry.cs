@@ -106,6 +106,19 @@ namespace UWPHook
             return result;
         }
 
+        public string isKnownApp()
+        {
+            if (_aumid.Contains("Microsoft.SeaofThieves"))
+            {
+                return "Sea of Thieves";
+            }
+            else if (_aumid.Contains("Microsoft.DeltaPC"))
+            {
+                return "Gears of War: Ultimate Edition";
+            }
+            return "Name not found, double click here to edit";
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

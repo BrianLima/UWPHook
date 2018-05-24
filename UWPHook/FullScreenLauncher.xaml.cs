@@ -29,6 +29,11 @@ namespace UWPHook
             pallet.SetLightDark(true);
         }
 
+        private void Chip2_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
+        }
+
         string GetLauncherText()
         {
             int n = DateTime.Now.Second;
