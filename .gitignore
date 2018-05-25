@@ -267,3 +267,4 @@ __pycache__/
 # Advanced Installer
 ./Setup/UWPHook setup.exe
 ./Setup/Setup-cache
+Setup/UWPHook.exe
