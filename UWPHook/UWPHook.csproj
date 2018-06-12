@@ -67,6 +67,10 @@
     <Reference Include="SharpSteam">
       <HintPath>..\..\SharpSteam\SharpSteam\bin\Release\SharpSteam.dll</HintPath>
     </Reference>
+    <Reference Include="Steamworks.NET, Version=11.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Downloads\Steamworks.NET-Standalone_11.0.0\Windows-x86\Steamworks.NET.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -192,6 +196,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\square.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Steamworks.NET.dll" />
+    <Content Include="Resources\steam_api64.dll" />
+    <Resource Include="Resources\steam_appid.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

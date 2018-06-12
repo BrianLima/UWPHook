@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Steamworks;
 
 namespace UWPHook
 {
@@ -117,6 +118,11 @@ namespace UWPHook
                 return "Gears of War: Ultimate Edition";
             }
             return "Name not found, double click here to edit";
+        }
+
+        public static string getAppId()
+        {
+            return SteamUtils.GetAppID().ToString();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

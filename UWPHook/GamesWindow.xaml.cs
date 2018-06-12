@@ -298,6 +298,11 @@ namespace UWPHook
             return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var a = AppEntry.getAppId();
+        }
+
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow window = new SettingsWindow();
