@@ -261,11 +261,11 @@ namespace UWPHook
                     {
                         if (values[2].Contains("Microsoft.SeaofThieves"))
                         {
-                            values[2] = "Sea of Thieves";
+                            values[0] = "Sea of Thieves";
                         }
                         else if (values[2].Contains("Microsoft.DeltaPC"))
                         {
-                            values[2] = "Gears of War: Ultimate Edition";
+                            values[0] = "Gears of War: Ultimate Edition";
                         }
                     }
                 }
