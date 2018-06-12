@@ -14,12 +14,6 @@
     <Name>Setup</Name>
     <RootNamespace>Setup</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'DefaultBuild' " />
-  <ItemGroup>
-    <Compile Include="Setup.aip">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
   <Import Condition="'$(AdvancedInstallerMSBuildTargets)' != ''" Project="$(AdvancedInstallerMSBuildTargets)\AdvInstExtTasks.Targets" />
   <Import Condition="'$(AdvancedInstallerMSBuildTargets)' == ''" Project="$(MSBuildExtensionsPath32)\Caphyon\Advanced Installer\AdvInstExtTasks.Targets" />
 </Project>
