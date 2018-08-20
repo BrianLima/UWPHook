@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="14.9" version="14.9" Modules="professional" RootPath="." Language="en" Id="{89341477-C755-493F-9327-DF5AFC42973F}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="14.9" version="15.2" Modules="professional" RootPath="." Language="en" Id="{89341477-C755-493F-9327-DF5AFC42973F}">
   <COMPONENT cid="caphyon.advinst.msicomp.ProjectOptionsComponent">
     <ROW Name="HiddenItems" Value="AppXProductDetailsComponent;AppXDependenciesComponent;AppXAppDetailsComponent;AppXVisualAssetsComponent;AppXCapabilitiesComponent;AppXAppDeclarationsComponent;AppXUriRulesComponent;MsiJavaComponent;MsiDriverPackagesComponent;UserAccountsComponent;ScheduledTasksComponent;SqlConnectionComponent;AutorunComponent;FirewallExceptionComponent;GameUxComponent;MsiDirectEditorComponent;SharePointSlnComponent;SilverlightSlnComponent;MultipleInstancesComponent;SccmComponent;ActSyncAppComponent"/>
   </COMPONENT>
@@ -14,7 +14,7 @@
     <ROW Property="AI_FrameBtnsColor" Value="metroblack" MsiKey="AI_FrameBtnsColor"/>
     <ROW Property="AI_FrameColor" Value="metroblack" MsiKey="AI_FrameColor"/>
     <ROW Property="AI_NO_BORDER_NORMAL" MsiKey="AI_NO_BORDER_NORMAL"/>
-    <ROW Property="AI_PRODUCTNAME_ARP" Value="UWPHook"/>
+    <ROW Property="AI_PRODUCTNAME_ARP" Value="UWPHok"/>
     <ROW Property="AI_ThemeStyle" Value="default" MsiKey="AI_ThemeStyle"/>
     <ROW Property="AI_ThemeStyleEx" Value="border" MsiKey="AI_ThemeStyleEx"/>
     <ROW Property="AI_UNINSTALLER" Value="msiexec.exe"/>
