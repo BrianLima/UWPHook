@@ -119,7 +119,7 @@ namespace UWPHook
         {
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
-            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps in it.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BwrSave_DoWork(object sender, DoWorkEventArgs e)
@@ -150,7 +150,7 @@ namespace UWPHook
                             //If it's a short VDF, let's just overwrite it
                             if (ex.GetType() != typeof(VDFTooShortException))
                             {
-                                throw new Exception("Error trying to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                                throw new Exception("Error: Program failed to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
                             }
                         }
 
@@ -184,13 +184,13 @@ namespace UWPHook
                             }
                             catch (Exception ex)
                             {
-                                throw new Exception("Error while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                                throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
             }
