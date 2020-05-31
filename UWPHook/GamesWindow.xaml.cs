@@ -169,7 +169,10 @@ namespace UWPHook
                                     IsHidden = 0,
                                     OpenVR = 0,
                                     ShortcutPath = "",
-                                    Tags = new string[0]
+                                    Tags = new string[0],
+                                    LaunchOptions = "",
+                                    AllowOverlay = 1,
+                                    LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                                 };
 
                                 //Resize this array so it fits the new entries
