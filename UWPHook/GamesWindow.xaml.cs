@@ -125,7 +125,7 @@ namespace UWPHook
         private void BwrSave_DoWork(object sender, DoWorkEventArgs e)
         {
             string steam_folder = SteamManager.GetSteamFolder();
-            if (!String.IsNullOrEmpty(steam_folder))
+            if (Directory.Exists(steam_folder))
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
@@ -182,6 +182,10 @@ namespace UWPHook
 
                             try
                             {
+                                if (!Directory.Exists(user + @"\\config\\"))
+                                {
+                                    Directory.CreateDirectory(user + @"\\config\\");
+                                }
                                 //Write the file with all the shortcuts
                                 File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
                             }
