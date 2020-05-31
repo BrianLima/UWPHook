@@ -68,7 +68,7 @@
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
                                  Margin="8,3,0,4" Click="Chip1_Click" HorizontalAlignment="Stretch" Height="Auto" Grid.Row="1" Grid.Column="1">
                 <materialDesign:Chip.Icon>
-                    <materialDesign:PackIcon Kind="GithubCircle"></materialDesign:PackIcon>
+                    <materialDesign:PackIcon Kind="MicrosoftGithub"></materialDesign:PackIcon>
                 </materialDesign:Chip.Icon>
             </materialDesign:Chip>
             <materialDesign:Chip Content="Paypal donate"                                  
