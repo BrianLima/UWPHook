@@ -1,4 +1,5 @@
-﻿using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignColors;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,14 @@ namespace UWPHook
             InitializeComponent();
             textLaunch.Text = GetLauncherText();
             pallet = new PaletteHelper();
-            pallet.SetLightDark(true);
+
+            BaseTheme darkTheme = BaseTheme.Dark;
+
+            var theme = Theme.Create(darkTheme.GetBaseTheme(),
+            SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.DeepPurple],
+            SwatchHelper.Lookup[(MaterialDesignColor)SecondaryColor.Lime]);
+
+            pallet.SetTheme(theme);
         }
 
         private void Chip2_Click(object sender, RoutedEventArgs e)
