@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.27703.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UWPHook", "UWPHook\UWPHook.csproj", "{AFE09BCF-28A4-48EE-876B-FEF080D04D5F}"
 EndProject
-Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Setup", "Setup\Setup.aiproj", "{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,12 +18,6 @@ Global
 		{AFE09BCF-28A4-48EE-876B-FEF080D04D5F}.DefaultBuild|Any CPU.Build.0 = Debug|Any CPU
 		{AFE09BCF-28A4-48EE-876B-FEF080D04D5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFE09BCF-28A4-48EE-876B-FEF080D04D5F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.Debug|Any CPU.ActiveCfg = DefaultBuild
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.Debug|Any CPU.Build.0 = DefaultBuild
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.DefaultBuild|Any CPU.ActiveCfg = DefaultBuild
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.DefaultBuild|Any CPU.Build.0 = DefaultBuild
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.Release|Any CPU.ActiveCfg = DefaultBuild
-		{F63C6051-9812-47BE-87F2-ECA8F2E89EC0}.Release|Any CPU.Build.0 = DefaultBuild
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
