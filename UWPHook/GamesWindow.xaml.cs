@@ -96,7 +96,7 @@ namespace UWPHook
             {
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
-                    ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
+                    ScriptManager.RunScript("Set-WinUILanguageOverride " + currentLanguage);
                 }
 
                 //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
