@@ -148,8 +148,7 @@ namespace UWPHook
 
         private async Task DownloadGridImages(string userId, string appName, string appTarget)
         {
-            // Generate app id for grid images
-            SteamGridDbApi api = new SteamGridDbApi("0973373b2cec3120ce673d06747d506c");
+            SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
             string gridDirectory = userId + @"\\config\\grid\\";
 
             var games = await api.SearchGame(appName);
@@ -267,8 +266,10 @@ namespace UWPHook
                                 Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                 shortcuts[shortcuts.Length - 1] = newApp;
 
-                                // TODO: Check if api key setting exist
-                                await DownloadGridImages(user, app.Name, appTarget);
+                                if (!String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey))
+                                {
+                                    await DownloadGridImages(user, app.Name, appTarget);
+                                }
                             }
 
                             try

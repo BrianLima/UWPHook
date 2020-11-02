@@ -26,9 +26,12 @@
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
         <Grid Margin="10,9.4,10.2,10.2" Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="93.6"/>
-                <RowDefinition Height="48.8"/>
-                <RowDefinition/>
+                <RowDefinition Height="72"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="41*"/>
+                <RowDefinition Height="72*"/>
+                <RowDefinition Height="56*"/>
+                <RowDefinition Height="51*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="52*"/>
@@ -39,16 +42,19 @@
             <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4">
                 <Label  Content="Settings" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
-            <ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="4,56,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" />
-            <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label1" Content="Set system language when launching an app*" Margin="5,48,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2"/>
-            <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,48,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93"/>
-            <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" Margin="0,42,10,0" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="2"/>
-            <Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,0,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
-            <ComboBox x:Name="seconds_comboBox" Margin="0,10,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
-            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Grid.Column="1" Margin="0,0,5,10" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162"/>
-            <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Margin="8,0,0,10" Grid.Row="2" VerticalAlignment="Bottom" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="163"/>
-            <ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,17,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
-            <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,10,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"/>
+            <ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,42,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" RenderTransformOrigin="0.304,0.444" />
+            <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label1" Content="Set system language when launching an app*" Margin="5,34,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,34,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93"/>
+            <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" Margin="0,14.333,10,0" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="4"/>
+            <Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,7,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
+            <ComboBox x:Name="seconds_comboBox" Margin="0,7,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
+            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,8,9" Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162" Grid.Column="1"/>
+            <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Margin="0,0,0,9" Grid.Row="5" VerticalAlignment="Bottom" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="163"/>
+            <ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,12,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
+            <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,5,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"/>
+            <Label ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork." x:Name="label1_Copy1" Content="SteamGridDB API key" Margin="5,6,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <TextBox x:Name="steamgriddb_api_key" Grid.Column="2" Height="29" Margin="0,6,10,0" Grid.Row="3" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+            <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="5,40,0,0" Grid.Row="3" TextWrapping="Wrap" Text="To get an api key, visit https://www.steamgriddb.com and create an account. You'll be able to generate a key in your account preferences." VerticalAlignment="Top" Grid.ColumnSpan="3" Height="32" Width="399" FontSize="11"/>
         </Grid>
         <Grid Margin="9.8,9.6,9.6,0.4" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
