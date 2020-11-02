@@ -45,7 +45,22 @@ namespace UWPHook.SteamGridDb
             string nsfw = "any", 
             string humor = "any") 
         {
-            string path = $"grids/game/{gameId}";
+            string path = $"grids/game/{gameId}?";
+
+            if (!String.IsNullOrEmpty(dimensions))
+                path += $"dimensions={dimensions}&";
+
+            if (!String.IsNullOrEmpty(types))
+                path += $"types={types}&";
+
+            if (!String.IsNullOrEmpty(styles))
+                path += $"styles={styles}&";
+
+            if (!String.IsNullOrEmpty(nsfw))
+                path += $"nsfw={nsfw}&";
+
+            if (!String.IsNullOrEmpty(humor))
+                path += $"humor={humor}&";
 
             GridResponse[] grids = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
@@ -67,7 +82,22 @@ namespace UWPHook.SteamGridDb
             string nsfw = "any", 
             string humor = "any")
         {
-            string path = $"heroes/game/{gameId}";
+            string path = $"heroes/game/{gameId}?";
+
+            if (!String.IsNullOrEmpty(dimensions))
+                path += $"dimensions={dimensions}&";
+
+            if (!String.IsNullOrEmpty(types))
+                path += $"types={types}&";
+
+            if (!String.IsNullOrEmpty(styles))
+                path += $"styles={styles}&";
+
+            if (!String.IsNullOrEmpty(nsfw))
+                path += $"nsfw={nsfw}&";
+
+            if (!String.IsNullOrEmpty(humor))
+                path += $"humor={humor}&";
 
             HeroResponse[] heroes = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
@@ -88,7 +118,19 @@ namespace UWPHook.SteamGridDb
             string nsfw = "any", 
             string humor = "any")
         {
-            string path = $"logos/game/{gameId}";
+            string path = $"logos/game/{gameId}?";
+
+            if (!String.IsNullOrEmpty(types))
+                path += $"types={types}&";
+
+            if (!String.IsNullOrEmpty(styles))
+                path += $"styles={styles}&";
+
+            if (!String.IsNullOrEmpty(nsfw))
+                path += $"nsfw={nsfw}&";
+
+            if (!String.IsNullOrEmpty(humor))
+                path += $"humor={humor}&";
 
             LogoResponse[] logos = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
