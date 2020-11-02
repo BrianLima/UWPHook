@@ -180,25 +180,25 @@ namespace UWPHook
                 var heroes = await gameHeroes;
                 var logos = await gameLogos;
 
-                if (gridsHorizontal != null)
+                if (gridsHorizontal != null && gridsHorizontal.Length > 0)
                 {
                     var grid = gridsHorizontal[0];
                     SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png);
                 }
 
-                if (gridsVertical != null)
+                if (gridsVertical != null && gridsVertical.Length > 0)
                 {
                     var grid = gridsVertical[0];
                     SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
                 }
 
-                if (heroes != null)
+                if (heroes != null && heroes.Length > 0)
                 {
                     var hero = heroes[0];
                     SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png);
                 }
 
-                if (logos != null)
+                if (logos != null && logos.Length > 0)
                 {
                     var logo = logos[0];
                     SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png);
