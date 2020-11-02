@@ -2,12 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
 
@@ -96,7 +101,7 @@ namespace UWPHook
             {
                 if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
                 {
-                    ScriptManager.RunScript("Set - WinUILanguageOverride " + currentLanguage);
+                    ScriptManager.RunScript("Set-WinUILanguageOverride " + currentLanguage);
                 }
 
                 //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
@@ -104,25 +109,97 @@ namespace UWPHook
             }
         }
 
-        private void ExportButton_Click(object sender, RoutedEventArgs e)
+        private UInt64 GenerateSteamGridAppId(string appName, string appTarget)
         {
-            bwrSave = new BackgroundWorker();
-            bwrSave.DoWork += BwrSave_DoWork;
-            bwrSave.RunWorkerCompleted += BwrSave_RunWorkerCompleted;
+            byte[] nameTargetBytes = Encoding.UTF8.GetBytes(appTarget + appName + "");
+            UInt64 crc = new Crc32().ComputeChecksum(nameTargetBytes);
+            UInt64 gameId = crc | 0x80000000;
+
+            return gameId;
+        }
+
+        private async void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            bwrSave.RunWorkerAsync();
-        }
+            await ExportGames();
 
-        private void BwrSave_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
             MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void BwrSave_DoWork(object sender, DoWorkEventArgs e)
+        private void SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
+        {
+            WebClient client = new WebClient();
+            Stream stream = client.OpenRead(imageUrl);
+            Bitmap bitmap; bitmap = new Bitmap(stream);
+
+            if (bitmap != null)
+            {
+                bitmap.Save(destinationFilename, format);
+            }
+
+            stream.Flush();
+            stream.Close();
+            client.Dispose();
+        }
+
+        private async Task DownloadGridImages(string userId, string appName, string appTarget)
+        {
+            // Generate app id for grid images
+            SteamGridDbApi api = new SteamGridDbApi("0973373b2cec3120ce673d06747d506c");
+            string gridDirectory = userId + @"\\config\\grid\\";
+
+            var games = await api.SearchGame(appName);
+
+            if (games != null)
+            {
+                var game = games[0];
+                UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
+
+                if (!Directory.Exists(gridDirectory))
+                {
+                    Directory.CreateDirectory(gridDirectory);
+                }
+
+                var gameGrids = api.GetGameGrids(game.Id, "600x900", "static");
+                var gameHeroes = api.GetGameHeroes(game.Id, "static");
+                var gameLogos = api.GetGameLogos(game.Id, "static");
+
+                await Task.WhenAll(
+                    gameGrids,
+                    gameHeroes,
+                    gameLogos
+                );
+
+                var grids = await gameGrids;
+                var heroes = await gameHeroes;
+                var logos = await gameLogos;
+
+                if (grids != null)
+                {
+                    var grid = grids[0];
+                    SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
+                }
+
+                if (heroes != null)
+                {
+                    var hero = heroes[0];
+                    SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png);
+                }
+
+                if (logos != null)
+                {
+                    var logo = logos[0];
+                    SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png);
+                }
+
+            }
+        }
+
+        private async Task ExportGames()
         {
             string steam_folder = SteamManager.GetSteamFolder();
             if (Directory.Exists(steam_folder))
@@ -158,10 +235,12 @@ namespace UWPHook
                         {
                             foreach (var app in selected_apps)
                             {
+                                string appTarget = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid;
+
                                 VDFEntry newApp = new VDFEntry()
                                 {
                                     AppName = app.Name,
-                                    Exe = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid,
+                                    Exe = appTarget,
                                     StartDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                                     AllowDesktopConfig = 1,
                                     Icon = app.Icon,
@@ -178,6 +257,9 @@ namespace UWPHook
                                 //Resize this array so it fits the new entries
                                 Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                 shortcuts[shortcuts.Length - 1] = newApp;
+
+                                // TODO: Check if api key setting exist
+                                await DownloadGridImages(user, app.Name, appTarget);
                             }
 
                             try
