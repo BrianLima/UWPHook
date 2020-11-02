@@ -164,23 +164,32 @@ namespace UWPHook
                     Directory.CreateDirectory(gridDirectory);
                 }
 
-                var gameGrids = api.GetGameGrids(game.Id, "600x900", "static");
+                var gameGridsVertical = api.GetGameGrids(game.Id, "600x900", "static");
+                var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215", "static");
                 var gameHeroes = api.GetGameHeroes(game.Id, "static");
                 var gameLogos = api.GetGameLogos(game.Id, "static");
 
                 await Task.WhenAll(
-                    gameGrids,
+                    gameGridsVertical,
+                    gameGridsHorizontal,
                     gameHeroes,
                     gameLogos
                 );
 
-                var grids = await gameGrids;
+                var gridsVertical = await gameGridsVertical;
+                var gridsHorizontal = await gameGridsHorizontal;
                 var heroes = await gameHeroes;
                 var logos = await gameLogos;
 
-                if (grids != null)
+                if (gridsHorizontal != null)
                 {
-                    var grid = grids[0];
+                    var grid = gridsHorizontal[0];
+                    SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png);
+                }
+
+                if (gridsVertical != null)
+                {
+                    var grid = gridsVertical[0];
                     SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
                 }
 
