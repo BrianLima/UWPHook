@@ -92,9 +92,9 @@
                 <Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
             <Image x:Name="image2" Height="150" VerticalAlignment="Top" Source="Resources/briano.png" Stretch="UniformToFill" Margin="8,32,0,0" HorizontalAlignment="Left" Width="150" Grid.Column="1"/>
-            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" Text="Special thanks to /r/Forza and /r/Steam communities at Reddit." TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"/>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"><Run Text="Special thanks to /r/Forza and /r/Steam communities at Reddit"/><Run Text=", and to all the "/><Hyperlink NavigateUri="https://github.com/BrianLima/UWPHook/graphs/contributors"> contributors </Hyperlink><Run Text=" who have dealt with my bad code"/><Run Text="."/><Run Text=" "/><Run Text=":)"/></TextBlock>
         </Grid>
-        <Grid Margin="10,9.8,10.2,0.4" Grid.Row="2">
+        <Grid Margin="10,9.8,10.2,0.4" Grid.Row="2" Visibility="Hidden">
             <Image HorizontalAlignment="Left" Height="111" VerticalAlignment="Top" Width="111" Source="Resources/square.png"/>
             <TextBlock Margin="116,0,0,0" TextWrapping="Wrap" Text="Checkout OverFy, my new app, it add Spotify's now playing status into Rivatuner/MSI Afterburner overlay, Free and Open Source!" VerticalAlignment="Top" Height="63" TextAlignment="Justify" HorizontalAlignment="Left" Width="341"/>
             <Button x:Name="update_button_Copy" Click="update_button_Copy_Click" Content="Get OverFy!" Margin="206,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="162"/>
