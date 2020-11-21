@@ -130,20 +130,23 @@ namespace UWPHook
             MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
+        private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
         {
-            WebClient client = new WebClient();
-            Stream stream = client.OpenRead(imageUrl);
-            Bitmap bitmap; bitmap = new Bitmap(stream);
-
-            if (bitmap != null)
+            await Task.Run(() =>
             {
-                bitmap.Save(destinationFilename, format);
-            }
+                WebClient client = new WebClient();
+                Stream stream = client.OpenRead(imageUrl);
+                Bitmap bitmap; bitmap = new Bitmap(stream);
 
-            stream.Flush();
-            stream.Close();
-            client.Dispose();
+                if (bitmap != null)
+                {
+                    bitmap.Save(destinationFilename, format);
+                }
+
+                stream.Flush();
+                stream.Close();
+                client.Dispose();
+            });            
         }
 
         private async Task DownloadGridImages(string userId, string appName, string appTarget)
@@ -183,25 +186,25 @@ namespace UWPHook
                 if (gridsHorizontal != null && gridsHorizontal.Length > 0)
                 {
                     var grid = gridsHorizontal[0];
-                    SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png);
+                    await SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png);
                 }
 
                 if (gridsVertical != null && gridsVertical.Length > 0)
                 {
                     var grid = gridsVertical[0];
-                    SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
+                    await SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
                 }
 
                 if (heroes != null && heroes.Length > 0)
                 {
                     var hero = heroes[0];
-                    SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png);
+                    await SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png);
                 }
 
                 if (logos != null && logos.Length > 0)
                 {
                     var logo = logos[0];
-                    SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png);
+                    await SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png);
                 }
 
             }
