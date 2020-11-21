@@ -183,29 +183,33 @@ namespace UWPHook
                 var heroes = await gameHeroes;
                 var logos = await gameLogos;
 
+                List<Task> saveImagesTasks = new List<Task>();
+
                 if (gridsHorizontal != null && gridsHorizontal.Length > 0)
                 {
                     var grid = gridsHorizontal[0];
-                    await SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png);
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png));
                 }
 
                 if (gridsVertical != null && gridsVertical.Length > 0)
                 {
                     var grid = gridsVertical[0];
-                    await SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png);
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png));
                 }
 
                 if (heroes != null && heroes.Length > 0)
                 {
                     var hero = heroes[0];
-                    await SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png);
+                    saveImagesTasks.Add(SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png));
                 }
 
                 if (logos != null && logos.Length > 0)
                 {
                     var logo = logos[0];
-                    await SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png);
+                    saveImagesTasks.Add(SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png));
                 }
+
+                await Task.WhenAll(saveImagesTasks);
 
             }
         }
@@ -244,6 +248,9 @@ namespace UWPHook
 
                         if (shortcuts != null)
                         {
+                            List<Task> gridImagesDownloadTasks = new List<Task>();
+                            bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
+
                             foreach (var app in selected_apps)
                             {
                                 string appTarget = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @""" " + app.Aumid;
@@ -269,9 +276,9 @@ namespace UWPHook
                                 Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                 shortcuts[shortcuts.Length - 1] = newApp;
 
-                                if (!String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey))
+                                if (downloadGridImages)
                                 {
-                                    await DownloadGridImages(user, app.Name, appTarget);
+                                    gridImagesDownloadTasks.Add(DownloadGridImages(user, app.Name, appTarget));
                                 }
                             }
 
@@ -283,6 +290,11 @@ namespace UWPHook
                                 }
                                 //Write the file with all the shortcuts
                                 File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+
+                                if (gridImagesDownloadTasks.Count > 0)
+                                {
+                                    await Task.WhenAll(gridImagesDownloadTasks);
+                                }
                             }
                             catch (Exception ex)
                             {
