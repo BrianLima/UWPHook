@@ -2,12 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
 
@@ -104,25 +109,112 @@ namespace UWPHook
             }
         }
 
-        private void ExportButton_Click(object sender, RoutedEventArgs e)
+        private UInt64 GenerateSteamGridAppId(string appName, string appTarget)
         {
-            bwrSave = new BackgroundWorker();
-            bwrSave.DoWork += BwrSave_DoWork;
-            bwrSave.RunWorkerCompleted += BwrSave_RunWorkerCompleted;
+            byte[] nameTargetBytes = Encoding.UTF8.GetBytes(appTarget + appName + "");
+            UInt64 crc = new Crc32().ComputeChecksum(nameTargetBytes);
+            UInt64 gameId = crc | 0x80000000;
+
+            return gameId;
+        }
+
+        private async void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            bwrSave.RunWorkerAsync();
-        }
+            await ExportGames();
 
-        private void BwrSave_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
             MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void BwrSave_DoWork(object sender, DoWorkEventArgs e)
+        private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
+        {
+            await Task.Run(() =>
+            {
+                WebClient client = new WebClient();
+                Stream stream = client.OpenRead(imageUrl);
+                Bitmap bitmap; bitmap = new Bitmap(stream);
+
+                if (bitmap != null)
+                {
+                    bitmap.Save(destinationFilename, format);
+                }
+
+                stream.Flush();
+                stream.Close();
+                client.Dispose();
+            });            
+        }
+
+        private async Task DownloadGridImages(string userId, string appName, string appTarget)
+        {
+            SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
+            string gridDirectory = userId + @"\\config\\grid\\";
+
+            var games = await api.SearchGame(appName);
+
+            if (games != null)
+            {
+                var game = games[0];
+                UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
+
+                if (!Directory.Exists(gridDirectory))
+                {
+                    Directory.CreateDirectory(gridDirectory);
+                }
+
+                var gameGridsVertical = api.GetGameGrids(game.Id, "600x900", "static");
+                var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215", "static");
+                var gameHeroes = api.GetGameHeroes(game.Id, "static");
+                var gameLogos = api.GetGameLogos(game.Id, "static");
+
+                await Task.WhenAll(
+                    gameGridsVertical,
+                    gameGridsHorizontal,
+                    gameHeroes,
+                    gameLogos
+                );
+
+                var gridsVertical = await gameGridsVertical;
+                var gridsHorizontal = await gameGridsHorizontal;
+                var heroes = await gameHeroes;
+                var logos = await gameLogos;
+
+                List<Task> saveImagesTasks = new List<Task>();
+
+                if (gridsHorizontal != null && gridsHorizontal.Length > 0)
+                {
+                    var grid = gridsHorizontal[0];
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png));
+                }
+
+                if (gridsVertical != null && gridsVertical.Length > 0)
+                {
+                    var grid = gridsVertical[0];
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png));
+                }
+
+                if (heroes != null && heroes.Length > 0)
+                {
+                    var hero = heroes[0];
+                    saveImagesTasks.Add(SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png));
+                }
+
+                if (logos != null && logos.Length > 0)
+                {
+                    var logo = logos[0];
+                    saveImagesTasks.Add(SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png));
+                }
+
+                await Task.WhenAll(saveImagesTasks);
+
+            }
+        }
+
+        private async Task ExportGames()
         {
             string steam_folder = SteamManager.GetSteamFolder();
             if (Directory.Exists(steam_folder))
@@ -158,6 +250,9 @@ namespace UWPHook
                         {
                             var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
                             var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                            List<Task> gridImagesDownloadTasks = new List<Task>();
+                            bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
+
                             foreach (var app in selected_apps)
                             {
                                 VDFEntry newApp = new VDFEntry()
@@ -182,6 +277,11 @@ namespace UWPHook
                                 //Resize this array so it fits the new entries
                                 Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                 shortcuts[shortcuts.Length - 1] = newApp;
+
+                                if (downloadGridImages)
+                                {
+                                    gridImagesDownloadTasks.Add(DownloadGridImages(user, app.Name, exePath));
+                                }
                             }
 
                             try
@@ -192,6 +292,11 @@ namespace UWPHook
                                 }
                                 //Write the file with all the shortcuts
                                 File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+
+                                if (gridImagesDownloadTasks.Count > 0)
+                                {
+                                    await Task.WhenAll(gridImagesDownloadTasks);
+                                }
                             }
                             catch (Exception ex)
                             {
