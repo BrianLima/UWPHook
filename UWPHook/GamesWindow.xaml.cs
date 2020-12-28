@@ -246,13 +246,21 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
+                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
+                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
+                bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
 
-                //To make things faster, decide icons before looping users
+                //To make things faster, decide icons and download grid images before looping users
                 foreach (var app in selected_apps)
                 {
                     app.Icon = app.widestSquareIcon();
+
+                    if (downloadGridImages)
+                    {
+                        gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
+                    }
                 }
 
                 foreach (var user in users)
@@ -275,19 +283,9 @@ namespace UWPHook
 
                         if (shortcuts != null)
                         {
-                            var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
-                            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
                             foreach (var app in selected_apps)
                             {
-                                /* 
-                                 * We download the images only if there's an API key set and the amount of tasks already triggered is less than the amount of games selected.
-                                 * Since the selected games will be imported to all steam users on the computer, we download the images for only one user, and later copy 
-                                 * them to the others. If the amount o tasks triggered match the amount of selected games, we can assume that's all the images we'll need.
-                                 */
-                                bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey)
-                                    && gridImagesDownloadTasks.Count < selected_apps.Count();
-
                                 VDFEntry newApp = new VDFEntry()
                                 {
                                     AppName = app.Name,
@@ -310,11 +308,6 @@ namespace UWPHook
                                 //Resize this array so it fits the new entries
                                 Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                 shortcuts[shortcuts.Length - 1] = newApp;
-
-                                if (downloadGridImages)
-                                {
-                                    gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
-                                }
                             }
 
                             try
