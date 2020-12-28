@@ -1,4 +1,5 @@
-﻿using SharpSteam;
+﻿using Force.Crc32;
+using SharpSteam;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -112,7 +113,7 @@ namespace UWPHook
         private UInt64 GenerateSteamGridAppId(string appName, string appTarget)
         {
             byte[] nameTargetBytes = Encoding.UTF8.GetBytes(appTarget + appName + "");
-            UInt64 crc = new Crc32().ComputeChecksum(nameTargetBytes);
+            UInt64 crc = Crc32Algorithm.Compute(nameTargetBytes);
             UInt64 gameId = crc | 0x80000000;
 
             return gameId;
