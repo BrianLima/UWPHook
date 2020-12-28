@@ -106,7 +106,6 @@
     </ApplicationDefinition>
     <Compile Include="AppEntry.cs" />
     <Compile Include="AppEntryModel.cs" />
-    <Compile Include="Crc32.cs" />
     <Compile Include="FullScreenLauncher.xaml.cs">
       <DependentUpon>FullScreenLauncher.xaml</DependentUpon>
     </Compile>

@@ -150,10 +150,34 @@ namespace UWPHook
             });            
         }
 
-        private async Task DownloadGridImages(string userId, string appName, string appTarget)
+        private void CopyTempGridImagesToSteamUser(string user)
+        {            
+            string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+            string userGridDirectory = user + "\\config\\grid\\";
+            string[] images = Directory.GetFiles(tmpGridDirectory);
+
+            if (!Directory.Exists(userGridDirectory))
+            {
+                Directory.CreateDirectory(userGridDirectory);
+            }
+
+            foreach (string image in images)
+            {
+                string destFile = userGridDirectory + Path.GetFileName(image);
+                File.Copy(image, destFile, true);
+            }
+        }
+
+        private void RemoveTempGridImages()
+        {
+            string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+            Directory.Delete(tmpGridDirectory, true);
+        }
+
+        private async Task DownloadTempGridImages(string appName, string appTarget)
         {
             SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
-            string gridDirectory = userId + @"\\config\\grid\\";
+            string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
 
             var games = await api.SearchGame(appName);
 
@@ -162,9 +186,9 @@ namespace UWPHook
                 var game = games[0];
                 UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
 
-                if (!Directory.Exists(gridDirectory))
+                if (!Directory.Exists(tmpGridDirectory))
                 {
-                    Directory.CreateDirectory(gridDirectory);
+                    Directory.CreateDirectory(tmpGridDirectory);
                 }
 
                 var gameGridsVertical = api.GetGameGrids(game.Id, "600x900", "static");
@@ -189,25 +213,25 @@ namespace UWPHook
                 if (gridsHorizontal != null && gridsHorizontal.Length > 0)
                 {
                     var grid = gridsHorizontal[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}.png", ImageFormat.Png));
                 }
 
                 if (gridsVertical != null && gridsVertical.Length > 0)
                 {
                     var grid = gridsVertical[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{gridDirectory}\\{gameId}p.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}p.png", ImageFormat.Png));
                 }
 
                 if (heroes != null && heroes.Length > 0)
                 {
                     var hero = heroes[0];
-                    saveImagesTasks.Add(SaveImage(hero.Url, $"{gridDirectory}\\{gameId}_hero.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(hero.Url, $"{tmpGridDirectory}\\{gameId}_hero.png", ImageFormat.Png));
                 }
 
                 if (logos != null && logos.Length > 0)
                 {
                     var logo = logos[0];
-                    saveImagesTasks.Add(SaveImage(logo.Url, $"{gridDirectory}\\{gameId}_logo.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(logo.Url, $"{tmpGridDirectory}\\{gameId}_logo.png", ImageFormat.Png));
                 }
 
                 await Task.WhenAll(saveImagesTasks);
@@ -222,6 +246,8 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
+
+                List<Task> gridImagesDownloadTasks = new List<Task>();
 
                 //To make things faster, decide icons before looping users
                 foreach (var app in selected_apps)
@@ -251,11 +277,17 @@ namespace UWPHook
                         {
                             var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
                             var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                            List<Task> gridImagesDownloadTasks = new List<Task>();
-                            bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
 
                             foreach (var app in selected_apps)
                             {
+                                /* 
+                                 * We download the images only if there's an API key set and the amount of tasks already triggered is less than the amount of games selected.
+                                 * Since the selected games will be imported to all steam users on the computer, we download the images for only one user, and later copy 
+                                 * them to the others. If the amount o tasks triggered match the amount of selected games, we can assume that's all the images we'll need.
+                                 */
+                                bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey)
+                                    && gridImagesDownloadTasks.Count < selected_apps.Count();
+
                                 VDFEntry newApp = new VDFEntry()
                                 {
                                     AppName = app.Name,
@@ -281,7 +313,7 @@ namespace UWPHook
 
                                 if (downloadGridImages)
                                 {
-                                    gridImagesDownloadTasks.Add(DownloadGridImages(user, app.Name, exePath));
+                                    gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
                                 }
                             }
 
@@ -293,11 +325,6 @@ namespace UWPHook
                                 }
                                 //Write the file with all the shortcuts
                                 File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
-
-                                if (gridImagesDownloadTasks.Count > 0)
-                                {
-                                    await Task.WhenAll(gridImagesDownloadTasks);
-                                }
                             }
                             catch (Exception ex)
                             {
@@ -309,6 +336,21 @@ namespace UWPHook
                     {
                         MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
+                }
+
+                if (gridImagesDownloadTasks.Count > 0)
+                {
+                    await Task.WhenAll(gridImagesDownloadTasks);
+
+                    await Task.Run(() =>
+                    {
+                        foreach (var user in users)
+                        {
+                            CopyTempGridImagesToSteamUser(user);
+                        }
+
+                        RemoveTempGridImages();
+                    });
                 }
             }
         }
