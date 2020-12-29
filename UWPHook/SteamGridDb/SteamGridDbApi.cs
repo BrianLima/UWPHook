@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
+using UWPHook.Properties;
 
 namespace UWPHook.SteamGridDb
 {
@@ -13,14 +11,25 @@ namespace UWPHook.SteamGridDb
         private const string BASE_URL = "https://www.steamgriddb.com/api/v2/";
 
         private HttpClient httpClient;
+        private Settings settings;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="apiKey"> An SteamGridDB api key retrieved from https://www.steamgriddb.com/profile/preferences </param>
         public SteamGridDbApi(string apiKey)
         {
+            settings = Settings.Default;
             httpClient = new HttpClient();
             httpClient.BaseAddress = new Uri(BASE_URL);
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         }
 
+        /// <summary>
+        /// Gets a list of 
+        /// </summary>
+        /// <param name="gameName" type="String">Name of the game</param>
+        /// <returns>Array of games corresponding to the provided name</returns>
         public async Task<GameResponse[]> SearchGame(string gameName)
         {
             string path = $"search/autocomplete/{gameName}";
@@ -28,7 +37,7 @@ namespace UWPHook.SteamGridDb
             GameResponse[] games = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
 
-            if(response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
                 var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<GameResponse>>();
                 games = parsedResponse.Data;
@@ -37,111 +46,76 @@ namespace UWPHook.SteamGridDb
             return games;
         }
 
-        public async Task<GridResponse[]> GetGameGrids(
-            int gameId,  
-            string dimensions = null, 
-            string types = null, 
-            string styles = null,
-            string nsfw = "any", 
-            string humor = "any") 
+        /// <summary>
+        /// Method responsible for transforming user selected settings
+        /// into a suitable parameter list for SteamGridDB requests
+        /// </summary>
+        /// <param name="dimensions">Comma separated list of resolutions, see https://www.steamgriddb.com/api/v2#tag/GRIDS</param>
+        /// <returns>A String with the formatted parameters</returns>
+        public string BuildParameters(string dimensions)
         {
-            string path = $"grids/game/{gameId}?";
+            String result = String.Empty;
+            var style = settings.SteamGridDB_Style[settings.SelectedSteamGridDB_Style];
+            var type = settings.SteamGridDB_Type[settings.SelectedSteamGridDB_Type];
+            var nsfw = settings.SteamGridDB_nfsw[settings.SelectedSteamGridDB_nfsw];
+            var humor = settings.SteamGridDB_Humor[settings.SelectedSteamGridDB_Humor];
 
             if (!String.IsNullOrEmpty(dimensions))
-                path += $"dimensions={dimensions}&";
+                result += $"dimensions={dimensions}&";
 
-            if (!String.IsNullOrEmpty(types))
-                path += $"types={types}&";
+            if (type != "any") 
+                result += $"types={type}&";
 
-            if (!String.IsNullOrEmpty(styles))
-                path += $"styles={styles}&";
+            if (style != "any")
+                result += $"styles={style}&";
 
-            if (!String.IsNullOrEmpty(nsfw))
-                path += $"nsfw={nsfw}&";
+            if (nsfw != "any")
+                result += $"nsfw={nsfw}&";
 
-            if (!String.IsNullOrEmpty(humor))
-                path += $"humor={humor}&";
+            if (humor != "any")
+                result += $"humor={humor}&";
 
-            GridResponse[] grids = null;
-            HttpResponseMessage response = await httpClient.GetAsync(path);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<GridResponse>>();
-                grids = parsedResponse.Data;
-            }
-
-            return grids;
+            return result;
         }
 
-        public async Task<HeroResponse[]> GetGameHeroes(
-            int gameId,
-            string types = null,
-            string dimensions = null, 
-            string styles = null, 
-            string nsfw = "any", 
-            string humor = "any")
+        /// <summary>
+        /// Performs a request on a given url
+        /// </summary>
+        /// <param name="url">The url to perform the request</param>
+        /// <returns>An array of ImageResponse with their urls</returns>
+        public async Task<ImageResponse[]> getResponse(string url)
         {
-            string path = $"heroes/game/{gameId}?";
-
-            if (!String.IsNullOrEmpty(dimensions))
-                path += $"dimensions={dimensions}&";
-
-            if (!String.IsNullOrEmpty(types))
-                path += $"types={types}&";
-
-            if (!String.IsNullOrEmpty(styles))
-                path += $"styles={styles}&";
-
-            if (!String.IsNullOrEmpty(nsfw))
-                path += $"nsfw={nsfw}&";
-
-            if (!String.IsNullOrEmpty(humor))
-                path += $"humor={humor}&";
-
-            HeroResponse[] heroes = null;
-            HttpResponseMessage response = await httpClient.GetAsync(path);
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+            ImageResponse[] images = null;
 
             if (response.IsSuccessStatusCode)
             {
-                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<HeroResponse>>();
-                heroes = parsedResponse.Data;
+                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<ImageResponse>>();
+                images = parsedResponse.Data;
             }
 
-            return heroes;
+            return images;
         }
 
-        public async Task<LogoResponse[]> GetGameLogos(
-            int gameId,  
-            string types = null, 
-            string styles = null,
-            string nsfw = "any", 
-            string humor = "any")
+        public async Task<ImageResponse[]> GetGameGrids(int gameId, string dimensions = null)
         {
-            string path = $"logos/game/{gameId}?";
+            string path = $"grids/game/{gameId}?{BuildParameters(dimensions)}";
 
-            if (!String.IsNullOrEmpty(types))
-                path += $"types={types}&";
+            return await getResponse(path);
+        }
 
-            if (!String.IsNullOrEmpty(styles))
-                path += $"styles={styles}&";
+        public async Task<ImageResponse[]> GetGameHeroes(int gameId, string dimensions = null)
+        {
+            string path = $"heroes/game/{gameId}?{BuildParameters(dimensions)}";
 
-            if (!String.IsNullOrEmpty(nsfw))
-                path += $"nsfw={nsfw}&";
+            return await getResponse(path);
+        }
 
-            if (!String.IsNullOrEmpty(humor))
-                path += $"humor={humor}&";
+        public async Task<ImageResponse[]> GetGameLogos(int gameId, string dimensions = null)
+        {
+            string path = $"logos/game/{gameId}?{BuildParameters(dimensions)}";
 
-            LogoResponse[] logos = null;
-            HttpResponseMessage response = await httpClient.GetAsync(path);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<LogoResponse>>();
-                logos = parsedResponse.Data;
-            }
-
-            return logos;
+            return await getResponse(path);
         }
 
         private class ResponseWrapper<T>

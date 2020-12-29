@@ -38,7 +38,8 @@ namespace UWPHook
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
                 {
-                    LauncherAsync();
+                    Task task = LauncherAsync();
+                    task.RunSynchronously();
                 }
             }
         }
@@ -191,10 +192,10 @@ namespace UWPHook
                     Directory.CreateDirectory(tmpGridDirectory);
                 }
 
-                var gameGridsVertical = api.GetGameGrids(game.Id, "600x900", "static");
-                var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215", "static");
-                var gameHeroes = api.GetGameHeroes(game.Id, "static");
-                var gameLogos = api.GetGameLogos(game.Id, "static");
+                var gameGridsVertical = api.GetGameGrids(game.Id, "600x900,342x482,660x930");
+                var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215,920x430");
+                var gameHeroes = api.GetGameHeroes(game.Id);
+                var gameLogos = api.GetGameLogos(game.Id);
 
                 await Task.WhenAll(
                     gameGridsVertical,
@@ -235,7 +236,6 @@ namespace UWPHook
                 }
 
                 await Task.WhenAll(saveImagesTasks);
-
             }
         }
 

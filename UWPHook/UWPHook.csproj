@@ -118,9 +118,7 @@
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="SteamGridDb\GameResponse.cs" />
-    <Compile Include="SteamGridDb\GridResponse.cs" />
-    <Compile Include="SteamGridDb\HeroResponse.cs" />
-    <Compile Include="SteamGridDb\LogoResponse.cs" />
+    <Compile Include="SteamGridDb\ImageResponse.cs" />
     <Compile Include="SteamGridDb\SteamGridDbApi.cs" />
     <Page Include="FullScreenLauncher.xaml">
       <Generator>MSBuild:Compile</Generator>
