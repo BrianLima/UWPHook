@@ -33,6 +33,10 @@ namespace UWPHook
             language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
             streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
             steamgriddb_api_key.Text = Properties.Settings.Default.SteamGridDbApiKey;
+            style_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Style;
+            type_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Type;
+            nfsw_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_nfsw;
+            humor_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Humor;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
@@ -42,6 +46,10 @@ namespace UWPHook
             Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
             Properties.Settings.Default.StreamMode = (bool)streaming_toggle.IsChecked;
             Properties.Settings.Default.SteamGridDbApiKey = steamgriddb_api_key.Text;
+            Properties.Settings.Default.SelectedSteamGridDB_Style = style_comboBox.SelectedIndex;
+            Properties.Settings.Default.SelectedSteamGridDB_Type = type_comboBox.SelectedIndex;
+            Properties.Settings.Default.SelectedSteamGridDB_nfsw = nfsw_comboBox.SelectedIndex;
+            Properties.Settings.Default.SelectedSteamGridDB_Humor = humor_comboBox.SelectedIndex;
             Properties.Settings.Default.Save();
             this.Close();
         }

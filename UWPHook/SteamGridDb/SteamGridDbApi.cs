@@ -26,7 +26,7 @@ namespace UWPHook.SteamGridDb
         }
 
         /// <summary>
-        /// Gets a list of 
+        /// Search SteamGridDB for a game 
         /// </summary>
         /// <param name="gameName" type="String">Name of the game</param>
         /// <returns>Array of games corresponding to the provided name</returns>

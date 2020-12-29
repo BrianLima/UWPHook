@@ -137,17 +137,27 @@ namespace UWPHook
             await Task.Run(() =>
             {
                 WebClient client = new WebClient();
-                Stream stream = client.OpenRead(imageUrl);
-                Bitmap bitmap; bitmap = new Bitmap(stream);
-
-                if (bitmap != null)
+                Stream stream = null;
+                try
                 {
-                    bitmap.Save(destinationFilename, format);
+                    stream = client.OpenRead(imageUrl);
+                }
+                catch (Exception e)
+                {
+                    //Image with error?
+                    //Skip for now
                 }
 
-                stream.Flush();
-                stream.Close();
-                client.Dispose();
+                if (stream != null)
+                {
+                    Bitmap bitmap; bitmap = new Bitmap(stream);
+                    bitmap.Save(destinationFilename, format);
+                    stream.Flush();
+                    stream.Close();
+                    client.Dispose();
+                }
+
+
             });            
         }
 
@@ -299,7 +309,7 @@ namespace UWPHook
                                     IsHidden = 0,
                                     OpenVR = 0,
                                     ShortcutPath = "",
-                                    Tags = new string[0],
+                                    Tags = new string[2] {"XBOX", "READY TO PLAY" },
                                     Devkit = 0,
                                     DevkitGameID = "",
                                     LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
