@@ -10,17 +10,32 @@ If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to d
 
 [Download the latest version of UWPHook](https://github.com/BrianLima/UWPHook/releases) and store it somewhere on your PC.
 
-![](http://i.imgur.com/wOV8QwD.png)
-
-Click "load installed UWP Apps", we will find every UWP app and Xbox Game Pass game installed on your PC.
-
-![](http://i.imgur.com/ppivtS5.png)
+Click on the 🔄 to load installed UWP Apps, we will find every UWP app and Xbox Game Pass game installed on your PC.
+![](https://i.imgur.com/pjGfGHe.png)
 
 Select every app you want to add to Steam, you can change the name by double clicking the "name" collumn, press "Export selected apps to Steam" and 🎉, every app you selected will be added to Steam.
+
+![](https://i.imgur.com/on46CMQ.png)
 
 Close UWPHook, restart Steam, click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
 
 ----------
+
+# SteamGridDB #
+
+Since v2.8, UWPHook can automatically import grid, icons and hero images from [SteamGridDB](https://www.steamgriddb.com)
+
+On your first usage, the app will ask you if you want it to download images, redirecting you to the settings page.
+
+![](https://i.imgur.com/K0Cm4IL.png)
+
+By adding a API Key obtained in the SteamGridDB preferences, UWPHook will try to find matching images for any exported games, giving you the following result:
+
+![](https://i.imgur.com/mlvVdwb.png)
+
+You can refine the images by using filters for animated images, blurred, no logo or memes for example, but it will always pick the first it finds for the filters automatically.
+
+Special thanks to @FusRoDah061 for implementing the base feature!
 
 # Troubleshooting #
 
