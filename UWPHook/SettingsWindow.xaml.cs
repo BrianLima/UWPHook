@@ -83,5 +83,12 @@ namespace UWPHook
         {
             System.Diagnostics.Process.Start("https://github.com/BrianLima/OverFy/releases");
         }
+
+        private void key_Button_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(messageBoxText: "You are being redirected to SteamGridDB website!\r\n" +
+                "Log-in, or create your account, go to your profile preferences and click 'Generate API Key', then paste the key back on UWPHook.", "Attention!", MessageBoxButton.OK, MessageBoxImage.Information );
+            System.Diagnostics.Process.Start("https://www.steamgriddb.com/profile/preferences");
+        }
     }
 }

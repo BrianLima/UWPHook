@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
@@ -25,7 +26,7 @@ namespace UWPHook
     public partial class GamesWindow : Window
     {
         AppEntryModel Apps;
-        BackgroundWorker bwrLoad, bwrSave;
+        BackgroundWorker bwrLoad;
 
         public GamesWindow()
         {
@@ -57,7 +58,7 @@ namespace UWPHook
         {
             FullScreenLauncher launcher = null;
             //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
-            if (Properties.Settings.Default.StreamMode)
+            if (Settings.Default.StreamMode)
             {
                 this.Hide();
                 launcher = new FullScreenLauncher();
@@ -80,7 +81,7 @@ namespace UWPHook
             {
                 //Some apps have their language locked to the UI language of the system, so overriding it might change the language of the game
                 //I my self couldn't get this to work on neither Forza Horizon 3 or Halo 5 Forge, @AbGedreht reported it works tho
-                if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
+                if (Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Settings.Default.TargetLanguage))
                 {
                     ScriptManager.RunScript("Set-WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
                 }
@@ -91,7 +92,7 @@ namespace UWPHook
                 //While the current launched app is running, sleep for n seconds and then check again
                 while (AppManager.IsRunning())
                 {
-                    Thread.Sleep(Properties.Settings.Default.Seconds * 1000);
+                    Thread.Sleep(Settings.Default.Seconds * 1000);
                 }
             }
             catch (Exception e)
@@ -101,7 +102,7 @@ namespace UWPHook
             }
             finally
             {
-                if (Properties.Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Properties.Settings.Default.TargetLanguage))
+                if (Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Settings.Default.TargetLanguage))
                 {
                     ScriptManager.RunScript("Set-WinUILanguageOverride " + currentLanguage);
                 }
@@ -165,6 +166,13 @@ namespace UWPHook
         {            
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
             string userGridDirectory = user + "\\config\\grid\\";
+            
+            // No images were downloaded, maybe the key is invalid or no app had an image
+            if (!Directory.Exists(tmpGridDirectory))
+            {
+                return;
+            }
+            
             string[] images = Directory.GetFiles(tmpGridDirectory);
 
             if (!Directory.Exists(userGridDirectory))
@@ -182,7 +190,10 @@ namespace UWPHook
         private void RemoveTempGridImages()
         {
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
-            Directory.Delete(tmpGridDirectory, true);
+            if (Directory.Exists(tmpGridDirectory))
+            {
+                Directory.Delete(tmpGridDirectory, true);
+            }
         }
 
         private async Task DownloadTempGridImages(string appName, string appTarget)
@@ -453,14 +464,28 @@ namespace UWPHook
         public bool Contains(object o)
         {
             AppEntry appEntry = o as AppEntry;
-            //Return members whose Orders have not been filled
             return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
         }
 
-        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow window = new SettingsWindow();
             window.ShowDialog();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrEmpty(Settings.Default.SteamGridDbApiKey) && !Settings.Default.OfferedSteamGridDB)
+            {
+                Settings.Default.OfferedSteamGridDB = true;
+                Settings.Default.Save();
+
+                var boxResult = MessageBox.Show("Do you want to automatically import grid images for imported games?", "UWPHook", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (boxResult == MessageBoxResult.Yes)
+                {
+                    SettingsButton_Click(this, null);
+                }
+            }
         }
     }
 }

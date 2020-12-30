@@ -34,8 +34,8 @@
                 <RowDefinition Height="44*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="52*"/>
-                <ColumnDefinition Width="177*"/>
+                <ColumnDefinition Width="62*"/>
+                <ColumnDefinition Width="167*"/>
                 <ColumnDefinition Width="124*"/>
                 <ColumnDefinition Width="113*"/>
             </Grid.ColumnDefinitions>
@@ -48,15 +48,16 @@
             <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="4"/>
             <Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,7,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
             <ComboBox x:Name="seconds_comboBox" Margin="0,7,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
-            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,8,9" Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162" Grid.Column="1"/>
+            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,8,9" Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162" Grid.ColumnSpan="2"/>
             <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Margin="0,0,0,9" Grid.Row="5" VerticalAlignment="Bottom" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="163"/>
             <ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="6,6,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
             <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,1,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" Grid.RowSpan="2"/>
             <Label ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork." x:Name="label1_Copy1" Content="Api Key" Margin="5,39,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
             <TextBox x:Name="steamgriddb_api_key" Grid.Column="2" Height="29" Margin="5,39,10,0" Grid.Row="3" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
             <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4" Margin="0,7,0,0" Grid.Row="3">
-                <Label  Content="SteamGrid" HorizontalAlignment="Left" Margin="-10,-15,0,-17" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#DDFFFFFF"/>
+                <Label Content="SteamGrid" HorizontalAlignment="Left" Margin="-10,-15,0,-17" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
+            <Button x:Name="key_Button" Content="{materialDesign:PackIcon Key}" ToolTip="Get a new API Key" Margin="6,39,7,161" Grid.Row="3" Height="Auto" Click="key_Button_Click" />
             <Label ToolTip="The main style of the artwork." x:Name="label1_Copy2" Content="Artwork Style" Margin="5,73,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
             <ComboBox x:Name="style_comboBox" Margin="0,73,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
                 <ComboBoxItem Content="Any"/>

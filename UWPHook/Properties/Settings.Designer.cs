@@ -195,5 +195,17 @@ namespace UWPHook.Properties {
                 this["SelectedSteamGridDB_Humor"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OfferedSteamGridDB {
+            get {
+                return ((bool)(this["OfferedSteamGridDB"]));
+            }
+            set {
+                this["OfferedSteamGridDB"] = value;
+            }
+        }
     }
 }
