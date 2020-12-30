@@ -72,7 +72,7 @@ namespace UWPHook
             List<String> result = null;
             var assembly = Assembly.GetExecutingAssembly();
             //Load the powershell script to get installed apps
-            var resourceName = "UWPHook.Resources.GetAUMIDScript.txt";
+            var resourceName = "UWPHook.Resources.GetAUMIDScript.ps1";
             try
             {
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))

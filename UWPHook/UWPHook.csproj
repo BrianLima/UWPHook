@@ -179,7 +179,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\GetAUMIDScript.txt" />
+    <EmbeddedResource Include="Resources\GetAUMIDScript.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\WhiteTransparent.png" />

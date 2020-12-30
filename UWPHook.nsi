@@ -11,7 +11,7 @@
 !define APP_NAME "UWPHook"
 !define COMP_NAME "Briano"
 !define WEB_SITE "https://briano.dev"
-!define VERSION "2.7.00.00"
+!define VERSION "2.8.00.00"
 !define COPYRIGHT "Briano � 2020"
 !define DESCRIPTION "The easy way to add UWP and XGP games to Steam"
 !define LICENSE_TXT "C:\Users\Brian\Documents\GitHub\UWPHook\README.md"
@@ -90,14 +90,16 @@ SetOverwrite ifnewer
 SetOutPath "$INSTDIR"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\MaterialDesignColors.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\MaterialDesignThemes.Wpf.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\MaterialDesignThemes.Wpf.xml"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Microsoft.Management.Infrastructure.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\SharpSteam.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Management.Automation.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Management.Automation.xml"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe.config"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\VDFParser.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Crc32.NET.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Net.Http.Formatting.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Newtonsoft.Json.dll"
+
 SectionEnd
 
 ######################################################################
@@ -158,7 +160,11 @@ Delete "$INSTDIR\System.Management.Automation.xml"
 Delete "$INSTDIR\UWPHook.exe"
 Delete "$INSTDIR\UWPHook.exe.config"
 Delete "$INSTDIR\VDFParser.dll"
+Delete "$INSTDIR\Crc32.NET.dll"
+Delete "$INSTDIR\Crc32.NET.xml"
 Delete "$INSTDIR\uninstall.exe"
+Delete "$INSTDIR\System.Net.Http.Formatting.dll"
+Delete "$INSTDIR\Newtonsoft.Json.dll"
 !ifdef WEB_SITE
 Delete "$INSTDIR\${APP_NAME} website.url"
 !endif

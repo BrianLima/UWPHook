@@ -61,24 +61,12 @@ namespace UWPHook.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to $installedapps = get-AppxPackage
-        ///$invalidNames = &apos;*ms-resource*&apos;, &apos;*DisplayName*&apos;
-        ///$aumidList = @()
-        ///
-        ///foreach ($app in $installedapps)
-        ///{
-        ///    try {
-        ///            if(-not $app.IsFramework){
-        ///            foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
-        ///            {
-        ///                    $appx = Get-AppxPackageManifest $app;
-        ///                    $name = $appx.Package.Properties.DisplayName;
-        ///
-        ///                    if($name -like &apos;*DisplayName*&apos; -or $name  -like &apos;*ms-resourc [rest of string was truncated]&quot;;.
+        ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static string GetAUMIDScript {
+        public static byte[] GetAUMIDScript {
             get {
-                return ResourceManager.GetString("GetAUMIDScript", resourceCulture);
+                object obj = ResourceManager.GetObject("GetAUMIDScript", resourceCulture);
+                return ((byte[])(obj));
             }
         }
     }
