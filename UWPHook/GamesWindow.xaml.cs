@@ -156,8 +156,6 @@ namespace UWPHook
                     stream.Close();
                     client.Dispose();
                 }
-
-
             });            
         }
 
@@ -261,7 +259,9 @@ namespace UWPHook
 
         private async Task ExportGames()
         {
+            string[] tags = Settings.Default.Tags.Split(',');
             string steam_folder = SteamManager.GetSteamFolder();
+
             if (Directory.Exists(steam_folder))
             {
                 var users = SteamManager.GetUsers(steam_folder);
@@ -319,7 +319,7 @@ namespace UWPHook
                                     IsHidden = 0,
                                     OpenVR = 0,
                                     ShortcutPath = "",
-                                    Tags = new string[2] {"XBOX", "READY TO PLAY" },
+                                    Tags = tags,
                                     Devkit = 0,
                                     DevkitGameID = "",
                                     LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),

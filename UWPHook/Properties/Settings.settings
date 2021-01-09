@@ -67,5 +67,8 @@
     <Setting Name="OfferedSteamGridDB" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Tags" Type="System.String" Scope="User">
+      <Value Profile="(Default)">READY TO PLAY,XBOX</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

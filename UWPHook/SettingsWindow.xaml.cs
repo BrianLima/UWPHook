@@ -37,6 +37,7 @@ namespace UWPHook
             type_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Type;
             nfsw_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_nfsw;
             humor_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Humor;
+            tags_textBox.Text = Properties.Settings.Default.Tags;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
@@ -50,6 +51,7 @@ namespace UWPHook
             Properties.Settings.Default.SelectedSteamGridDB_Type = type_comboBox.SelectedIndex;
             Properties.Settings.Default.SelectedSteamGridDB_nfsw = nfsw_comboBox.SelectedIndex;
             Properties.Settings.Default.SelectedSteamGridDB_Humor = humor_comboBox.SelectedIndex;
+            Properties.Settings.Default.Tags = tags_textBox.Text;
             Properties.Settings.Default.Save();
             this.Close();
         }

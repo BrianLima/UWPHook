@@ -207,5 +207,17 @@ namespace UWPHook.Properties {
                 this["OfferedSteamGridDB"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("READY TO PLAY,XBOX")]
+        public string Tags {
+            get {
+                return ((string)(this["Tags"]));
+            }
+            set {
+                this["Tags"] = value;
+            }
+        }
     }
 }
