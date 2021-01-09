@@ -32,14 +32,15 @@ namespace UWPHook
         {
             InitializeComponent();
             Apps = new AppEntryModel();
+            var args = Environment.GetCommandLineArgs();
 
             //If null or 1, the app was launched normally
-            if (Environment.GetCommandLineArgs() != null)
+            if (args != null)
             {
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
                 {
-                    _ = LauncherAsync();
+                    _ = LauncherAsync(args);
                 }
             }
         }
@@ -53,7 +54,7 @@ namespace UWPHook
             await Task.Delay(10000);
         }
 
-        private async Task LauncherAsync()
+        private async Task LauncherAsync(string[] args)
         {
             FullScreenLauncher launcher = null;
             //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
@@ -86,7 +87,7 @@ namespace UWPHook
                 }
 
                 //The only other parameter Steam will send is the app AUMID
-                AppManager.LaunchUWPApp(Environment.GetCommandLineArgs()[1]);
+                AppManager.LaunchUWPApp(args);
 
                 //While the current launched app is running, sleep for n seconds and then check again
                 while (AppManager.IsRunning())

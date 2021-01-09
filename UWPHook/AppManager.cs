@@ -20,14 +20,23 @@ namespace UWPHook
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
         /// </summary>
         /// <param name="aumid">The AUMID of the app to launch</param>
-        public static void LaunchUWPApp(string aumid)
+        public static void LaunchUWPApp(string[] args)
         {
+            string aumid = args[1]; // We receive the args from Steam, 
+                                    // 0 is application location, 
+                                    // 1 is the aumid, the rest are extras
+
             var mgr = new ApplicationActivationManager();
             uint processId;
 
+            string extra_args = String.Join(" ", args.Skip(2)
+                                                 .Take(args.Length - 2)
+                                                 .Select(eachElement => eachElement.Clone()
+                                            ).ToArray());
+
             try
             {
-                mgr.ActivateApplication(aumid, null, ActivateOptions.None, out processId);
+                mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
                 
                 //Bring the launched app to the foreground, this fixes in-home streaming
                 id = (int)processId;
