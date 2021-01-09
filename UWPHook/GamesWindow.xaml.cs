@@ -39,8 +39,7 @@ namespace UWPHook
                 //When length is 1, the only argument is the path where the app is installed
                 if (Environment.GetCommandLineArgs().Length > 1)
                 {
-                    Task task = LauncherAsync();
-                    task.RunSynchronously();
+                    _ = LauncherAsync();
                 }
             }
         }
