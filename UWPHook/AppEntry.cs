@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace UWPHook
@@ -73,8 +74,17 @@ namespace UWPHook
             Size size = new Size(0, 0);
             List<string> images = new List<string>();
 
-            //Get every png in this directory, Steam only allows for .png's
-            images.AddRange(Directory.GetFiles(_icon_path, "*.png"));
+
+            try
+            {
+                //Get every png in this directory, Steam only allows for .png's
+                images.AddRange(Directory.GetFiles(_icon_path, "*.png"));
+            }
+            catch (DirectoryNotFoundException)
+            {
+                // Issue #56
+                return string.Empty;
+            }
 
             //Decide which is the largest
             foreach (string image in images)

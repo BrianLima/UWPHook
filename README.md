@@ -11,6 +11,7 @@ If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to d
 [Download the latest version of UWPHook](https://github.com/BrianLima/UWPHook/releases) and store it somewhere on your PC.
 
 Click on the 🔄 to load installed UWP Apps, we will find every UWP app and Xbox Game Pass game installed on your PC.
+
 ![](https://i.imgur.com/pjGfGHe.png)
 
 Select every app you want to add to Steam, you can change the name by double clicking the "name" collumn, press "Export selected apps to Steam" and 🎉, every app you selected will be added to Steam.
