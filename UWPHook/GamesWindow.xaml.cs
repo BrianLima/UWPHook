@@ -304,7 +304,6 @@ namespace UWPHook
 
                         if (shortcuts != null)
                         {
-
                             foreach (var app in selected_apps)
                             {
                                 VDFEntry newApp = new VDFEntry()
