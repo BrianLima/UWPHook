@@ -12,7 +12,7 @@ namespace UWPHook.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -105,10 +105,10 @@ namespace UWPHook.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<ArrayOfString xmlns:xsi=\"http://www.w3.o" +
-            "rg/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n  <str" +
-            "ing>any</string>\n  <string>static</string>\n  <string>animated</string>\n</ArrayOf" +
-            "String>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
+            "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
+            "tring>any</string>\r\n  <string>static</string>\r\n  <string>animated</string>\r\n</Ar" +
+            "rayOfString>")]
         public global::System.Collections.Specialized.StringCollection SteamGridDB_Type {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["SteamGridDB_Type"]));
@@ -120,10 +120,10 @@ namespace UWPHook.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<ArrayOfString xmlns:xsi=\"http://www.w3.o" +
-            "rg/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n  <str" +
-            "ing>false</string>\n  <string>any</string>\n  <string>true</string>\n</ArrayOfStrin" +
-            "g>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
+            "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
+            "tring>false</string>\r\n  <string>any</string>\r\n  <string>true</string>\r\n</ArrayOf" +
+            "String>")]
         public global::System.Collections.Specialized.StringCollection SteamGridDB_nfsw {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["SteamGridDB_nfsw"]));
@@ -135,10 +135,10 @@ namespace UWPHook.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<ArrayOfString xmlns:xsi=\"http://www.w3.o" +
-            "rg/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n  <str" +
-            "ing>false</string>\n  <string>any</string>\n  <string>true</string>\n</ArrayOfStrin" +
-            "g>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
+            "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
+            "tring>false</string>\r\n  <string>any</string>\r\n  <string>true</string>\r\n</ArrayOf" +
+            "String>")]
         public global::System.Collections.Specialized.StringCollection SteamGridDB_Humor {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["SteamGridDB_Humor"]));
