@@ -1,4 +1,4 @@
-﻿<Window x:Class="UWPHook.SettingsWindow"
+<Window x:Class="UWPHook.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,131 +12,131 @@
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
         Title="Settings" Height="638" Width="800" Icon="Resources/hook2.ico">
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="27*"/>
-			<ColumnDefinition Width="17*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="41*"/>
-			<RowDefinition Height="179*"/>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="27*"/>
+            <ColumnDefinition Width="17*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="41*"/>
+            <RowDefinition Height="179*"/>
 
-		</Grid.RowDefinitions>
-		<materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2" Margin="0,0,-0.4,0"/>
-		<Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-		<Grid Margin="10,88,10,44" Grid.RowSpan="2">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="62"/>
-				<RowDefinition Height="40"/>
-				<RowDefinition Height="68*"/>
-				<RowDefinition Height="213*"/>
-				<RowDefinition Height="43*"/>
-				<RowDefinition Height="48*"/>
-			</Grid.RowDefinitions>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="62*"/>
-				<ColumnDefinition Width="167*"/>
-				<ColumnDefinition Width="124*"/>
-				<ColumnDefinition Width="113*"/>
-			</Grid.ColumnDefinitions>
-			<materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4">
-				<Label  Content="Settings" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
-			</materialDesign:ColorZone>
-			<ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="6,34,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" RenderTransformOrigin="0.304,0.444" />
-			<Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label1" Content="Set system language when launching an app*" Margin="5,31,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2"/>
-			<ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,29,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93"/>
-			<Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="4" Margin="0,2,0,0"/>
-			<Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,7,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
-			<ComboBox x:Name="seconds_comboBox" Margin="0,7,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
-			<Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,8,9" Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162" Grid.ColumnSpan="2"/>
-			<Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Margin="0,0,0,9" Grid.Row="5" VerticalAlignment="Bottom" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="163"/>
-			<ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="6,6,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
-			<Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,1,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"/>
-			<Label ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork." x:Name="label1_Copy1" Content="Api Key" Margin="5,39,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
-			<TextBox x:Name="steamgriddb_api_key" Grid.Column="2" Height="29" Margin="5,39,10,0" Grid.Row="3" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-			<materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4" Margin="0,7,0,0" Grid.Row="3">
-				<Label Content="SteamGrid" HorizontalAlignment="Left" Margin="-10,-15,0,-17" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#DDFFFFFF"/>
-			</materialDesign:ColorZone>
-			<Button x:Name="key_Button" Content="{materialDesign:PackIcon Key}" ToolTip="Get a new API Key" Margin="6,39,7,147" Grid.Row="3" Height="Auto" Click="key_Button_Click" />
-			<Label ToolTip="The main style of the artwork." x:Name="label1_Copy2" Content="Artwork Style" Margin="5,73,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
-			<ComboBox x:Name="style_comboBox" Margin="0,73,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
-				<ComboBoxItem Content="Any"/>
-				<ComboBoxItem Content="Alternate"/>
-				<ComboBoxItem Content="Blurred"/>
-				<ComboBoxItem Content="White Logo"/>
-				<ComboBoxItem Content="Material"/>
-				<ComboBoxItem Content="No Logo"/>
-			</ComboBox>
-			<Label ToolTip="Type of the artwork, animated, static or both." x:Name="label1_Copy3" Content="Artwork Type" Margin="5,109,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
-			<ComboBox x:Name="type_comboBox" Margin="0,109,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
-				<ComboBoxItem Content="Any"/>
-				<ComboBoxItem Content="Static"/>
-				<ComboBoxItem Content="Animated"/>
-			</ComboBox>
-			<Label ToolTip="Consider NSFW artwork?" x:Name="label1_Copy4" Content="Artwork nsfw" Margin="5,142,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
-			<ComboBox x:Name="nfsw_comboBox" Margin="0,145,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
-				<ComboBoxItem Content="No"/>
-				<ComboBoxItem Content="Any"/>
-				<ComboBoxItem Content="Yes"/>
-			</ComboBox>
-			<Label ToolTip="Consider meme and humorous artwork?" x:Name="label1_Copy5" Content="Artwork humorous" Margin="5,176,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
-			<ComboBox x:Name="humor_comboBox" Margin="0,181,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
-				<ComboBoxItem Content="No"/>
-				<ComboBoxItem Content="Any"/>
-				<ComboBoxItem Content="Yes"/>
-			</ComboBox>
-			<Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label1_Copy6" Content="Export with these tags" Margin="5,35,8,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="2"/>
-			<TextBox x:Name="tags_textBox" Grid.Column="2" Height="29" Margin="5,35,10,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-		</Grid>
-		<Grid Margin="10,88,9,35" Grid.Column="1" Grid.RowSpan="2">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="63*"/>
-				<ColumnDefinition Width="164*"/>
-				<ColumnDefinition Width="59*"/>
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="266*"/>
-				<RowDefinition Height="48*"/>
-				<RowDefinition Height="48*"/>
-				<RowDefinition Height="48*"/>
-				<RowDefinition Height="58*"/>
-			</Grid.RowDefinitions>
-			<materialDesign:Chip Content="Projects @ GitHub"                                  
+        </Grid.RowDefinitions>
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2" Margin="0,0,-0.4,0"/>
+        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+        <Grid Margin="10,88,10,44" Grid.RowSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="62"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="68*"/>
+                <RowDefinition Height="213*"/>
+                <RowDefinition Height="43*"/>
+                <RowDefinition Height="48*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="62*"/>
+                <ColumnDefinition Width="167*"/>
+                <ColumnDefinition Width="124*"/>
+                <ColumnDefinition Width="113*"/>
+            </Grid.ColumnDefinitions>
+            <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4">
+                <Label  Content="Settings" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
+            </materialDesign:ColorZone>
+            <ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="6,34,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" RenderTransformOrigin="0.304,0.444" />
+            <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label1" Content="Set system language when launching an app*" Margin="5,31,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,29,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93"/>
+            <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="4" Margin="0,2,0,0"/>
+            <Label x:Name="label3" Content="Check if the launched app is running every" Margin="5,7,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
+            <ComboBox x:Name="seconds_comboBox" Margin="0,7,10,0" VerticalAlignment="Top" Height="31" Grid.Column="3" HorizontalAlignment="Right" Width="93" Grid.Row="1"/>
+            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,8,9" Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="162" Grid.ColumnSpan="2"/>
+            <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Margin="0,0,0,9" Grid.Row="5" VerticalAlignment="Bottom" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="163"/>
+            <ToggleButton x:Name="streaming_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="6,6,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" HorizontalAlignment="Left" Width="46" Grid.Row="2" />
+            <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label1_Copy" Content="Enable streaming mode" Margin="5,1,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2"/>
+            <Label ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork." x:Name="label1_Copy1" Content="Api Key" Margin="5,39,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <TextBox x:Name="steamgriddb_api_key" Grid.Column="2" Height="29" Margin="5,39,10,0" Grid.Row="3" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+            <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="4" Margin="0,7,0,0" Grid.Row="3">
+                <Label Content="SteamGrid" HorizontalAlignment="Left" Margin="-10,-15,0,-17" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#DDFFFFFF"/>
+            </materialDesign:ColorZone>
+            <Button x:Name="key_Button" Content="{materialDesign:PackIcon Key}" ToolTip="Get a new API Key" Margin="6,39,7,147" Grid.Row="3" Height="Auto" Click="key_Button_Click" />
+            <Label ToolTip="The main style of the artwork." x:Name="label1_Copy2" Content="Artwork Style" Margin="5,73,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <ComboBox x:Name="style_comboBox" Margin="0,73,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
+                <ComboBoxItem Content="Any"/>
+                <ComboBoxItem Content="Alternate"/>
+                <ComboBoxItem Content="Blurred"/>
+                <ComboBoxItem Content="White Logo"/>
+                <ComboBoxItem Content="Material"/>
+                <ComboBoxItem Content="No Logo"/>
+            </ComboBox>
+            <Label ToolTip="Type of the artwork, animated, static or both." x:Name="label1_Copy3" Content="Artwork Type" Margin="5,109,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <ComboBox x:Name="type_comboBox" Margin="0,109,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
+                <ComboBoxItem Content="Any"/>
+                <ComboBoxItem Content="Static"/>
+                <ComboBoxItem Content="Animated"/>
+            </ComboBox>
+            <Label ToolTip="Consider NSFW artwork?" x:Name="label1_Copy4" Content="Artwork nsfw" Margin="5,142,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <ComboBox x:Name="nfsw_comboBox" Margin="0,145,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
+                <ComboBoxItem Content="No"/>
+                <ComboBoxItem Content="Any"/>
+                <ComboBoxItem Content="Yes"/>
+            </ComboBox>
+            <Label ToolTip="Consider meme and humorous artwork?" x:Name="label1_Copy5" Content="Artwork humorous" Margin="5,176,0,0" VerticalAlignment="Top" Height="29" Grid.Row="3" Grid.Column="1"/>
+            <ComboBox x:Name="humor_comboBox" Margin="0,181,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="222" Grid.Row="3" Grid.ColumnSpan="2">
+                <ComboBoxItem Content="No"/>
+                <ComboBoxItem Content="Any"/>
+                <ComboBoxItem Content="Yes"/>
+            </ComboBox>
+            <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label1_Copy6" Content="Export with these tags" Margin="5,35,8,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="2"/>
+            <TextBox x:Name="tags_textBox" Grid.Column="2" Height="29" Margin="5,35,10,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        </Grid>
+        <Grid Margin="10,88,9,35" Grid.Column="1" Grid.RowSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="63*"/>
+                <ColumnDefinition Width="164*"/>
+                <ColumnDefinition Width="59*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="266*"/>
+                <RowDefinition Height="48*"/>
+                <RowDefinition Height="48*"/>
+                <RowDefinition Height="48*"/>
+                <RowDefinition Height="58*"/>
+            </Grid.RowDefinitions>
+            <materialDesign:Chip Content="Projects @ GitHub"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
                                  Margin="8,3,0,4" Click="Chip1_Click" HorizontalAlignment="Stretch" Height="Auto" Grid.Row="1" Grid.Column="1">
-				<materialDesign:Chip.Icon>
-					<materialDesign:PackIcon Kind="MicrosoftGithub"></materialDesign:PackIcon>
-				</materialDesign:Chip.Icon>
-			</materialDesign:Chip>
-			<materialDesign:Chip Content="Paypal donate"                                  
+                <materialDesign:Chip.Icon>
+                    <materialDesign:PackIcon Kind="MicrosoftGithub"></materialDesign:PackIcon>
+                </materialDesign:Chip.Icon>
+            </materialDesign:Chip>
+            <materialDesign:Chip Content="Paypal donate"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
                                  Margin="8,4,0,5" Click="Chip2_Click" HorizontalAlignment="Stretch" Height="Auto" Grid.Row="2" Grid.Column="1">
-				<materialDesign:Chip.Icon>
-					<materialDesign:PackIcon Kind="Coffee"></materialDesign:PackIcon>
-				</materialDesign:Chip.Icon>
-			</materialDesign:Chip>
-			<materialDesign:Chip Content="@brianostorm"                                  
+                <materialDesign:Chip.Icon>
+                    <materialDesign:PackIcon Kind="Coffee"></materialDesign:PackIcon>
+                </materialDesign:Chip.Icon>
+            </materialDesign:Chip>
+            <materialDesign:Chip Content="@brianostorm"                                  
                                  IconBackground="{DynamicResource PrimaryHueDarkBrush}"
                                  IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
                                  Margin="8,4,0,3" Click="Chip_Click" HorizontalAlignment="Stretch" Height="Auto" Grid.Row="3" Grid.Column="1">
-				<materialDesign:Chip.Icon>
-					<materialDesign:PackIcon Kind="Twitter" />
-				</materialDesign:Chip.Icon>
-			</materialDesign:Chip>
-			<TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Margin="0,185,0,0" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" TextAlignment="Justify" Height="91" VerticalAlignment="Top" Grid.ColumnSpan="3" Grid.RowSpan="2"/>
-			<materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="3">
-				<Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
-			</materialDesign:ColorZone>
-			<Image x:Name="image2" Height="150" VerticalAlignment="Top" Source="Resources/briano.png" Stretch="UniformToFill" Margin="8,32,0,0" HorizontalAlignment="Left" Width="150" Grid.Column="1"/>
-			<TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"><Run Text="Special thanks to /r/Forza and /r/Steam communities at Reddit"/><Run Text=", and to all the "/><Hyperlink NavigateUri="https://github.com/BrianLima/UWPHook/graphs/contributors"> contributors </Hyperlink><Run Text=" who have dealt with my bad code"/><Run Text="."/><Run Text=" "/><Run Text=":)"/></TextBlock>
-		</Grid>
-		<Grid Margin="10,9.8,10.2,0.4" Grid.Row="2" Visibility="Hidden">
-			<Image HorizontalAlignment="Left" Height="111" VerticalAlignment="Top" Width="111" Source="Resources/square.png"/>
-			<TextBlock Margin="116,0,0,0" TextWrapping="Wrap" Text="Checkout OverFy, my new app, it add Spotify's now playing status into Rivatuner/MSI Afterburner overlay, Free and Open Source!" VerticalAlignment="Top" Height="63" TextAlignment="Justify" HorizontalAlignment="Left" Width="341"/>
-			<Button x:Name="update_button_Copy" Click="update_button_Click" Content="Get OverFy!" Margin="206,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="162"/>
-		</Grid>
-		<Button x:Name="clearAll_button" Click="clearAll_button_Click" Content="Debug: Clear shortcuts.vdf" Margin="0,0,156,12" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="191"/>
-	</Grid>
+                <materialDesign:Chip.Icon>
+                    <materialDesign:PackIcon Kind="Twitter" />
+                </materialDesign:Chip.Icon>
+            </materialDesign:Chip>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Margin="0,185,0,0" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" TextAlignment="Justify" Height="91" VerticalAlignment="Top" Grid.ColumnSpan="3" Grid.RowSpan="2"/>
+            <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" VerticalAlignment="Top" Height="27" Grid.ColumnSpan="3">
+                <Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
+            </materialDesign:ColorZone>
+            <Image x:Name="image2" Height="150" VerticalAlignment="Top" Source="Resources/briano.png" Stretch="UniformToFill" Margin="8,32,0,0" HorizontalAlignment="Left" Width="150" Grid.Column="1"/>
+            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" VerticalAlignment="Top" Height="59" TextAlignment="Justify" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,44,0,0" Grid.RowSpan="2"><Run Text="Special thanks to /r/Forza and /r/Steam communities at Reddit"/><Run Text=", and to all the "/><Hyperlink NavigateUri="https://github.com/BrianLima/UWPHook/graphs/contributors"> contributors </Hyperlink><Run Text=" who have dealt with my bad code"/><Run Text="."/><Run Text=" "/><Run Text=":)"/></TextBlock>
+        </Grid>
+        <Grid Margin="10,9.8,10.2,0.4" Grid.Row="2" Visibility="Hidden">
+            <Image HorizontalAlignment="Left" Height="111" VerticalAlignment="Top" Width="111" Source="Resources/square.png"/>
+            <TextBlock Margin="116,0,0,0" TextWrapping="Wrap" Text="Checkout OverFy, my new app, it add Spotify's now playing status into Rivatuner/MSI Afterburner overlay, Free and Open Source!" VerticalAlignment="Top" Height="63" TextAlignment="Justify" HorizontalAlignment="Left" Width="341"/>
+            <Button x:Name="update_button_Copy" Click="update_button_Click" Content="Get OverFy!" Margin="206,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="162"/>
+        </Grid>
+        <Button x:Name="clearAll_button" Click="clearAll_button_Click" Content="Debug: Clear shortcuts.vdf" Margin="0,0,156,12" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="191"/>
+    </Grid>
 </Window>
