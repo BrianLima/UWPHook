@@ -17,6 +17,7 @@ using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
+using System.Diagnostics;
 
 namespace UWPHook
 {
@@ -31,6 +32,7 @@ namespace UWPHook
         public GamesWindow()
         {
             InitializeComponent();
+            Debug.WriteLine("Init GamesWindow");
             Apps = new AppEntryModel();
             var args = Environment.GetCommandLineArgs();
 
@@ -324,10 +326,27 @@ namespace UWPHook
                                     DevkitGameID = "",
                                     LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                                 };
+                                Boolean isFound = false;
+                                for (int i = 0; i < shortcuts.Length; i++)
+                                {
+                                    Debug.WriteLine(shortcuts[i].ToString());
+                                    
 
-                                //Resize this array so it fits the new entries
-                                Array.Resize(ref shortcuts, shortcuts.Length + 1);
-                                shortcuts[shortcuts.Length - 1] = newApp;
+                                    if (shortcuts[i].AppName == app.Name)
+                                    {
+                                        isFound = true;
+                                        Debug.WriteLine(app.Name + " already added to Steam. Updating existing shortcut.");
+                                        shortcuts[i] = newApp;
+                                    }
+                                }
+
+                                if (!isFound)
+                                {
+                                    //Resize this array so it fits the new entries
+                                    Array.Resize(ref shortcuts, shortcuts.Length + 1);
+                                    shortcuts[shortcuts.Length - 1] = newApp;
+                                }
+                                
                             }
 
                             try
@@ -365,6 +384,47 @@ namespace UWPHook
                         RemoveTempGridImages();
                     });
                 }
+            }
+        }
+
+        public static void ClearAllShortcuts()
+        {
+            Debug.WriteLine("DBG: Clearing all elements in shortcuts.vdf");
+            string[] tags = Settings.Default.Tags.Split(',');
+            string steam_folder = SteamManager.GetSteamFolder();
+
+            if (Directory.Exists(steam_folder))
+            {
+                var users = SteamManager.GetUsers(steam_folder);
+                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
+                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+                foreach (var user in users)
+                {
+                    try
+                    {
+                        VDFEntry[] shortcuts = new VDFEntry[0];
+
+                        try
+                        {
+                            if (!Directory.Exists(user + @"\\config\\"))
+                            {
+                                Directory.CreateDirectory(user + @"\\config\\");
+                            }
+                            //Write the file with all the shortcuts
+                            File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: Program failed while trying to clear your Steam shurtcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                    }
+                }
+                MessageBox.Show("All non-Steam shortcuts has been cleared.");
             }
         }
 
