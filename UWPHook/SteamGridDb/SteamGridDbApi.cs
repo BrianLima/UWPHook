@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using UWPHook.Properties;
+using System.Diagnostics;
 
 namespace UWPHook.SteamGridDb
 {
@@ -36,9 +37,17 @@ namespace UWPHook.SteamGridDb
 
             GameResponse[] games = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
-
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                System.Windows.MessageBox.Show("Warning: SteamGrid API Key Invalid. Please either remove the API key in settings or enter a valid API key.");
+                Debug.WriteLine("ERROR RESPONSE: " + response.ToString());
+                SettingsWindow window = new SettingsWindow();
+                window.ShowDialog();
+            }
             if (response.IsSuccessStatusCode)
             {
+                
                 var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<GameResponse>>();
                 games = parsedResponse.Data;
             }
