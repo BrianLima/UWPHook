@@ -55,6 +55,16 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 
 ----------
 
+# Building #
+
+- Clone project or forked project.
+- Install Visual Studio 2019 with .NET Framework 4.6.2.
+- Install [SharpSteam by BrianLima](https://github.com/BrianLima/SharpSteam/releases/) and [VDFParser by heyvito](https://github.com/heyvito/VDFParser).
+- Add the above two dll to the project in Visual Studio Reference Manager.
+- Press run!
+
+----------
+
 # About #
 
 This software is open-source under the MIT License.

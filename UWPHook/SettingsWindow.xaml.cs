@@ -81,9 +81,9 @@ namespace UWPHook
             System.Diagnostics.Process.Start("https://reddit.com/r/UWPHook/");
         }
 
-        private void update_button_Copy_Click(object sender, RoutedEventArgs e)
+        private void clearAll_button_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/BrianLima/OverFy/releases");
+            GamesWindow.ClearAllShortcuts();
         }
 
         private void key_Button_Click(object sender, RoutedEventArgs e)
