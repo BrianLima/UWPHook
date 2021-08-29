@@ -3,6 +3,7 @@ using SharpSteam;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -202,10 +203,11 @@ namespace UWPHook
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
 
             var games = await api.SearchGame(appName);
-
+            
             if (games != null)
             {
                 var game = games[0];
+                Debug.WriteLine("Detected Game: " + game.ToString());
                 UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
 
                 if (!Directory.Exists(tmpGridDirectory))
@@ -217,6 +219,8 @@ namespace UWPHook
                 var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215,920x430");
                 var gameHeroes = api.GetGameHeroes(game.Id);
                 var gameLogos = api.GetGameLogos(game.Id);
+
+                Debug.WriteLine("Game ID: " + game.Id);
 
                 await Task.WhenAll(
                     gameGridsVertical,
@@ -274,14 +278,16 @@ namespace UWPHook
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
                 bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
-
                 //To make things faster, decide icons and download grid images before looping users
+                Debug.WriteLine("downloadGridImages: " + (downloadGridImages));
+
                 foreach (var app in selected_apps)
                 {
                     app.Icon = app.widestSquareIcon();
 
                     if (downloadGridImages)
                     {
+                        Debug.WriteLine("Downloading grid images for app " + app.Name);
                         gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
                     }
                 }
