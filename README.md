@@ -18,7 +18,7 @@ Select every app you want to add to Steam, you can change the name by double cli
 
 ![](https://i.imgur.com/on46CMQ.png)
 
-Close UWPHook, restart Steam, click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
+Close UWPHook, restart Steam if prompted, click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
 
 ----------
 

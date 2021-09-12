@@ -130,11 +130,23 @@ namespace UWPHook
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            await ExportGames();
+            bool restartSteam = true;
+            var result = await ExportGames(restartSteam);
 
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
-            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            string msg = "Your apps were successfuly exported!";
+            if(!restartSteam)
+            {
+                msg += " Please restart Steam in order to see them.";
+            }
+            else if(result)
+            {
+                msg += " Steam has been restarted.";
+            }
+
+            MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
@@ -265,7 +277,7 @@ namespace UWPHook
             }
         }
 
-        private async Task ExportGames()
+        private async Task<bool> ExportGames(bool restartSteam)
         {
             string[] tags = Settings.Default.Tags.Split(',');
             string steam_folder = SteamManager.GetSteamFolder();
@@ -392,6 +404,52 @@ namespace UWPHook
                     });
                 }
             }
+
+            if(restartSteam)
+            {
+                Func<Process> getSteam = () => Process.GetProcessesByName("steam").SingleOrDefault();
+
+                Process steam = getSteam();
+                if (steam != null)
+                {
+                    string steamExe = steam.MainModule.FileName;
+
+                    //we always ask politely
+                    Debug.WriteLine("Requesting Steam shutdown");
+                    Process.Start(steamExe, "-exitsteam");
+
+                    bool restarted = false;
+                    Stopwatch watch = new Stopwatch();
+                    watch.Start();
+
+                    //give it N seconds to sort itself out
+                    int waitSeconds = 8;
+                    while (watch.Elapsed.TotalSeconds < waitSeconds)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5f));
+                        if (getSteam() == null)
+                        {
+                            Debug.WriteLine("Restarting Steam");
+                            Process.Start(steamExe);
+                            restarted = true;
+                            break;
+                        }
+                    }
+
+                    if (!restarted)
+                    {
+                        Debug.WriteLine("Steam instance not restarted");
+                        MessageBox.Show("Failed to restart Steam, please launch it manually", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return false;
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Steam instance not found to be restarted");
+                }
+            }
+
+            return true;
         }
 
         public static void ClearAllShortcuts()
