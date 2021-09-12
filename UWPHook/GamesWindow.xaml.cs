@@ -428,7 +428,7 @@ namespace UWPHook
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error: Program failed while trying to clear your Steam shurtcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        MessageBox.Show("Error: Program failed while trying to clear your Steam shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
                 MessageBox.Show("All non-Steam shortcuts has been cleared.");
