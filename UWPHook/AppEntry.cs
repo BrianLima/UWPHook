@@ -118,14 +118,11 @@ namespace UWPHook
 
         public string isKnownApp()
         {
-            if (_aumid.Contains("Microsoft.SeaofThieves"))
+            if(AppManager.IsKnownApp(_aumid, out string name))
             {
-                return "Sea of Thieves";
+                return name;
             }
-            else if (_aumid.Contains("Microsoft.DeltaPC"))
-            {
-                return "Gears of War: Ultimate Edition";
-            }
+
             return "Name not found, double click here to edit";
         }
 
@@ -134,6 +131,11 @@ namespace UWPHook
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} ({Aumid})";
         }
     }
 }

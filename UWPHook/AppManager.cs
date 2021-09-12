@@ -101,6 +101,30 @@ namespace UWPHook
             return result;
         }
 
+        /// <summary>
+        /// Try to convert an aumid into a human-readable app name
+        /// </summary>
+        /// <param name="appName">Application user model ID (aumid)</param>
+        /// <param name="readableName">User-friendly app name</param>
+        /// <returns>Whether this is a known app</returns>
+        public static bool IsKnownApp(string appName, out string readableName)
+        {
+            string appsJson = File.ReadAllText(@"Resources\KnownApps.json");
+            var apps = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(appsJson);
+
+            foreach (var kvp in apps)
+            {
+                if (appName.StartsWith(kvp.Key + "_"))
+                {
+                    readableName = kvp.Value;
+                    return true;
+                }
+            }
+
+            readableName = null;
+            return false;
+        }
+
         [DllImport("user32.dll")]
         private static extern
         bool SetForegroundWindow(IntPtr hWnd);
