@@ -37,7 +37,7 @@ namespace UWPHook
             var args = Environment.GetCommandLineArgs();
 
             //If null or 1, the app was launched normally
-            if (args != null && Environment.GetCommandLineArgs().Length > 1)
+            if (args?.Length > 1)
             {
                 //When length is 1, the only argument is the path where the app is installed
                  _ = LauncherAsync(args);
