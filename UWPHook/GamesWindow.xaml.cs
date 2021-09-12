@@ -1,4 +1,4 @@
-﻿using Force.Crc32;
+using Force.Crc32;
 using SharpSteam;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,6 @@ using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
-using System.Diagnostics;
 
 namespace UWPHook
 {
