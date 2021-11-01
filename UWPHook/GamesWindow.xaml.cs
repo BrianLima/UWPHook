@@ -583,7 +583,7 @@ namespace UWPHook
         public bool Contains(object o)
         {
             AppEntry appEntry = o as AppEntry;
-            return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
+            return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()) || appEntry.Name.ToLower().Contains(textBox.Text.ToLower()));
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
