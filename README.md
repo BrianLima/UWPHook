@@ -41,16 +41,13 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 # Troubleshooting #
 
 - **Steam's Overlay isn't working!**
-- Unfortunately, it's a Steam limitation, Valve has to update it in order to work properly with UWP, DXTory is a recommended overlay for UWP games.
-
+  - Unfortunately, it's a Steam limitation, Valve has to update it in order to work properly with UWP, DXTory is a recommended overlay for UWP games.
 - **Steam Link launches the game but input doesn't work!**
-- Unfortunately, another limitation by Steam, i have some ideas as to why it isn't working, but i can't give an ETA for when i can fix this, or even if it's fixable on my end, since Valve didn't released the Link in Brazil and i can't get one to test.
-
+  - Unfortunately, another limitation by Steam, i have some ideas as to why it isn't working, but i can't give an ETA for when i can fix this, or even if it's fixable on my end, since Valve didn't released the Link in Brazil and i can't get one to test.
 - **Steam Controller isn't working**
-- Another limitation by Steam, some people reported it works with "Desktop Mode" configuration, but i can't verify this.
-
+  - Another limitation by Steam, some people reported it works with "Desktop Mode" configuration, but i can't verify this.
 - **My question isn't listed here!**
-- Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can
+  - Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can
  **[https://www.reddit.com/r/uwphook](https://www.reddit.com/r/uwphook)**
 
 ----------
