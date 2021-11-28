@@ -1,4 +1,4 @@
-﻿using Force.Crc32;
+using Force.Crc32;
 using SharpSteam;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,6 @@ using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
 using VDFParser.Models;
-using System.Diagnostics;
 
 namespace UWPHook
 {
@@ -38,13 +37,15 @@ namespace UWPHook
             var args = Environment.GetCommandLineArgs();
 
             //If null or 1, the app was launched normally
-            if (args != null)
+            if (args?.Length > 1)
             {
                 //When length is 1, the only argument is the path where the app is installed
-                if (Environment.GetCommandLineArgs().Length > 1)
-                {
-                    _ = LauncherAsync(args);
-                }
+                 _ = LauncherAsync(args);
+            }
+            else
+            {
+                //auto refresh on load
+                LoadButton_Click(null, null);
             }
         }
 
@@ -129,11 +130,23 @@ namespace UWPHook
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            await ExportGames();
+            bool restartSteam = true;
+            var result = await ExportGames(restartSteam);
 
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
-            MessageBox.Show("Your apps were successfuly exported, please restart Steam in order to see your apps.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            string msg = "Your apps were successfuly exported!";
+            if(!restartSteam)
+            {
+                msg += " Please restart Steam in order to see them.";
+            }
+            else if(result)
+            {
+                msg += " Steam has been restarted.";
+            }
+
+            MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
@@ -264,7 +277,7 @@ namespace UWPHook
             }
         }
 
-        private async Task ExportGames()
+        private async Task<bool> ExportGames(bool restartSteam)
         {
             string[] tags = Settings.Default.Tags.Split(',');
             string steam_folder = SteamManager.GetSteamFolder();
@@ -391,6 +404,52 @@ namespace UWPHook
                     });
                 }
             }
+
+            if(restartSteam)
+            {
+                Func<Process> getSteam = () => Process.GetProcessesByName("steam").SingleOrDefault();
+
+                Process steam = getSteam();
+                if (steam != null)
+                {
+                    string steamExe = steam.MainModule.FileName;
+
+                    //we always ask politely
+                    Debug.WriteLine("Requesting Steam shutdown");
+                    Process.Start(steamExe, "-exitsteam");
+
+                    bool restarted = false;
+                    Stopwatch watch = new Stopwatch();
+                    watch.Start();
+
+                    //give it N seconds to sort itself out
+                    int waitSeconds = 8;
+                    while (watch.Elapsed.TotalSeconds < waitSeconds)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5f));
+                        if (getSteam() == null)
+                        {
+                            Debug.WriteLine("Restarting Steam");
+                            Process.Start(steamExe);
+                            restarted = true;
+                            break;
+                        }
+                    }
+
+                    if (!restarted)
+                    {
+                        Debug.WriteLine("Steam instance not restarted");
+                        MessageBox.Show("Failed to restart Steam, please launch it manually", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return false;
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Steam instance not found to be restarted");
+                }
+            }
+
+            return true;
         }
 
         public static void ClearAllShortcuts()
@@ -427,7 +486,7 @@ namespace UWPHook
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error: Program failed while trying to clear your Steam shurtcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        MessageBox.Show("Error: Program failed while trying to clear your Steam shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
                 MessageBox.Show("All non-Steam shortcuts has been cleared.");
@@ -483,6 +542,12 @@ namespace UWPHook
                     //Remove end lines from the String and split both values, I split the appname and the AUMID using |
                     //I hope no apps have that in their name. Ever.
                     var values = app.Replace("\r\n", "").Split('|');
+
+                    if (values.Length >= 3 && AppManager.IsKnownApp(values[2], out string readableName))
+                    {
+                        values[0] = readableName;
+                    }
+
                     if (!String.IsNullOrWhiteSpace(values[0]))
                     {
                         //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
@@ -491,17 +556,6 @@ namespace UWPHook
                         {
                             Apps.Entries.Add(new AppEntry() { Name = values[0], IconPath = logosPath, Aumid = values[2], Selected = false });
                         });
-                    }
-                    if (values.Length > 2)
-                    {
-                        if (values[2].Contains("Microsoft.SeaofThieves"))
-                        {
-                            values[0] = "Sea of Thieves";
-                        }
-                        else if (values[2].Contains("Microsoft.DeltaPC"))
-                        {
-                            values[0] = "Gears of War: Ultimate Edition";
-                        }
                     }
                 }
             }
@@ -529,7 +583,7 @@ namespace UWPHook
         public bool Contains(object o)
         {
             AppEntry appEntry = o as AppEntry;
-            return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()));
+            return (appEntry.Aumid.ToLower().Contains(textBox.Text.ToLower()) || appEntry.Name.ToLower().Contains(textBox.Text.ToLower()));
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
