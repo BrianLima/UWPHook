@@ -36,11 +36,12 @@ namespace UWPHook
             Apps = new AppEntryModel();
             var args = Environment.GetCommandLineArgs();
 
-            //If null or 1, the app was launched normally
+            // If null or 1, the app was launched normally
             if (args?.Length > 1)
             {
-                //When length is 1, the only argument is the path where the app is installed
-                 _ = LauncherAsync(args);
+                // When length is 1, the only argument is the path where the app is installed
+                 _ = LauncherAsync(args); // Launches the requested game
+
             }
             else
             {
@@ -58,6 +59,12 @@ namespace UWPHook
             await Task.Delay(10000);
         }
 
+        /// <summary>
+        /// Main task that launches a game
+        /// Usually invoked by steam
+        /// </summary>
+        /// <param name="args">launch args received from the program execution</param>
+        /// <returns></returns>
         private async Task LauncherAsync(string[] args)
         {
             FullScreenLauncher launcher = null;
@@ -116,6 +123,13 @@ namespace UWPHook
             }
         }
 
+        /// <summary>
+        /// Generates a CRC32 hash expected by Steam to link an image with a game in the library
+        /// See https://blog.yo1.dog/calculate-id-for-non-steam-games-js/ for an example
+        /// </summary>
+        /// <param name="appName">The name of the executable to be displayed</param>
+        /// <param name="appTarget">The executable target path</param>
+        /// <returns></returns>
         private UInt64 GenerateSteamGridAppId(string appName, string appTarget)
         {
             byte[] nameTargetBytes = Encoding.UTF8.GetBytes(appTarget + appName + "");
@@ -125,30 +139,53 @@ namespace UWPHook
             return gameId;
         }
 
+        /// <summary>
+        /// Task responsible for triggering the export, blocks the UI, and shows a message
+        /// once the task is finished, unlocking the UI
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            bool restartSteam = true;
-            var result = await ExportGames(restartSteam);
+            bool result = false, restartSteam = true;
+            string msg = String.Empty;
+
+            try
+            {
+                await ExportGames(restartSteam);
+
+                msg = "Your apps were successfuly exported!";
+                if(!restartSteam)
+                {
+                    msg += " Please restart Steam in order to see them.";
+                }
+                else if(result)
+                {
+                    msg += " Steam has been restarted.";
+                }
+
+            }
+            catch (TaskCanceledException exception)
+            {
+                msg = exception.Message;
+            }
 
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
 
-            string msg = "Your apps were successfuly exported!";
-            if(!restartSteam)
-            {
-                msg += " Please restart Steam in order to see them.";
-            }
-            else if(result)
-            {
-                msg += " Steam has been restarted.";
-            }
-
             MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        /// <summary>
+        /// Downloads the given image in the url to a given path in a given format
+        /// </summary>
+        /// <param name="imageUrl">The url for the image</param>
+        /// <param name="destinationFilename">Path to store the image</param>
+        /// <param name="format"></param>
+        /// <returns></returns>
         private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
         {
             await Task.Run(() =>
@@ -176,6 +213,10 @@ namespace UWPHook
             });            
         }
 
+        /// <summary>
+        /// Copies all temporary images to the given user
+        /// </summary>
+        /// <param name="user">The user path to copy images to</param>
         private void CopyTempGridImagesToSteamUser(string user)
         {            
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
@@ -210,12 +251,28 @@ namespace UWPHook
             }
         }
 
+        /// <summary>
+        /// Task responsible for downloading grid images to a temporary location,
+        /// generates the steam ID for the game based in the receiving parameters,
+        /// Throws TaskCanceledException if cannot communicate with SteamGridDB properly
+        /// </summary>
+        /// <param name="appName">The name of the app</param>
+        /// <param name="appTarget">The target path of the executable</param>
+        /// <returns></returns>
         private async Task DownloadTempGridImages(string appName, string appTarget)
         {
             SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+            GameResponse[] games;
 
-            var games = await api.SearchGame(appName);
+            try
+            {
+                games = await api.SearchGame(appName);
+            }
+            catch (TaskCanceledException exception)
+            {
+                throw;
+            }
             
             if (games != null)
             {
@@ -277,6 +334,11 @@ namespace UWPHook
             }
         }
 
+        /// <summary>
+        /// Main Task to export the selected games to steam
+        /// </summary>
+        /// <param name="restartSteam"></param>
+        /// <returns></returns>
         private async Task<bool> ExportGames(bool restartSteam)
         {
             string[] tags = Settings.Default.Tags.Split(',');
@@ -301,10 +363,13 @@ namespace UWPHook
                     if (downloadGridImages)
                     {
                         Debug.WriteLine("Downloading grid images for app " + app.Name);
+
                         gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
                     }
                 }
 
+                // Export the selected apps and the downloaded images to each user
+                // in the steam folder by modifying it's VDF file
                 foreach (var user in users)
                 {
                     try
@@ -493,6 +558,11 @@ namespace UWPHook
             }
         }
 
+        /// <summary>
+        /// Fires the Bwr_DoWork, to load the apps installed at the machine
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
             bwrLoad = new BackgroundWorker();
@@ -500,12 +570,19 @@ namespace UWPHook
             bwrLoad.RunWorkerCompleted += Bwr_RunWorkerCompleted;
 
             grid.IsEnabled = false;
+            label.Content = "Loading your installed apps";
+
             progressBar.Visibility = Visibility.Visible;
             Apps.Entries = new System.Collections.ObjectModel.ObservableCollection<AppEntry>();
 
             bwrLoad.RunWorkerAsync();
         }
 
+        /// <summary>
+        /// Callback for restoring the grid list interactivity
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             listGames.ItemsSource = Apps.Entries;
@@ -518,6 +595,11 @@ namespace UWPHook
             label.Content = "Installed Apps";
         }
 
+        /// <summary>
+        /// Worker responsible for loading the apps installed in the machine
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Bwr_DoWork(object sender, DoWorkEventArgs e)
         {
             try
@@ -592,6 +674,13 @@ namespace UWPHook
             window.ShowDialog();
         }
 
+        /// <summary>
+        /// Function that executes when the Games Window is loaded
+        /// Will inform the user of the possibility of using the SteamGridDB API
+        /// redirecting him to the settings page if he wishes to use the functionality
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (String.IsNullOrEmpty(Settings.Default.SteamGridDbApiKey) && !Settings.Default.OfferedSteamGridDB)

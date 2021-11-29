@@ -45,15 +45,13 @@ namespace UWPHook.SteamGridDb
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                System.Windows.MessageBox.Show("Warning: SteamGrid API Key Invalid. Please generate a new key and add it to settings.");
                 Debug.WriteLine("ERROR RESPONSE: " + response.ToString());
 
                 settings.SteamGridDbApiKey = String.Empty;
                 settings.Save();
 
-                System.Windows.Application.Current.Shutdown();
+                throw new TaskCanceledException("Warning: SteamGrid API Key Invalid. Please generate a new key and add it to settings.");
             }
-
 
             return games;
         }
