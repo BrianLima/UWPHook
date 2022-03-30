@@ -33,7 +33,8 @@ namespace UWPHook.SteamGridDb
         /// <returns>Array of games corresponding to the provided name</returns>
         public async Task<GameResponse[]> SearchGame(string gameName)
         {
-            string path = $"search/autocomplete/{gameName}";
+            // remove any forward slashes in the gameName to allow Games like FINAL FANTASY X/X-2 HD Remaster to be found
+            string path = $"search/autocomplete/{gameName.Replace('/', ' ')}";
 
             GameResponse[] games = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
