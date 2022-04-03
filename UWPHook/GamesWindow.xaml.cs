@@ -40,7 +40,7 @@ namespace UWPHook
             if (args?.Length > 1)
             {
                 // When length is 1, the only argument is the path where the app is installed
-                 _ = LauncherAsync(args); // Launches the requested game
+                _ = LauncherAsync(args); // Launches the requested game
 
             }
             else
@@ -210,7 +210,7 @@ namespace UWPHook
                     stream.Close();
                     client.Dispose();
                 }
-            });            
+            });
         }
 
         /// <summary>
@@ -218,16 +218,16 @@ namespace UWPHook
         /// </summary>
         /// <param name="user">The user path to copy images to</param>
         private void CopyTempGridImagesToSteamUser(string user)
-        {            
+        {
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
             string userGridDirectory = user + "\\config\\grid\\";
-            
+
             // No images were downloaded, maybe the key is invalid or no app had an image
             if (!Directory.Exists(tmpGridDirectory))
             {
                 return;
             }
-            
+
             string[] images = Directory.GetFiles(tmpGridDirectory);
 
             if (!Directory.Exists(userGridDirectory))
@@ -273,7 +273,7 @@ namespace UWPHook
             {
                 throw;
             }
-            
+
             if (games != null)
             {
                 var game = games[0];
@@ -348,7 +348,7 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
-                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
+                var exePath = GenerateExePath();
                 var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
@@ -370,89 +370,8 @@ namespace UWPHook
 
                 // Export the selected apps and the downloaded images to each user
                 // in the steam folder by modifying it's VDF file
-                foreach (var user in users)
-                {
-                    try
-                    {
-                        VDFEntry[] shortcuts = new VDFEntry[0];
-                        try
-                        {
-                            shortcuts = SteamManager.ReadShortcuts(user);
-                        }
-                        catch (Exception ex)
-                        {
-                            //If it's a short VDF, let's just overwrite it
-                            if (ex.GetType() != typeof(VDFTooShortException))
-                            {
-                                throw new Exception("Error: Program failed to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
-                            }
-                        }
-
-                        if (shortcuts != null)
-                        {
-                            foreach (var app in selected_apps)
-                            {
-                                VDFEntry newApp = new VDFEntry()
-                                {
-                                    AppName = app.Name,
-                                    Exe = exePath,
-                                    StartDir = exeDir,
-                                    LaunchOptions = app.Aumid,
-                                    AllowDesktopConfig = 1,
-                                    AllowOverlay = 1,
-                                    Icon = app.Icon,
-                                    Index = shortcuts.Length,
-                                    IsHidden = 0,
-                                    OpenVR = 0,
-                                    ShortcutPath = "",
-                                    Tags = tags,
-                                    Devkit = 0,
-                                    DevkitGameID = "",
-                                    LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                                };
-                                Boolean isFound = false;
-                                for (int i = 0; i < shortcuts.Length; i++)
-                                {
-                                    Debug.WriteLine(shortcuts[i].ToString());
-                                    
-
-                                    if (shortcuts[i].AppName == app.Name)
-                                    {
-                                        isFound = true;
-                                        Debug.WriteLine(app.Name + " already added to Steam. Updating existing shortcut.");
-                                        shortcuts[i] = newApp;
-                                    }
-                                }
-
-                                if (!isFound)
-                                {
-                                    //Resize this array so it fits the new entries
-                                    Array.Resize(ref shortcuts, shortcuts.Length + 1);
-                                    shortcuts[shortcuts.Length - 1] = newApp;
-                                }
-                                
-                            }
-
-                            try
-                            {
-                                if (!Directory.Exists(user + @"\\config\\"))
-                                {
-                                    Directory.CreateDirectory(user + @"\\config\\");
-                                }
-                                //Write the file with all the shortcuts
-                                File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
-                    }
-                }
+                ExportAppsToSteamShortcuts(tags, users, selected_apps, exePath, exeDir);
+                ExportAppsToShieldShortcuts(selected_apps, exePath, exeDir);
 
                 if (gridImagesDownloadTasks.Count > 0)
                 {
@@ -463,6 +382,7 @@ namespace UWPHook
                         foreach (var user in users)
                         {
                             CopyTempGridImagesToSteamUser(user);
+                            CopyTempGridImagesToShieldStreamingAssets(selected_apps);
                         }
 
                         RemoveTempGridImages();
@@ -470,7 +390,7 @@ namespace UWPHook
                 }
             }
 
-            if(restartSteam)
+            if (restartSteam)
             {
                 Func<Process> getSteam = () => Process.GetProcessesByName("steam").SingleOrDefault();
 
@@ -515,6 +435,103 @@ namespace UWPHook
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Extracted method to simplify the complexity of the ExportGames method.
+        /// 
+        /// This method updates and existing steam vdf file to add or update shortcuts for the selected windows apps.
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="users"></param>
+        /// <param name="selected_apps"></param>
+        /// <param name="exePath"></param>
+        /// <param name="exeDir"></param>
+        private static void ExportAppsToSteamShortcuts(string[] tags, string[] users, IEnumerable<AppEntry> selected_apps, string exePath, string exeDir)
+        {
+            foreach (var user in users)
+            {
+                try
+                {
+                    VDFEntry[] shortcuts = new VDFEntry[0];
+                    try
+                    {
+                        shortcuts = SteamManager.ReadShortcuts(user);
+                    }
+                    catch (Exception ex)
+                    {
+                        //If it's a short VDF, let's just overwrite it
+                        if (ex.GetType() != typeof(VDFTooShortException))
+                        {
+                            throw new Exception("Error: Program failed to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
+                        }
+                    }
+
+                    if (shortcuts != null)
+                    {
+                        foreach (var app in selected_apps)
+                        {
+                            VDFEntry newApp = new VDFEntry()
+                            {
+                                AppName = app.Name,
+                                Exe = exePath,
+                                StartDir = exeDir,
+                                LaunchOptions = app.Aumid,
+                                AllowDesktopConfig = 1,
+                                AllowOverlay = 1,
+                                Icon = app.Icon,
+                                Index = shortcuts.Length,
+                                IsHidden = 0,
+                                OpenVR = 0,
+                                ShortcutPath = "",
+                                Tags = tags,
+                                Devkit = 0,
+                                DevkitGameID = "",
+                                LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                            };
+                            Boolean isFound = false;
+                            for (int i = 0; i < shortcuts.Length; i++)
+                            {
+                                Debug.WriteLine(shortcuts[i].ToString());
+
+
+                                if (shortcuts[i].AppName == app.Name)
+                                {
+                                    isFound = true;
+                                    Debug.WriteLine(app.Name + " already added to Steam. Updating existing shortcut.");
+                                    shortcuts[i] = newApp;
+                                }
+                            }
+
+                            if (!isFound)
+                            {
+                                //Resize this array so it fits the new entries
+                                Array.Resize(ref shortcuts, shortcuts.Length + 1);
+                                shortcuts[shortcuts.Length - 1] = newApp;
+                            }
+
+                        }
+
+                        try
+                        {
+                            if (!Directory.Exists(user + @"\\config\\"))
+                            {
+                                Directory.CreateDirectory(user + @"\\config\\");
+                            }
+                            //Write the file with all the shortcuts
+                            File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                }
+            }
         }
 
         public static void ClearAllShortcuts()
@@ -693,6 +710,141 @@ namespace UWPHook
                 {
                     SettingsButton_Click(this, null);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Generates the exe path used by Steam and NVIDIA Shield to call UWPHook
+        /// </summary>
+        /// <returns></returns>
+        private static string GenerateExePath()
+        {
+            return @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
+        }
+
+        /// <summary>
+        /// Iterates through the selected apps and creates windwos shortcut files for each inside the NVIDIA Shield Apps directory.
+        /// Will place an NVIDIA required placeholder box-art.png file inside the StreamingAssets/{app-name} dir.
+        /// </summary>
+        /// <param name="selected_apps"></param>
+        /// <param name="exePath"></param>
+        /// <param name="exeDir"></param>
+        private static void ExportAppsToShieldShortcuts(IEnumerable<AppEntry> selected_apps, string exePath, string exeDir)
+        {
+            string shieldAppsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NVIDIA Corporation", "Shield Apps");
+            string streamingAssetsDir = Path.Combine(shieldAppsDir, "StreamingAssets");
+            if (!Directory.Exists(streamingAssetsDir))
+            {
+                DirectoryInfo di = Directory.CreateDirectory(streamingAssetsDir);
+                di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
+            }
+
+            foreach (AppEntry app in selected_apps)
+            {
+                string scrubbedAppName = app.Name;
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
+                    scrubbedAppName = scrubbedAppName.Replace(c, '_');
+                }
+
+                string shortcutFile = Path.Combine(shieldAppsDir, scrubbedAppName + ".lnk");
+                Debug.WriteLine("Creating NVIDIA Shield shortcut: " + shortcutFile);
+
+                IWshRuntimeLibrary.IWshShell3 wsh = new IWshRuntimeLibrary.IWshShell_Class();
+                IWshRuntimeLibrary.IWshShortcut shortcut = wsh.CreateShortcut(shortcutFile);
+                shortcut.Arguments = app.Aumid;
+                shortcut.TargetPath = exePath;
+                // not sure about what this is for
+                shortcut.WindowStyle = 1;
+                shortcut.Description = "test link for " + app.Name;
+                shortcut.WorkingDirectory = exeDir;
+                //shortcut.IconLocation = "specify icon location";
+                shortcut.Save();
+
+                // Copy over placeholder box-art.png (required by NVIDIA)
+                string boxArtDir = Path.Combine(streamingAssetsDir, scrubbedAppName);
+                string boxArtFile = Path.Combine(streamingAssetsDir, scrubbedAppName, "box-art.png");
+                if (!Directory.Exists(boxArtDir))
+                {
+                    Debug.WriteLine("creating directory for game streaming assets: " + boxArtDir);
+                    try
+                    {
+                        Directory.CreateDirectory(boxArtDir);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine("unable to create game streaming assets dir: {0}", e);
+                    }
+
+                }
+                try
+                {
+                    Debug.WriteLine("copying placeholder box-art to " + boxArtFile);
+                    Properties.Resources.box_art.Save(boxArtFile);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine("unable to copy placeholder box-art: {0}", e);
+                }
+
+            }
+
+        }
+
+        /// <summary>
+        /// Copies all temporary images to the {drive}:/Users/{user}/Appdata/Local/NVIDIA Corporation/Shield Apps/StreamingAssets/{scrubbed game name} dirs
+        /// </summary>
+        /// <param name="selectedApps">Selected app entrys to copy images for</param>
+        private void CopyTempGridImagesToShieldStreamingAssets(IEnumerable<AppEntry> selectedApps)
+        {
+            string tmpGridDirectory = Path.Combine(Path.GetTempPath(), "UWPHook", "tmp_grid");
+            string streamingAssetsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NVIDIA Corporation", "Shield Apps", "StreamingAssets");
+
+            // No images were downloaded, maybe the key is invalid or no app had an image
+            if (!Directory.Exists(tmpGridDirectory))
+            {
+                return;
+            }
+            if (!Directory.Exists(streamingAssetsDirectory))
+            {
+                DirectoryInfo di = Directory.CreateDirectory(streamingAssetsDirectory);
+                di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
+            }
+
+            foreach (AppEntry app in selectedApps)
+            {
+                string scrubbedAppName = app.Name;
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
+                    scrubbedAppName = scrubbedAppName.Replace(c, '_');
+                }
+
+                ulong gameId = GenerateSteamGridAppId(app.Name, GenerateExePath());
+                string srcFile = Path.Combine(tmpGridDirectory, string.Format("{0}p.png", gameId));
+                string destDir = Path.Combine(streamingAssetsDirectory, scrubbedAppName);
+                string destFile = Path.Combine(destDir, "box-art.png");
+                if (!Directory.Exists(destDir))
+                {
+                    try
+                    {
+                        Debug.WriteLine("Creating directory: ", destDir);
+                        _ = Directory.CreateDirectory(destDir);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine("unable to create directory: ", e);
+                    }
+                }
+                try
+                {
+                    Debug.WriteLine("Copying box-art image from {0} to {1}", new object[] { srcFile, destFile });
+                    File.Copy(srcFile, destFile, true);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine("unable to copy box-art: ", e);
+                }
+
             }
         }
     }
