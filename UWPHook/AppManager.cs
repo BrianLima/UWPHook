@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -14,7 +15,8 @@ namespace UWPHook
     /// </summary>
     static class AppManager
     {
-        private static int id;
+        private static int runningProcessId;
+        private static bool isLauncherProcess;
 
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
@@ -37,10 +39,16 @@ namespace UWPHook
             try
             {
                 mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
-                
-                //Bring the launched app to the foreground, this fixes in-home streaming
-                id = (int)processId;
+                runningProcessId = (int)processId;
 
+                //if this is a launch aided by GameLaunchHelper, deal with child launch later
+                var possibleLauncher = Process.GetProcessById(runningProcessId);
+                if (possibleLauncher.ProcessName.Equals("gamelaunchhelper", StringComparison.OrdinalIgnoreCase))
+                {
+                    isLauncherProcess = true;
+                }
+
+                //Bring the launched app to the foreground, this fixes in-home streaming
                 BringProcess();
             }
             catch (Exception e)
@@ -56,20 +64,64 @@ namespace UWPHook
         public static Boolean IsRunning()
         {
             //If 0, no app was launched most probably
-            if (id == 0)
+            if (runningProcessId != 0)
             {
-                return false;
-            }
-            try
-            {
-                Process.GetProcessById(id);
-            }
-            catch (Exception)
-            {
-                return false;
+                try
+                {
+                    Process.GetProcessById(runningProcessId);
+                    return true;
+                }
+                catch
+                {
+                    //the process we launched is no longer running. did it spawn any others?
+                    if (isLauncherProcess)
+                    {
+                        var tree = GetProcessChildren();
+                        if (tree.TryGetValue(runningProcessId, out var children))
+                        {
+                            //retarget to the first child we find
+                            isLauncherProcess = false;
+
+                            var newId = children.First();
+                            Debug.WriteLine($"Launcher opened child process ({runningProcessId}->{newId}), using new process as target");
+                            runningProcessId = newId;
+
+                            //bring the "real" launched process
+                            BringProcess();
+                            return true;
+                        }
+                    }
+                }
             }
 
-            return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Find pid<->parent_pid relationships
+        /// </summary>
+        /// <returns>Map of processes to their child IDs. Any process in this object may have already terminated</returns>
+        private static Dictionary<int, List<int>> GetProcessChildren()
+        {
+            var result = new Dictionary<int, List<int>>();
+
+            using (var searcher = new ManagementObjectSearcher("select processid,parentprocessid from win32_process"))
+            {
+                foreach (var process in searcher.Get())
+                {
+                    int processId = Convert.ToInt32(process.Properties["processid"].Value);
+                    int parentId = Convert.ToInt32(process.Properties["parentprocessid"].Value);
+
+                    if (!result.ContainsKey(parentId))
+                    {
+                        result.Add(parentId, new List<int>());
+                    }
+
+                    result[parentId].Add(processId);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -147,8 +199,7 @@ namespace UWPHook
             const int SW_SHOWDEFAULT = 10;
             */
 
-            var me = Process.GetCurrentProcess();
-            var arrProcesses = Process.GetProcessById(id);
+            var arrProcesses = Process.GetProcessById(runningProcessId);
 
             // get the window handle
             IntPtr hWnd = arrProcesses.MainWindowHandle;
