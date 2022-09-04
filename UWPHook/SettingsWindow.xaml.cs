@@ -22,8 +22,6 @@ namespace UWPHook
             {
                 cultures_comboBox.Items.Add(culture.TextInfo.CultureName);
             }
-
-
             
             for (int i = 0; i < 10; i++)
             {

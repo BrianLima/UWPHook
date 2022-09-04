@@ -89,9 +89,9 @@
             </ComboBox>
             <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label1_Copy6" Content="Export with these tags:" Margin="5,2,8,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="4"/>
             <TextBox x:Name="tags_textBox" Grid.Column="2" Height="29" Margin="10,2,10,0" Grid.Row="4" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-            <ToggleButton x:Name="change_resolution_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,9,0,0" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Height="18" Grid.Row="3" />
+            <ToggleButton x:Name="change_resolution_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Top" Margin="0,9,0,0" ToolTip="Change host resolution on streaming mode" IsChecked="False" Height="18" Grid.Row="3" />
             <Label ToolTip="Change the host computer resolution on launch, return to previous after." x:Name="label1_Copy8" Content="Change host resolution to:" Margin="5,3,0,0" VerticalAlignment="Top" Height="29" Grid.Column="1" Grid.Row="3"/>
-            <ComboBox x:Name="seconds_comboBox_Copy" Margin="0,3,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="217" Grid.Row="3" Grid.ColumnSpan="2"/>
+            <ComboBox x:Name="resolution_comboBox" Margin="0,3,10,0" VerticalAlignment="Top" Height="31" Grid.Column="2" HorizontalAlignment="Right" Width="217" Grid.Row="3" Grid.ColumnSpan="2"/>
         </Grid>
         <Grid Margin="10,88,9,35" Grid.Column="1" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
