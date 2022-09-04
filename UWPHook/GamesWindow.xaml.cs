@@ -393,7 +393,7 @@ namespace UWPHook
                         {
                             foreach (var app in selected_apps)
                             {
-                                string icon = PersistAppIcon(app, exeDir);
+                                string icon = PersistAppIcon(app);
 
                                 VDFEntry newApp = new VDFEntry()
                                 {
@@ -480,11 +480,11 @@ namespace UWPHook
         /// Due to some apps changing the icon location when they update, which causes icons to be "lost"
         /// </summary>
         /// <param name="app">App to copy the icon from</param>
-        /// <param name="path">Base path to copy the app to</param>
         /// <returns></returns>
-        private string PersistAppIcon(AppEntry app, string path)
+        private string PersistAppIcon(AppEntry app)
         {
-            string icons_path = path + @"\\icons\\";
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string icons_path = path + @"\\Briano\\UWPHook\\icons\\";
 
             if (!Directory.Exists(icons_path))
             {
