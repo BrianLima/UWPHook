@@ -11,8 +11,8 @@
 !define APP_NAME "UWPHook"
 !define COMP_NAME "Briano"
 !define WEB_SITE "https://briano.dev"
-!define VERSION "2.10.00.00"
-!define COPYRIGHT "Briano � 2020 2021"
+!define VERSION "2.11.00.00"
+!define COPYRIGHT "Briano � 2020 2021 2022"
 !define DESCRIPTION "The easy way to add UWP and XGP games to Steam"
 !define LICENSE_TXT "C:\Users\Brian\Documents\GitHub\UWPHook\README.md"
 !define INSTALLER_NAME "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook.exe"
@@ -88,17 +88,21 @@ Section -MainProgram
 ${INSTALL_TYPE}
 SetOverwrite ifnewer
 SetOutPath "$INSTDIR"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Crc32.NET.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\MaterialDesignColors.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\MaterialDesignThemes.Wpf.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Microsoft.Management.Infrastructure.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Newtonsoft.Json.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\SharpSteam.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Management.Automation.dll"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Net.Http.Formatting.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe.config"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\VDFParser.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Crc32.NET.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Net.Http.Formatting.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Newtonsoft.Json.dll"
+
+CreateDirectory "$INSTDIR\Resources"
+SetOutPath "$INSTDIR\Resources"
+File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\Resources\KnownApps.json"
 
 SectionEnd
 
@@ -165,10 +169,15 @@ Delete "$INSTDIR\Crc32.NET.xml"
 Delete "$INSTDIR\uninstall.exe"
 Delete "$INSTDIR\System.Net.Http.Formatting.dll"
 Delete "$INSTDIR\Newtonsoft.Json.dll"
+Delete "$INSTDIR\System.dll"
+Delete "$INSTDIR\Resources\KnownApps.json"
 !ifdef WEB_SITE
 Delete "$INSTDIR\${APP_NAME} website.url"
 !endif
 
+
+RmDir /r "$APPDATA\Briano"
+RmDir "$INSTDIR\Resources"
 RmDir "$INSTDIR"
 
 !ifdef REG_START_MENU
