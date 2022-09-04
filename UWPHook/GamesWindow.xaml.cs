@@ -683,8 +683,10 @@ namespace UWPHook
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrEmpty(Settings.Default.SteamGridDbApiKey) && !Settings.Default.OfferedSteamGridDB)
+            
+            if (!Settings.Default.OfferedSteamGridDB)
             {
+                Settings.Default.SteamGridDbApiKey = "";
                 Settings.Default.OfferedSteamGridDB = true;
                 Settings.Default.Save();
 

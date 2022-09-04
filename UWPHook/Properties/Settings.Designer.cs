@@ -73,7 +73,7 @@ namespace UWPHook.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("617eb1e4ce186060a4b1e2ab0d468a44")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string SteamGridDbApiKey {
             get {
                 return ((string)(this["SteamGridDbApiKey"]));

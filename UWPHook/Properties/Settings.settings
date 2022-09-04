@@ -15,7 +15,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="SteamGridDbApiKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">617eb1e4ce186060a4b1e2ab0d468a44</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SteamGridDB_Style" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;

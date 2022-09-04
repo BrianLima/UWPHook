@@ -97,14 +97,5 @@ namespace UWPHook
                 "Log-in, or create your account, go to your profile preferences and click 'Generate API Key', then paste the key back on UWPHook.", "Attention!", MessageBoxButton.OK, MessageBoxImage.Information );
             System.Diagnostics.Process.Start("https://www.steamgriddb.com/profile/preferences/api");
         }
-
-        //private void test()
-        //{
-        //    FixHeight = 1280;
-        //
-        //    FixWidth = 1024;
-        //
-        //    Resolution.CResolution ChangeRes1024 = new Resolution.CResolution(FixHeight, FixWidth);
-        //}
     }
 }
