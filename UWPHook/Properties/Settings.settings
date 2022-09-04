@@ -17,41 +17,6 @@
     <Setting Name="SteamGridDbApiKey" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SteamGridDB_Style" Type="System.Collections.Specialized.StringCollection" Scope="User">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;any&lt;/string&gt;
-  &lt;string&gt;alternate&lt;/string&gt;
-  &lt;string&gt;blurred&lt;/string&gt;
-  &lt;string&gt;white_logo&lt;/string&gt;
-  &lt;string&gt;material&lt;/string&gt;
-  &lt;string&gt;no_logo &lt;/string&gt;
-&lt;/ArrayOfString&gt;</Value>
-    </Setting>
-    <Setting Name="SteamGridDB_Type" Type="System.Collections.Specialized.StringCollection" Scope="User">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;any&lt;/string&gt;
-  &lt;string&gt;static&lt;/string&gt;
-  &lt;string&gt;animated&lt;/string&gt;
-&lt;/ArrayOfString&gt;</Value>
-    </Setting>
-    <Setting Name="SteamGridDB_nfsw" Type="System.Collections.Specialized.StringCollection" Scope="User">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;false&lt;/string&gt;
-  &lt;string&gt;any&lt;/string&gt;
-  &lt;string&gt;true&lt;/string&gt;
-&lt;/ArrayOfString&gt;</Value>
-    </Setting>
-    <Setting Name="SteamGridDB_Humor" Type="System.Collections.Specialized.StringCollection" Scope="User">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;false&lt;/string&gt;
-  &lt;string&gt;any&lt;/string&gt;
-  &lt;string&gt;true&lt;/string&gt;
-&lt;/ArrayOfString&gt;</Value>
-    </Setting>
     <Setting Name="SelectedSteamGridDB_Style" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
@@ -69,6 +34,41 @@
     </Setting>
     <Setting Name="Tags" Type="System.String" Scope="User">
       <Value Profile="(Default)">READY TO PLAY,XBOX</Value>
+    </Setting>
+    <Setting Name="SteamGridDB_Style" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;any&lt;/string&gt;
+  &lt;string&gt;alternate&lt;/string&gt;
+  &lt;string&gt;blurred&lt;/string&gt;
+  &lt;string&gt;white_logo&lt;/string&gt;
+  &lt;string&gt;material&lt;/string&gt;
+  &lt;string&gt;no_logo &lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="SteamGridDB_Type" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;any&lt;/string&gt;
+  &lt;string&gt;static&lt;/string&gt;
+  &lt;string&gt;animated&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="SteamGridDB_nfsw" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;false&lt;/string&gt;
+  &lt;string&gt;any&lt;/string&gt;
+  &lt;string&gt;true&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="SteamGridDB_Humor" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;false&lt;/string&gt;
+  &lt;string&gt;any&lt;/string&gt;
+  &lt;string&gt;true&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
     </Setting>
   </Settings>
 </SettingsFile>
