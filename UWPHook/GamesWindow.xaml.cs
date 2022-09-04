@@ -393,6 +393,8 @@ namespace UWPHook
                         {
                             foreach (var app in selected_apps)
                             {
+                                string icon = PersistAppIcon(app, exeDir);
+
                                 VDFEntry newApp = new VDFEntry()
                                 {
                                     AppName = app.Name,
@@ -401,7 +403,7 @@ namespace UWPHook
                                     LaunchOptions = app.Aumid,
                                     AllowDesktopConfig = 1,
                                     AllowOverlay = 1,
-                                    Icon = app.Icon,
+                                    Icon = icon,
                                     Index = shortcuts.Length,
                                     IsHidden = 0,
                                     OpenVR = 0,
@@ -431,7 +433,6 @@ namespace UWPHook
                                     Array.Resize(ref shortcuts, shortcuts.Length + 1);
                                     shortcuts[shortcuts.Length - 1] = newApp;
                                 }
-                                
                             }
 
                             try
@@ -474,11 +475,38 @@ namespace UWPHook
             return true;
         }
 
+        /// <summary>
+        /// Copies an apps icon to a intermediate location
+        /// Due to some apps changing the icon location when they update, which causes icons to be "lost"
+        /// </summary>
+        /// <param name="app">App to copy the icon from</param>
+        /// <param name="path">Base path to copy the app to</param>
+        /// <returns></returns>
+        private string PersistAppIcon(AppEntry app, string path)
+        {
+            string icons_path = path + @"\\icons\\";
+
+            if (!Directory.Exists(icons_path))
+            {
+                Directory.CreateDirectory(icons_path);
+            }
+
+            string destFile = String.Join(String.Empty, icons_path+ @"\\", app.Aumid + Path.GetFileName(app.Icon));
+            File.Copy(app.Icon, destFile, true);
+
+            return destFile;
+        }
+
+        /// <summary>
+        /// Restarts the Steam.exe process
+        /// </summary>
+        /// <param name="restartSteam"></param>
+        /// <returns></returns>
         private async Task<bool> RestartSteam(bool restartSteam)
         {
             Func<Process> getSteam = () => Process.GetProcessesByName("steam").SingleOrDefault();
-
             Process steam = getSteam();
+
             if (steam != null)
             {
                 string steamExe = steam.MainModule.FileName;
@@ -686,7 +714,6 @@ namespace UWPHook
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            
             if (!Settings.Default.OfferedSteamGridDB)
             {
                 Settings.Default.SteamGridDbApiKey = "";
