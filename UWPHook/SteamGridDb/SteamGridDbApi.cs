@@ -101,7 +101,13 @@ namespace UWPHook.SteamGridDb
             if (response.IsSuccessStatusCode)
             {
                 var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<ImageResponse>>();
-                images = parsedResponse.Data;
+                if (parsedResponse != null)
+                {
+                    if (parsedResponse.Success)
+                    {
+                        images = parsedResponse.Data;
+                    }
+                }
             }
 
             return images;
