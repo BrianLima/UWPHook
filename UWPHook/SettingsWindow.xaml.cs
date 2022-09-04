@@ -98,13 +98,13 @@ namespace UWPHook
             System.Diagnostics.Process.Start("https://www.steamgriddb.com/profile/preferences/api");
         }
 
-        private void test()
-        {
-            FixHeight = 1280;
-
-            FixWidth = 1024;
-
-            Resolution.CResolution ChangeRes1024 = new Resolution.CResolution(FixHeight, FixWidth);
-        }
+        //private void test()
+        //{
+        //    FixHeight = 1280;
+        //
+        //    FixWidth = 1024;
+        //
+        //    Resolution.CResolution ChangeRes1024 = new Resolution.CResolution(FixHeight, FixWidth);
+        //}
     }
 }
