@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,8 @@ using System.Management;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using UWPHook.Properties;
 
 namespace UWPHook
 {
@@ -17,6 +20,7 @@ namespace UWPHook
     {
         private static int runningProcessId;
         private static bool isLauncherProcess;
+        private static string executablePath;
 
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
@@ -24,29 +28,29 @@ namespace UWPHook
         /// <param name="aumid">The AUMID of the app to launch</param>
         public static void LaunchUWPApp(string[] args)
         {
-            string aumid = args[1]; // We receive the args from Steam, 
-                                    // 0 is application location, 
-                                    // 1 is the aumid, the rest are extras
+            
 
+            // We receive the args from Steam, 
+            // 0 is application location, 
+            // 1 is the aumid,
+            // 2 is the executable, the rest are extras
+            string aumid = args[1];
+            executablePath = args[2].Contains("/") ? args[2].Replace('/', '\\') : args[2];
+            FileStream debug = File.OpenWrite("debug.log");
+            Log.Debug("Arguments => " + String.Join("/", args));
             var mgr = new ApplicationActivationManager();
             uint processId;
 
-            string extra_args = String.Join(" ", args.Skip(2)
-                                                 .Take(args.Length - 2)
+            string extra_args = String.Join(" ", args.Skip(3)
+                                                 .Take(args.Length - 3)
                                                  .Select(eachElement => eachElement.Clone()
                                             ).ToArray());
 
             try
             {
                 mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
-                runningProcessId = (int)processId;
-
-                //if this is a launch aided by GameLaunchHelper, deal with child launch later
-                var possibleLauncher = Process.GetProcessById(runningProcessId);
-                if (possibleLauncher.ProcessName.Equals("gamelaunchhelper", StringComparison.OrdinalIgnoreCase))
-                {
-                    isLauncherProcess = true;
-                }
+                runningProcessId = (int) processId;
+                Log.Debug("Process ID => " + runningProcessId.ToString());
 
                 //Bring the launched app to the foreground, this fixes in-home streaming
                 BringProcess();
@@ -63,34 +67,58 @@ namespace UWPHook
         /// <returns>True if the perviously launched app is running, false otherwise</returns>
         public static Boolean IsRunning()
         {
-            //If 0, no app was launched most probably
-            if (runningProcessId != 0)
+            try
             {
-                try
+                Log.Debug("Checking PID => " + runningProcessId.ToString());
+
+                // PID 0 means an error during launch for the game
+                // (Example : Game no more available on gamepass or problem with installation) so instant exit in this case
+                if (runningProcessId == 0)
                 {
-                    Process.GetProcessById(runningProcessId);
-                    return true;
+                    Log.Debug("PID is 0");
+                    return false;
                 }
-                catch
+                Process.GetProcessById(runningProcessId);
+                Log.Debug("Process is running");
+                return true;
+            }
+            catch
+            {
+                // Check only at launch if started by a launcher
+                if (!isLauncherProcess)
                 {
-                    //the process we launched is no longer running. did it spawn any others?
-                    if (isLauncherProcess)
+                    Log.Debug("initial PID is not running anymore, checking other possible process runing before stop");
+                    bool secondCheck = false;
+                    do
                     {
-                        var tree = GetProcessChildren();
-                        if (tree.TryGetValue(runningProcessId, out var children))
+                        // Handle process running by some launcher by checking their executable path and name
+                        var processes = GetProcess();
+                        foreach (var process in processes)
                         {
-                            //retarget to the first child we find
-                            isLauncherProcess = false;
+                            string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
+                            Log.Debug("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
+                            Log.Debug("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
+                            if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
+                            {
+                                int pid = process.Value.Pid;
+                                Log.Debug($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");
+                                runningProcessId = pid;
+                                isLauncherProcess = true;
 
-                            var newId = children.First();
-                            Debug.WriteLine($"Launcher opened child process ({runningProcessId}->{newId}), using new process as target");
-                            runningProcessId = newId;
-
-                            //bring the "real" launched process
-                            BringProcess();
-                            return true;
+                                //bring the "real" launched process
+                                BringProcess();
+                                return true;
+                            }
                         }
-                    }
+
+                        // Handle the last chance if process was not found due to slow running like Farming Simulator 2022 or Halo MCC
+                        secondCheck = !secondCheck;
+                        if (secondCheck)
+                        {
+                            Log.Debug("Process has not been found. Last chance to find it !");
+                            Thread.Sleep(Settings.Default.Seconds * 5000);
+                        }
+                    } while (secondCheck);
                 }
             }
 
@@ -98,26 +126,24 @@ namespace UWPHook
         }
 
         /// <summary>
-        /// Find pid<->parent_pid relationships
+        /// Find process path with their dedicated pid
         /// </summary>
-        /// <returns>Map of processes to their child IDs. Any process in this object may have already terminated</returns>
-        private static Dictionary<int, List<int>> GetProcessChildren()
+        /// <returns>Map of processes to their path and pid. Any process in this object may have already terminated</returns>
+        private static Dictionary<string, (string Path, int Pid)> GetProcess()
         {
-            var result = new Dictionary<int, List<int>>();
+            var result = new Dictionary<string, (string Path, int Pid)>();
 
-            using (var searcher = new ManagementObjectSearcher("select processid,parentprocessid from win32_process"))
+            using (var searcher = new ManagementObjectSearcher("select processid, Name, ExecutablePath from win32_process"))
             {
                 foreach (var process in searcher.Get())
                 {
+                    string processName = Convert.ToString(process.Properties["Name"].Value);
                     int processId = Convert.ToInt32(process.Properties["processid"].Value);
-                    int parentId = Convert.ToInt32(process.Properties["parentprocessid"].Value);
+                    string processPath = Convert.ToString(process.Properties["ExecutablePath"].Value);
 
-                    if (!result.ContainsKey(parentId))
-                    {
-                        result.Add(parentId, new List<int>());
-                    }
+                    if (String.IsNullOrWhiteSpace(processName) || result.ContainsKey(processName)) continue;
 
-                    result[parentId].Add(processId);
+                    result.Add(processName, (processPath, processId));
                 }
             }
 
@@ -125,7 +151,7 @@ namespace UWPHook
         }
 
         /// <summary>
-        /// Gets a list of installed UWP Apps on the system, containing each app name + AUMID, separated by '|' 
+        /// Gets a list of installed UWP Apps on the system, containing each app name + AUMID + executable path, separated by '|' 
         /// </summary>
         /// <returns>List of installed UWP Apps</returns>
         public static List<String> GetInstalledApps()
