@@ -1,4 +1,5 @@
 using Force.Crc32;
+using Serilog;
 using SharpSteam;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,10 @@ namespace UWPHook
             Debug.WriteLine("Init GamesWindow");
             Apps = new AppEntryModel();
             var args = Environment.GetCommandLineArgs();
+            Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Error()
+            .WriteTo.File("debug.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
 
             // If null or 1, the app was launched normally
             if (args?.Length > 1)
@@ -400,7 +405,7 @@ namespace UWPHook
                                     AppName = app.Name,
                                     Exe = exePath,
                                     StartDir = exeDir,
-                                    LaunchOptions = app.Aumid,
+                                    LaunchOptions = app.Aumid + " " + app.Executable,
                                     AllowDesktopConfig = 1,
                                     AllowOverlay = 1,
                                     Icon = icon,
@@ -667,7 +672,7 @@ namespace UWPHook
                         string logosPath = Path.GetDirectoryName(values[1]);
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                         {
-                            Apps.Entries.Add(new AppEntry() { Name = values[0], IconPath = logosPath, Aumid = values[2], Selected = false });
+                            Apps.Entries.Add(new AppEntry() { Name = values[0], Executable = values[3], IconPath = logosPath, Aumid = values[2], Selected = false });
                         });
                     }
                 }
