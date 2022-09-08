@@ -35,6 +35,16 @@ namespace UWPHook
             set { _name = value; }
         }
 
+        private string _executable;
+        /// <summary>
+        /// Gets or sets the executable of the application
+        /// </summary>
+        public string Executable
+        {
+            get { return _executable; }
+            set { _executable = value; }
+        }
+
         private string _aumid;
         /// <summary>
         /// Gets or sets the aumid of the application
