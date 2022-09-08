@@ -10,6 +10,11 @@ foreach ($app in $installedapps)
             {
                     $appx = Get-AppxPackageManifest $app;
                     $name = $appx.Package.Properties.DisplayName;
+                    $executable = (Select-Xml -Path ($app.InstallLocation + "\MicrosoftGame.Config") -XPath "/Game/ExecutableList/Executable/@Name").Node.Value
+                    # Convert object to ensure is the String of execuble (cf Halo Master Chief Collection example below)
+                    # mcclauncher.exe
+                    # MCC\Binaries\Win64\MCCWinStore-Win64-Shipping.exe
+                    if($executable -is [Object[]]) { $executable = $executable[1].ToString() }
 
                     if($name -like '*DisplayName*' -or $name  -like '*ms-resource*')
                     {
@@ -22,8 +27,7 @@ foreach ($app in $installedapps)
 
                     $logo = $app.InstallLocation + "\" + $appx.Package.Applications.Application.VisualElements.Square150x150Logo;
 
-                    $aumidList += $name + "|" + $logo + "|" +
-                    $app.packagefamilyname + "!" + $id+ ";"
+                    $aumidList += $name + "|" + $logo + "|" + $app.packagefamilyname + "!" + $id + "|" + $executable + ";"
                 }
             }
         }
