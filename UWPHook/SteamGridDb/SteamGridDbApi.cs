@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using UWPHook.Properties;
 using System.Diagnostics;
+using Serilog;
 
 namespace UWPHook.SteamGridDb
 {
@@ -45,11 +46,12 @@ namespace UWPHook.SteamGridDb
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                Debug.WriteLine("ERROR RESPONSE: " + response.ToString());
+                Log.Verbose("ERROR RESPONSE: " + response.ToString());
 
                 settings.SteamGridDbApiKey = String.Empty;
                 settings.Save();
 
+                Log.Error("Warning: SteamGrid API Key Invalid. Please generate a new key and add it to settings.");
                 throw new TaskCanceledException("Warning: SteamGrid API Key Invalid. Please generate a new key and add it to settings.");
             }
 

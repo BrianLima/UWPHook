@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,16 +29,13 @@ namespace UWPHook
         /// <param name="aumid">The AUMID of the app to launch</param>
         public static void LaunchUWPApp(string[] args)
         {
-            
-
             // We receive the args from Steam, 
             // 0 is application location, 
             // 1 is the aumid,
             // 2 is the executable, the rest are extras
             string aumid = args[1];
             executablePath = args[2].Contains("/") ? args[2].Replace('/', '\\') : args[2];
-            FileStream debug = File.OpenWrite("debug.log");
-            Log.Debug("Arguments => " + String.Join("/", args));
+            Log.Verbose("Arguments => " + String.Join("/", args));
             var mgr = new ApplicationActivationManager();
             uint processId;
 
@@ -50,13 +48,14 @@ namespace UWPHook
             {
                 mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
                 runningProcessId = (int) processId;
-                Log.Debug("Process ID => " + runningProcessId.ToString());
+                Log.Verbose("Process ID => " + runningProcessId.ToString());
 
                 //Bring the launched app to the foreground, this fixes in-home streaming
                 BringProcess();
             }
             catch (Exception e)
             {
+                Log.Error("Error while trying to launch your app." + Environment.NewLine + e.Message);
                 throw new Exception("Error while trying to launch your app." + Environment.NewLine + e.Message);
             }
         }
@@ -96,12 +95,12 @@ namespace UWPHook
                         foreach (var process in processes)
                         {
                             string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
-                            Log.Debug("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
-                            Log.Debug("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
+                            Log.Verbose("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
+                            Log.Verbose("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
                             if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
                             {
                                 int pid = process.Value.Pid;
-                                Log.Debug($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");
+                                Log.Verbose($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");
                                 runningProcessId = pid;
                                 isLauncherProcess = true;
 
@@ -173,6 +172,7 @@ namespace UWPHook
             }
             catch (Exception e)
             {
+                Log.Error("Error trying to get installed apps on your PC " + Environment.NewLine + e.Message, e.InnerException);
                 throw new Exception("Error trying to get installed apps on your PC " + Environment.NewLine + e.Message, e.InnerException);
             }
 
