@@ -11,7 +11,7 @@
 !define APP_NAME "UWPHook"
 !define COMP_NAME "Briano"
 !define WEB_SITE "https://briano.dev"
-!define VERSION "2.11.00.00"
+!define VERSION "2.12.00.00"
 !define COPYRIGHT "Briano � 2020 2021 2022"
 !define DESCRIPTION "The easy way to add UWP and XGP games to Steam"
 !define LICENSE_TXT "C:\Users\Brian\Documents\GitHub\UWPHook\README.md"
