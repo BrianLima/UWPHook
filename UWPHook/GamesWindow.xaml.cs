@@ -398,7 +398,29 @@ namespace UWPHook
                         {
                             foreach (var app in selected_apps)
                             {
-                                string icon = PersistAppIcon(app);
+                                string icon = "";
+                                if (gridImagesDownloadTasks.Count > 0)
+                                {
+                                    await Task.WhenAll(gridImagesDownloadTasks);
+
+                                    await Task.Run(() =>
+                                    {
+                                        string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+                                        string[] images = Directory.GetFiles(tmpGridDirectory);
+
+                                        foreach (string image in images)
+                                        {
+                                            if (image.EndsWith("_logo.png"))
+                                            {
+                                                icon = PersistAppIcon(app, image);
+                                                break;
+                                            }
+                                        }
+                                    });
+                                }
+                                else {
+                                    icon = PersistAppIcon(app);
+                                }
 
                                 VDFEntry newApp = new VDFEntry()
                                 {
@@ -489,15 +511,31 @@ namespace UWPHook
         private string PersistAppIcon(AppEntry app)
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string icons_path = path + @"\\Briano\\UWPHook\\icons\\";
+            string icons_path = path + @"\Briano\UWPHook\icons\";
 
             if (!Directory.Exists(icons_path))
             {
                 Directory.CreateDirectory(icons_path);
             }
 
-            string destFile = String.Join(String.Empty, icons_path+ @"\\", app.Aumid + Path.GetFileName(app.Icon));
+            string destFile = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(app.Icon));
             File.Copy(app.Icon, destFile, true);
+
+            return destFile;
+        }
+
+        private string PersistAppIcon(AppEntry app, string iconDownloadedPath)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string icons_path = path + @"\Briano\UWPHook\icons\";
+
+            if (!Directory.Exists(icons_path))
+            {
+                Directory.CreateDirectory(icons_path);
+            }
+
+            string destFile = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(iconDownloadedPath));
+            File.Copy(iconDownloadedPath, destFile, true);
 
             return destFile;
         }
