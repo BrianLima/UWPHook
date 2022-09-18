@@ -542,7 +542,14 @@ namespace UWPHook
             string dest_file = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(icon_to_copy));
             try
             {
-                File.Copy(icon_to_copy, dest_file, true);
+                if (File.Exists(icon_to_copy))
+                {
+                    File.Copy(icon_to_copy, dest_file, true);
+                }
+                else
+                {
+                    dest_file = app.Icon;
+                }
             }
             catch (System.IO.IOException e)
             {
