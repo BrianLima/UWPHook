@@ -175,6 +175,7 @@ namespace UWPHook
             {
                 await ExportGames();
                 await RestartSteam(restartSteam);
+                LoadButton_Click(null, null);
 
                 msg = "Your apps were successfuly exported!";
                 if (!restartSteam)
@@ -715,6 +716,31 @@ namespace UWPHook
                 //Rejoin them in the original list, but putting them into last
                 installedApps = installedApps.Union(nameNotFound).ToList<String>();
 
+                //Get already installed apps from Steam Library
+                string steam_folder = SteamManager.GetSteamFolder();
+                VDFEntry[] vdf = new VDFEntry[0];
+
+                if (Directory.Exists(steam_folder))
+                {
+                    var users = SteamManager.GetUsers(steam_folder);
+
+                    foreach (var user in users)
+                    {
+                        try
+                        {
+                            if (Directory.Exists(user + @"\\config\\"))
+                            {
+                                vdf = VDFParser.VDFParser.Parse(user + @"\\config\\shortcuts.vdf");
+                                break;
+                            }
+                        }
+                        catch (Exception ex) when (!(ex is System.IO.FileNotFoundException) || !(ex is VDFParser.VDFTooShortException))
+                        {
+                            throw new Exception("Error: Program failed while trying to read your Steam shortcuts" + Environment.NewLine + ex.Message);
+                        }
+                    }
+                }
+
                 foreach (var app in installedApps)
                 {
                     //Remove end lines from the String and split both values, I split the appname and the AUMID using |
@@ -724,10 +750,17 @@ namespace UWPHook
                     if (values.Length >= 3 && AppManager.IsKnownApp(values[2], out string readableName))
                     {
                         values[0] = readableName;
+                        Log.Verbose("readableName => " + readableName);
                     }
 
                     if (!String.IsNullOrWhiteSpace(values[0]))
                     {
+                        Log.Verbose("vdf => " + vdf.Length);
+                        if (vdf.Length > 0 && Array.Exists(vdf, entry => entry.AppName == values[0])) {
+                            Log.Debug(values[0] + " is already installed !");
+                            continue;
+                        }
+
                         //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
                         string logosPath = Path.GetDirectoryName(values[1]);
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
