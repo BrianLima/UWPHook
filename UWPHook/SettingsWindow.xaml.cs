@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows;
-using System.Linq;
-using System.Runtime.InteropServices;
-//using System.Windows.Forms;
 
 namespace UWPHook
 {
@@ -28,13 +25,14 @@ namespace UWPHook
                 seconds_comboBox.Items.Add(i + " seconds");
                 if (i == Properties.Settings.Default.Seconds)
                 {
-                    seconds_comboBox.SelectedIndex = i - 1;
+                    seconds_comboBox.SelectedIndex = i;
                 }
             }
 
             cultures_comboBox.SelectedItem = Properties.Settings.Default.TargetLanguage;
             language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
             streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
+            logLevel_comboBox.SelectedIndex = Properties.Settings.Default.SelectedLogLevel;
             steamgriddb_api_key.Text = Properties.Settings.Default.SteamGridDbApiKey;
             style_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Style;
             type_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Type;
@@ -49,6 +47,7 @@ namespace UWPHook
             Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem.ToString();
             Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
             Properties.Settings.Default.StreamMode = (bool)streaming_toggle.IsChecked;
+            Properties.Settings.Default.SelectedLogLevel = logLevel_comboBox.SelectedIndex;
             Properties.Settings.Default.SteamGridDbApiKey = steamgriddb_api_key.Text.Trim('\r', '\n');
             Properties.Settings.Default.SelectedSteamGridDB_Style = style_comboBox.SelectedIndex;
             Properties.Settings.Default.SelectedSteamGridDB_Type = type_comboBox.SelectedIndex;
@@ -56,6 +55,7 @@ namespace UWPHook
             Properties.Settings.Default.SelectedSteamGridDB_Humor = humor_comboBox.SelectedIndex;
             Properties.Settings.Default.Tags = tags_textBox.Text;
             Properties.Settings.Default.Save();
+            GamesWindow.SetLogLevel();
             this.Close();
         }
 
