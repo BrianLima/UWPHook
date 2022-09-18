@@ -58,7 +58,7 @@ namespace UWPHook
             if (args?.Length > 1)
             {
                 // When length is 1, the only argument is the path where the app is installed
-                 _ = LauncherAsync(args); // Launches the requested game
+                _ = LauncherAsync(args); // Launches the requested game
 
             }
             else
@@ -177,11 +177,11 @@ namespace UWPHook
                 await RestartSteam(restartSteam);
 
                 msg = "Your apps were successfuly exported!";
-                if(!restartSteam)
+                if (!restartSteam)
                 {
                     msg += " Please restart Steam in order to see them.";
                 }
-                else if(result)
+                else if (result)
                 {
                     msg += " Steam has been restarted.";
                 }
@@ -231,7 +231,7 @@ namespace UWPHook
                     stream.Close();
                     client.Dispose();
                 }
-            });            
+            });
         }
 
         /// <summary>
@@ -239,16 +239,16 @@ namespace UWPHook
         /// </summary>
         /// <param name="user">The user path to copy images to</param>
         private void CopyTempGridImagesToSteamUser(string user)
-        {            
+        {
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
             string userGridDirectory = user + "\\config\\grid\\";
-            
+
             // No images were downloaded, maybe the key is invalid or no app had an image
             if (!Directory.Exists(tmpGridDirectory))
             {
                 return;
             }
-            
+
             string[] images = Directory.GetFiles(tmpGridDirectory);
 
             if (!Directory.Exists(userGridDirectory))
@@ -295,7 +295,7 @@ namespace UWPHook
                 Log.Error(exception.Message);
                 throw;
             }
-            
+
             if (games != null)
             {
                 var game = games[0];
@@ -435,7 +435,8 @@ namespace UWPHook
                                         }
                                     });
                                 }
-                                else {
+                                else
+                                {
                                     icon = PersistAppIcon(app);
                                 }
 
@@ -461,7 +462,7 @@ namespace UWPHook
                                 for (int i = 0; i < shortcuts.Length; i++)
                                 {
                                     Log.Verbose(shortcuts[i].ToString());
-                                    
+
 
                                     if (shortcuts[i].AppName == app.Name)
                                     {
@@ -525,38 +526,38 @@ namespace UWPHook
         /// Copies an apps icon to a intermediate location
         /// Due to some apps changing the icon location when they update, which causes icons to be "lost"
         /// </summary>
-        /// <param name="app">App to copy the icon from</param>
-        /// <returns></returns>
-        private string PersistAppIcon(AppEntry app)
+        /// <param name="app">App to copy the icon to</param>
+        /// <param name="forcedIcon">Overwrites the app.icon to be copied</param>
+        /// <returns>string, the path to the usable and persisted icon</returns>
+        private string PersistAppIcon(AppEntry app, string forcedIcon = "")
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string icons_path = path + @"\Briano\UWPHook\icons\";
+
+            // If we do not have an specific icon to copy, copy app.icon, if we do, copy the specified icon
+            string icon_to_copy = String.IsNullOrEmpty(forcedIcon) ? app.Icon : forcedIcon;
+
 
             if (!Directory.Exists(icons_path))
             {
                 Directory.CreateDirectory(icons_path);
             }
 
-            string destFile = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(app.Icon));
-            File.Copy(app.Icon, destFile, true);
-
-            return destFile;
-        }
-
-        private string PersistAppIcon(AppEntry app, string iconDownloadedPath)
-        {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string icons_path = path + @"\Briano\UWPHook\icons\";
-
-            if (!Directory.Exists(icons_path))
+            string dest_file = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(icon_to_copy));
+            try
             {
-                Directory.CreateDirectory(icons_path);
+                File.Copy(icon_to_copy, dest_file, true);
+            }
+            catch (System.IO.IOException)
+            {
+                // This file is most likely encrypted or does not exist, so we return the app.Icon itself
+                // but this app is now prone to #90 unfortunately, if we return String.empty, Steam will default
+                // to UWPHook's icon
+                Log.Warning("File could not be copied: " + icon_to_copy);
+                dest_file = app.Icon;
             }
 
-            string destFile = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(iconDownloadedPath));
-            File.Copy(iconDownloadedPath, destFile, true);
-
-            return destFile;
+            return dest_file;
         }
 
         /// <summary>
@@ -792,7 +793,7 @@ namespace UWPHook
                 }
             }
         }
-    
+
         public static void SetLogLevel()
         {
             switch (Settings.Default.SelectedLogLevel)
