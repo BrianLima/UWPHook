@@ -13,33 +13,41 @@
         mc:Ignorable="d"
         Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook2.ico" Loaded="Window_Loaded">
     <Grid x:Name="grid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="50*"/>
+            <ColumnDefinition Width="60"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="28*"/>
+            <RowDefinition Height="80"/>
             <RowDefinition Height="144*"/>
-            <RowDefinition Height="19*"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80">
-            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+        <!-- HEADER -->
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80" Grid.ColumnSpan="3">
+            <Label x:Name="label_header" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
         </materialDesign:ColorZone>
-        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Button x:Name="settingsButton" Click="SettingsButton_Click"  Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                        Margin="0,6,10,0" HorizontalAlignment="Right"
-                        ToolTip="Settings/About" VerticalAlignment="Top">
+        <Image x:Name="applicationLogo" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+        <!-- FLOATING BUTTONS -->
+        <Button x:Name="settingsButton" Click="SettingsButton_Click" Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}" HorizontalAlignment="Center" ToolTip="Settings/About" VerticalAlignment="Center" Grid.Column="2">
             <materialDesign:PackIcon Kind="Settings" Height="24" Width="24" />
         </Button>
-        <Button Click="LoadButton_Click" Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                        Margin="0,51,10,0" HorizontalAlignment="Right"
-                        ToolTip="Load installed UWP Apps" VerticalAlignment="Top" Grid.RowSpan="2">
+        <Button Click="LoadButton_Click" Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}" ToolTip="Load installed UWP Apps" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Grid.RowSpan="1">
             <materialDesign:PackIcon Kind="Reload" Height="24" Width="24" />
         </Button>
-        <Grid Margin="10" Grid.Row="1">
-            <DataGrid x:Name="listGames" Margin="0,25,0,0" CanUserSortColumns="True" CanUserAddRows="False"
-                       materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"/>
-            <Label x:Name="label" Content="Press 'Load installed apps' to get a list of installed titles." HorizontalAlignment="Left" Margin="0,-10,0,0" VerticalAlignment="Top"/>
+        <!-- LIST -->
+        <DataGrid x:Name="listGames" CanUserAddRows="False" materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2" Grid.Row="1" Grid.ColumnSpan="3" Margin="10"/>
+        <ProgressBar Visibility="Hidden" x:Name="progressBar" Grid.Row="1" IsIndeterminate="True" Grid.ColumnSpan="3" Margin="10"/>
+        <!-- FOOTER -->
+        <Grid Grid.Row="2" Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="30*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Search:" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <TextBox x:Name="textBox" Height="25" TextWrapping="Wrap" VerticalAlignment="Center" MinWidth="200" TextChanged="textBox_TextChanged" Grid.Column="1" Cursor="Arrow" HorizontalAlignment="Left" />
+            <Button Content="Export selected apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="0" VerticalAlignment="Bottom" Width="227" Grid.Column="2"/>
         </Grid>
-        <Button Content="Export selected apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
-        <ProgressBar Visibility="Collapsed" x:Name="progressBar" Margin="10,215,10,174" Grid.Row="1" IsIndeterminate="True" />
-        <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="25" Margin="50,17,0,0" Grid.Row="2" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="271" TextChanged="textBox_TextChanged"/>
     </Grid>
 </Window>

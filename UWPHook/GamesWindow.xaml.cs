@@ -16,6 +16,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media.Imaging;
 using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
@@ -380,7 +383,7 @@ namespace UWPHook
 
                 foreach (var app in selected_apps)
                 {
-                    app.Icon = app.widestSquareIcon();
+                    //app.Icon = Image.FromFile(app.widestSquareIcon());
 
                     if (downloadGridImages)
                     {
@@ -535,7 +538,7 @@ namespace UWPHook
             string icons_path = path + @"\Briano\UWPHook\icons\";
 
             // If we do not have an specific icon to copy, copy app.icon, if we do, copy the specified icon
-            string icon_to_copy = String.IsNullOrEmpty(forcedIcon) ? app.Icon : forcedIcon;
+            string icon_to_copy = String.IsNullOrEmpty(forcedIcon) ? app.IconPath : forcedIcon;
 
 
             if (!Directory.Exists(icons_path))
@@ -554,7 +557,7 @@ namespace UWPHook
                 // but this app is now prone to #90 unfortunately, if we return String.empty, Steam will default
                 // to UWPHook's icon
                 Log.Warning("File could not be copied: " + icon_to_copy);
-                dest_file = app.Icon;
+                dest_file = app.IconPath;
             }
 
             return dest_file;
@@ -666,7 +669,6 @@ namespace UWPHook
             bwrLoad.RunWorkerCompleted += Bwr_RunWorkerCompleted;
 
             grid.IsEnabled = false;
-            label.Content = "Loading your installed apps";
 
             progressBar.Visibility = Visibility.Visible;
             Apps.Entries = new System.Collections.ObjectModel.ObservableCollection<AppEntry>();
@@ -682,13 +684,30 @@ namespace UWPHook
         private void Bwr_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             listGames.ItemsSource = Apps.Entries;
+            listGames.Columns[0].IsReadOnly = false;
 
-            listGames.Columns[2].IsReadOnly = true;
-            listGames.Columns[3].IsReadOnly = true;
+            DataGridTemplateColumn templateColumn = new DataGridTemplateColumn
+            {
+                CanUserResize = false,
+                CanUserSort = false,
+                CanUserReorder = false
+            };
+
+            DataTemplate cellTemplate = new DataTemplate();
+            FrameworkElementFactory factory = new FrameworkElementFactory(typeof(System.Windows.Controls.Image));
+            factory.SetBinding(System.Windows.Controls.Image.SourceProperty, new Binding("Icon"));
+            factory.SetValue(System.Windows.Controls.Image.WidthProperty, 24.00);
+            factory.SetValue(System.Windows.Controls.Image.HeightProperty, 24.00);
+            cellTemplate.VisualTree = factory;
+            templateColumn.CellTemplate = cellTemplate;
+            listGames.Columns[1] = templateColumn;
+
+            listGames.Columns[3].Visibility = Visibility.Hidden;
+            listGames.Columns[4].Visibility = Visibility.Hidden;
+            listGames.Columns[5].Visibility = Visibility.Hidden;
 
             grid.IsEnabled = true;
             progressBar.Visibility = Visibility.Collapsed;
-            label.Content = "Installed Apps";
         }
 
         /// <summary>
@@ -730,9 +749,56 @@ namespace UWPHook
                     {
                         //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
                         string logosPath = Path.GetDirectoryName(values[1]);
+
+                        BitmapImage appLogo = null;
+                        List<string> images = new List<string>();
+                        System.Drawing.Size size = new System.Drawing.Size(0, 0);
+                        
+                        try
+                        {
+                            images.AddRange(Directory.GetFiles(logosPath, "*.png"));
+                        }
+                        catch(System.Exception ex)
+                        {
+                            Log.Error(ex.Message);
+                            continue;
+                        }
+
+                        if (images.Count > 0) {
+                            System.Drawing.Image currentImage = null;
+                            
+                            foreach (string image in images)
+                            {
+                                try
+                                {
+                                    currentImage = System.Drawing.Image.FromFile(image);
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    Log.Error(ex.Message);
+                                }
+
+                                if (currentImage != null)
+                                {
+                                    //UWP apps usually store live tile images inside the same directory
+                                    //Let's check if the image is square for use as icon on Steam and pick the largest one
+                                    if (currentImage.Width == currentImage.Height && (size.Height == 0 || (currentImage.Size.Height < size.Height)))
+                                    {
+                                        size = currentImage.Size;
+                                        appLogo = new BitmapImage();
+                                        appLogo.BeginInit();
+                                        appLogo.CacheOption = BitmapCacheOption.OnLoad;
+                                        appLogo.UriSource = new Uri(image);
+                                        appLogo.EndInit();
+                                        
+                                    }
+                                }
+                            }
+                        }
+                        appLogo.Freeze();
                         Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                         {
-                            Apps.Entries.Add(new AppEntry() { Name = values[0], Executable = values[3], IconPath = logosPath, Aumid = values[2], Selected = false });
+                            Apps.Entries.Add(new AppEntry() { Name = values[0], Icon = appLogo, Executable = values[3], IconPath = logosPath, Aumid = values[2], Selected = false });
                         });
                     }
                 }

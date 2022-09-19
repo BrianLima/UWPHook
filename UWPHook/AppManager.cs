@@ -22,6 +22,7 @@ namespace UWPHook
         private static int runningProcessId;
         private static bool isLauncherProcess;
         private static string executablePath;
+        private static string executableName;
 
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
@@ -35,6 +36,7 @@ namespace UWPHook
             // 2 is the executable, the rest are extras
             string aumid = args[1];
             executablePath = args[2].Contains("/") ? args[2].Replace('/', '\\') : args[2];
+            executableName = args[2].Contains("/") ? args[2].Substring(args[2].LastIndexOf("/") + 1) : args[2];
             Log.Verbose("Arguments => " + String.Join("/", args));
             var mgr = new ApplicationActivationManager();
             uint processId;
@@ -46,12 +48,15 @@ namespace UWPHook
 
             try
             {
-                mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
-                runningProcessId = (int) processId;
-                Log.Verbose("Process ID => " + runningProcessId.ToString());
-
+                Process process = new Process();
+                ProcessStartInfo processStartInfo = new ProcessStartInfo();
+                processStartInfo.UseShellExecute = true;
+                processStartInfo.FileName = @"shell:appsFolder\" + aumid;
+                process.StartInfo = processStartInfo;
+                process.Start();
+                //mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
                 //Bring the launched app to the foreground, this fixes in-home streaming
-                BringProcess();
+                //BringProcess();
             }
             catch (Exception e)
             {
@@ -66,61 +71,33 @@ namespace UWPHook
         /// <returns>True if the perviously launched app is running, false otherwise</returns>
         public static Boolean IsRunning()
         {
-            try
+            bool secondCheck = false;
+            do
             {
-                Log.Debug("Checking PID => " + runningProcessId.ToString());
-
-                // PID 0 means an error during launch for the game
-                // (Example : Game no more available on gamepass or problem with installation) so instant exit in this case
-                if (runningProcessId == 0)
+                // Handle process running by some launcher by checking their executable path and name
+                var processes = GetProcess();
+                foreach (var process in processes)
                 {
-                    Log.Debug("PID is 0");
-                    return false;
-                }
-                Process.GetProcessById(runningProcessId);
-                Log.Debug("Process is running");
-                return true;
-            }
-            catch
-            {
-                // Check only at launch if started by a launcher
-                if (!isLauncherProcess)
-                {
-                    Log.Debug("initial PID is not running anymore, checking other possible process runing before stop");
-                    bool secondCheck = false;
-                    do
+                    string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
+                    Log.Verbose("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
+                    Log.Verbose("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
+                    if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
                     {
-                        // Handle process running by some launcher by checking their executable path and name
-                        var processes = GetProcess();
-                        foreach (var process in processes)
-                        {
-                            string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
-                            Log.Verbose("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
-                            Log.Verbose("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
-                            if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
-                            {
-                                int pid = process.Value.Pid;
-                                Log.Verbose($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");
-                                runningProcessId = pid;
-                                isLauncherProcess = true;
-
-                                //bring the "real" launched process
-                                BringProcess();
-                                return true;
-                            }
-                        }
-
-                        // Handle the last chance if process was not found due to slow running like Farming Simulator 2022 or Halo MCC
-                        secondCheck = !secondCheck;
-                        if (secondCheck)
-                        {
-                            Log.Debug("Process has not been found. Last chance to find it !");
-                            Thread.Sleep(Settings.Default.Seconds * 5000);
-                        }
-                    } while (secondCheck);
+                        //BringProcess();
+                        return true;
+                    }
                 }
-            }
 
+                // Handle the last chance if process was not found due to slow running like Farming Simulator 2022 or Halo MCC
+                secondCheck = !secondCheck;
+                
+                if (secondCheck)
+                {
+                    Log.Debug("Process has not been found. Last chance to find it !");
+                    Thread.Sleep(Settings.Default.Seconds * 5000);
+                }
+            } while (secondCheck);
+                
             return false;
         }
 
