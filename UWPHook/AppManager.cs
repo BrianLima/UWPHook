@@ -56,7 +56,7 @@ namespace UWPHook
                 process.Start();
                 //mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
                 //Bring the launched app to the foreground, this fixes in-home streaming
-                //BringProcess();
+                BringProcess();
             }
             catch (Exception e)
             {

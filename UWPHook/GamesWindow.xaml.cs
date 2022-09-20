@@ -549,7 +549,9 @@ namespace UWPHook
             string dest_file = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(icon_to_copy));
             try
             {
-                File.Copy(icon_to_copy, dest_file, true);
+                System.Drawing.Image image = System.Drawing.Image.FromFile(dest_file);
+                image.Save(dest_file);
+                //File.Copy(icon_to_copy, dest_file, true);
             }
             catch (System.IO.IOException)
             {
@@ -557,7 +559,35 @@ namespace UWPHook
                 // but this app is now prone to #90 unfortunately, if we return String.empty, Steam will default
                 // to UWPHook's icon
                 Log.Warning("File could not be copied: " + icon_to_copy);
-                dest_file = app.IconPath;
+                try
+                {
+                    if (File.GetAttributes(icon_to_copy).HasFlag(FileAttributes.Directory))
+                    {
+                        System.Drawing.Size size = new System.Drawing.Size(0, 0);
+                        System.Drawing.Image currentImage = null;
+
+                        foreach (var image in (Directory.GetFiles(icon_to_copy, "*.png")))
+                        {
+                            currentImage = System.Drawing.Image.FromFile(image);
+                            if (currentImage != null)
+                            {
+                                //UWP apps usually store live tile images inside the same directory
+                                //Let's check if the image is square for use as icon on Steam and pick the largest one
+                                if (currentImage.Width == currentImage.Height && (size.Height == 0 || (currentImage.Size.Height < size.Height)))
+                                {
+                                    size = currentImage.Size;
+                                    dest_file = image;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error("Path is not a directory and could not be read: " + icon_to_copy);
+                    Log.Verbose(e.Message);
+                    dest_file = "";
+                }
             }
 
             return dest_file;
