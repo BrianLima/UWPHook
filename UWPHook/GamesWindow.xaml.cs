@@ -287,7 +287,7 @@ namespace UWPHook
         {
             SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
-            GameResponse[] games;
+            GameResponse[] games = null;
 
             try
             {
@@ -296,7 +296,6 @@ namespace UWPHook
             catch (TaskCanceledException exception)
             {
                 Log.Error(exception.Message);
-                throw;
             }
 
             if (games != null)
@@ -393,6 +392,8 @@ namespace UWPHook
                     }
                 }
 
+                await Task.WhenAll(gridImagesDownloadTasks);
+
                 // Export the selected apps and the downloaded images to each user
                 // in the steam folder by modifying it's VDF file
                 foreach (var user in users)
@@ -418,29 +419,25 @@ namespace UWPHook
                         {
                             foreach (var app in selected_apps)
                             {
-                                string icon = "";
-                                if (gridImagesDownloadTasks.Count > 0)
+                                try
                                 {
-                                    await Task.WhenAll(gridImagesDownloadTasks);
+
+                                    app.Icon = PersistAppIcon(app);
+                                    Log.Verbose("Defaulting to app.Icon for app " + app.Name);
+
+                                }
+                                catch (System.IO.IOException)
+                                {
+                                    Log.Verbose("Using backup icon for app " + app.Name);
 
                                     await Task.Run(() =>
                                     {
                                         string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
                                         string[] images = Directory.GetFiles(tmpGridDirectory);
 
-                                        foreach (string image in images)
-                                        {
-                                            if (image.EndsWith("_logo.png"))
-                                            {
-                                                icon = PersistAppIcon(app, image);
-                                                break;
-                                            }
-                                        }
+                                        UInt64 gameId = GenerateSteamGridAppId(app.Name, exePath);
+                                        app.Icon = PersistAppIcon(app, tmpGridDirectory + gameId + "_logo.png");
                                     });
-                                }
-                                else
-                                {
-                                    icon = PersistAppIcon(app);
                                 }
 
                                 VDFEntry newApp = new VDFEntry()
@@ -451,7 +448,7 @@ namespace UWPHook
                                     LaunchOptions = app.Aumid + " " + app.Executable,
                                     AllowDesktopConfig = 1,
                                     AllowOverlay = 1,
-                                    Icon = icon,
+                                    Icon = app.Icon,
                                     Index = shortcuts.Length,
                                     IsHidden = 0,
                                     OpenVR = 0,
@@ -540,7 +537,6 @@ namespace UWPHook
             // If we do not have an specific icon to copy, copy app.icon, if we do, copy the specified icon
             string icon_to_copy = String.IsNullOrEmpty(forcedIcon) ? app.IconPath : forcedIcon;
 
-
             if (!Directory.Exists(icons_path))
             {
                 Directory.CreateDirectory(icons_path);
@@ -551,9 +547,8 @@ namespace UWPHook
             {
                 System.Drawing.Image image = System.Drawing.Image.FromFile(dest_file);
                 image.Save(dest_file);
-                //File.Copy(icon_to_copy, dest_file, true);
             }
-            catch (System.IO.IOException)
+            catch (System.IO.IOException e)
             {
                 // This file is most likely encrypted or does not exist, so we return the app.Icon itself
                 // but this app is now prone to #90 unfortunately, if we return String.empty, Steam will default
