@@ -87,8 +87,11 @@ namespace UWPHook
 
             try
             {
-                //Get every png in this directory, Steam only allows for .png's
+                //Get every png/jpg/jpeg in this directory
+                //Steam only allows for .png's in the drop-down, but jpgs work too
                 images.AddRange(Directory.GetFiles(_icon_path, "*.png"));
+                images.AddRange(Directory.GetFiles(_icon_path, "*.jpg"));
+                images.AddRange(Directory.GetFiles(_icon_path, "*.jpeg"));
             }
             catch (DirectoryNotFoundException)
             {
