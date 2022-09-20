@@ -459,9 +459,8 @@ namespace UWPHook
                                 for (int i = 0; i < shortcuts.Length; i++)
                                 {
                                     Log.Verbose(shortcuts[i].ToString());
-
-
-                                    if (shortcuts[i].AppName == app.Name)
+                                    //only catch UWPHook entries
+                                    if (shortcuts[i].AppName == app.Name && shortcuts[i].Exe == exePath)
                                     {
                                         isFound = true;
                                         Log.Verbose(app.Name + " already added to Steam. Updating existing shortcut.");
