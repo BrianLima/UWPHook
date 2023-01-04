@@ -430,6 +430,12 @@ namespace UWPHook
                                     await Task.Run(() =>
                                     {
                                         string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+
+                                        if (!Directory.Exists(tmpGridDirectory))
+                                        {
+                                            Directory.CreateDirectory(tmpGridDirectory);
+                                        }
+
                                         string[] images = Directory.GetFiles(tmpGridDirectory);
 
                                         UInt64 gameId = GenerateSteamGridAppId(app.Name, exePath);
