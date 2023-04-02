@@ -38,7 +38,12 @@
             <Label x:Name="label" Content="Press 'Load installed apps' to get a list of installed titles." HorizontalAlignment="Left" Margin="0,-10,0,0" VerticalAlignment="Top"/>
         </Grid>
         <Button Content="Export selected apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
-        <ProgressBar Visibility="Collapsed" x:Name="progressBar" Margin="10,215,10,174" Grid.Row="1" IsIndeterminate="True" />
+        <ProgressBar
+                x:Name="progressBar"
+                Grid.Row="1"
+                IsIndeterminate="True"
+                Style="{StaticResource MaterialDesignCircularProgressBar}"
+                Value="50" Height="100" Width="100" Visibility="Hidden"/>
         <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="25" Margin="50,17,0,0" Grid.Row="2" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="271" TextChanged="textBox_TextChanged"/>
     </Grid>
