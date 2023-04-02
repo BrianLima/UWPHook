@@ -4,7 +4,7 @@
 
 Small project to link UWP games and XboxGamePass to Steam
 
-If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to do a bit of a warkaround because Steam can't see UWP apps, and there's a chance Steam won't show it on your "Currently playing" status. This app aims to simplify a little bit the process where it is possible by automating the scripting and launching of Windows Store apps and Xbox Game Pass games.
+If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to do a bit of a workaround because Steam can't see UWP apps, and there's a chance Steam won't show it on your "Currently playing" status. This app aims to simplify a little bit the process where it is possible by automating the scripting and launching of Windows Store apps and Xbox Game Pass games.
 
 # To add UWP or XGP games to Steam #
 
