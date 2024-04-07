@@ -86,7 +86,11 @@ namespace UWPHook
 
         private void clearAll_button_Click(object sender, RoutedEventArgs e)
         {
-            GamesWindow.ClearAllShortcuts();
+            MessageBoxResult result = MessageBox.Show("This action will remove ALL shortcuts from non-Steam games." + Environment.NewLine + " Are you sure you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+            {
+                GamesWindow.ClearAllShortcuts();
+            }
         }
 
         private void key_Button_Click(object sender, RoutedEventArgs e)
