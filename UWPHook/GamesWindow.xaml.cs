@@ -434,10 +434,8 @@ namespace UWPHook
                             {
                                 try
                                 {
-
                                     app.Icon = PersistAppIcon(app);
                                     Log.Verbose("Defaulting to app.Icon for app " + app.Name);
-
                                 }
                                 catch (System.IO.IOException)
                                 {
@@ -474,21 +472,20 @@ namespace UWPHook
                                     DevkitGameID = "",
                                     LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                                 };
-                                Boolean isFound = false;
+                                Boolean shortcutAlreadyExists = false;
                                 for (int i = 0; i < shortcuts.Length; i++)
                                 {
                                     Log.Verbose(shortcuts[i].ToString());
 
-
                                     if (shortcuts[i].AppName == app.Name)
                                     {
-                                        isFound = true;
+                                        shortcutAlreadyExists = true;
                                         Log.Verbose(app.Name + " already added to Steam. Updating existing shortcut.");
                                         shortcuts[i] = newApp;
                                     }
                                 }
 
-                                if (!isFound)
+                                if (!shortcutAlreadyExists)
                                 {
                                     //Resize this array so it fits the new entries
                                     Array.Resize(ref shortcuts, shortcuts.Length + 1);
@@ -502,8 +499,12 @@ namespace UWPHook
                                 {
                                     Directory.CreateDirectory(user + @"\\config\\");
                                 }
+
+                                BackupShortcutsVDF(user, @"\\config\\shortcuts.vdf");
+
                                 //Write the file with all the shortcuts
                                 File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
+                                Log.Debug("Shortcuts written to " + user + @"\\config\\shortcuts.vdf");
                             }
                             catch (Exception ex)
                             {
@@ -536,6 +537,24 @@ namespace UWPHook
             }
 
             return true;
+        }
+
+        private void BackupShortcutsVDF(string userPath, string vdfSubPath)
+        {
+            string backupFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "backups");
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+                Log.Debug("Created backup folder: " + backupFolder);
+            }
+
+            string user_id = userPath.Split('\\').Last();
+
+            string sourceFilePath = Path.Combine(userPath, "config", "shortcuts.vdf");
+            string destinationFileName = Path.Combine(backupFolder, $"{user_id}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_shortcuts.vdf");
+
+            File.Copy(sourceFilePath, destinationFileName);
+            Log.Debug("Backup created: " + destinationFileName);
         }
 
         /// <summary>
