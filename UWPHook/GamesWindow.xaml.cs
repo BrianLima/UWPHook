@@ -456,6 +456,7 @@ namespace UWPHook
 
                                 VDFEntry newApp = new VDFEntry()
                                 {
+                                    appid = ((int)GenerateSteamGridAppId(app.Name, exePath)),
                                     AppName = app.Name,
                                     Exe = exePath,
                                     StartDir = exeDir,
