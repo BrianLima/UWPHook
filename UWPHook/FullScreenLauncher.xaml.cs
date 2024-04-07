@@ -30,7 +30,7 @@ namespace UWPHook
 
             BaseTheme darkTheme = BaseTheme.Dark;
 
-            var theme = Theme.Create(darkTheme.GetBaseTheme(),
+            var theme = Theme.Create(darkTheme,
             SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.DeepPurple],
             SwatchHelper.Lookup[(MaterialDesignColor)SecondaryColor.Lime]);
 

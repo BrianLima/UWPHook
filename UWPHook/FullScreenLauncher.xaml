@@ -20,7 +20,7 @@
             <RowDefinition Height="147*"/>
             <RowDefinition Height="65.6"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" Height="80" Margin="0,0,-0.4,0">
+        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.Darken="True" Mode="PrimaryMid" Height="80" Margin="0,0,-0.4,0">
             <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
         </materialDesign:ColorZone>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
