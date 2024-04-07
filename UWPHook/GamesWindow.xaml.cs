@@ -59,7 +59,6 @@ namespace UWPHook
             {
                 // When length is 1, the only argument is the path where the app is installed
                 _ = LauncherAsync(args); // Launches the requested game
-
             }
             else
             {
@@ -301,10 +300,7 @@ namespace UWPHook
                 Log.Verbose("Detected Game: " + game.ToString());
                 UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
 
-                if (!Directory.Exists(tmpGridDirectory))
-                {
-                    Directory.CreateDirectory(tmpGridDirectory);
-                }
+                SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
                 var gameGridsVertical = api.GetGameGrids(game.Id, "600x900,342x482,660x930");
                 var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215,920x430");
@@ -352,6 +348,26 @@ namespace UWPHook
                 }
 
                 await Task.WhenAll(saveImagesTasks);
+            }
+        }
+
+        private void SafellyCreateTmpGridDirectory(string tmpGridDirectory)
+        {
+            if (!Directory.Exists(tmpGridDirectory))
+            {
+                try
+                {
+                    Directory.CreateDirectory(tmpGridDirectory);
+                    Log.Information("Created directory: " + tmpGridDirectory);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception.Message);
+                    Log.Error(exception.StackTrace);
+                    throw new Exception("UWPHook was not able to create the tmp directory for some reason." + Environment.NewLine +
+                        "You may solve this by manually creating the following folder:" + Environment.NewLine +
+                        tmpGridDirectory);
+                }
             }
         }
 
@@ -431,10 +447,7 @@ namespace UWPHook
                                     {
                                         string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
 
-                                        if (!Directory.Exists(tmpGridDirectory))
-                                        {
-                                            Directory.CreateDirectory(tmpGridDirectory);
-                                        }
+                                        SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
                                         string[] images = Directory.GetFiles(tmpGridDirectory);
 
