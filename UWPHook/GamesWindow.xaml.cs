@@ -509,7 +509,7 @@ namespace UWPHook
                             }
                             catch (Exception ex)
                             {
-                                Log.Error("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                                Log.Error("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.InnerException + ex.StackTrace);
                                 throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
                             }
                         }
