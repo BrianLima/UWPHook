@@ -1,7 +1,6 @@
 using Force.Crc32;
 using Serilog;
 using Serilog.Core;
-using SharpSteam;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

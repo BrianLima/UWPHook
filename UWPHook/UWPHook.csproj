@@ -16,9 +16,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="SharpSteam">
-			<HintPath>..\..\SharpSteam\SharpSteam\bin\Release\SharpSteam.dll</HintPath>
-		</Reference>
 		<Reference Include="VDFParser">
 			<HintPath>..\..\SharpSteam\SharpSteam\bin\Release\VDFParser.dll</HintPath>
 		</Reference>
