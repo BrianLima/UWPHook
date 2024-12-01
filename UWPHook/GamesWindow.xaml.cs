@@ -739,6 +739,9 @@ namespace UWPHook
         {
             try
             {
+                //For some reason I need to enforce Set-ExecutionPolicy none
+                ScriptManager.RunScript("Set-ExecutionPolicy RemoteSigned -Scope Process -Force");
+
                 //Get all installed apps on the system excluding frameworks
                 List<String> installedApps = AppManager.GetInstalledApps();
 
