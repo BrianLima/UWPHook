@@ -841,7 +841,10 @@ namespace UWPHook
 
         public static void SetLogLevel()
         {
-            switch (Settings.Default.SelectedLogLevel)
+            int logLevel_index;
+            int.TryParse(Settings.Default.SelectedLogLevel, out logLevel_index);
+
+            switch (logLevel_index)
             {
                 case 1:
                     Log.Information("Init log with DEBUG level.");
