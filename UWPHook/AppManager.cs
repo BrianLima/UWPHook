@@ -187,7 +187,7 @@ namespace UWPHook
         /// <returns>Whether this is a known app</returns>
         public static bool IsKnownApp(string appName, out string readableName)
         {
-            string appsJson = File.ReadAllText(@"Resources\KnownApps.json");
+            string appsJson = GetEmbeddedResource("KnownApps.json");
             var apps = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(appsJson);
 
             foreach (var kvp in apps)
@@ -201,6 +201,17 @@ namespace UWPHook
 
             readableName = null;
             return false;
+        }
+
+        static string GetEmbeddedResource(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            resourceName = assembly.GetManifestResourceNames().First(r => r.Contains(resourceName));
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
         }
 
         [DllImport("user32.dll")]
