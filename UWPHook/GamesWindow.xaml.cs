@@ -1,7 +1,6 @@
 using Force.Crc32;
 using Serilog;
 using Serilog.Core;
-using SharpSteam;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -385,8 +384,9 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
-                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
-                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                var processModule = Process.GetCurrentProcess().MainModule;
+                var exePath = processModule?.FileName;
+                var exeDir = Path.GetDirectoryName(exePath);
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
                 bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
@@ -745,6 +745,9 @@ namespace UWPHook
         {
             try
             {
+                //For some reason I need to enforce Set-ExecutionPolicy none
+                ScriptManager.RunScript("Set-ExecutionPolicy RemoteSigned -Scope Process -Force");
+
                 //Get all installed apps on the system excluding frameworks
                 List<String> installedApps = AppManager.GetInstalledApps();
 

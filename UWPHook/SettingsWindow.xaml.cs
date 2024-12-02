@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
+using System.Security.Policy;
 using System.Windows;
+using static System.Net.WebRequestMethods;
 
 namespace UWPHook
 {
@@ -64,27 +67,27 @@ namespace UWPHook
 
         private void Chip_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://twitter.com/brianostorm");
+            OpenUrl("http://twitter.com/brianostorm");
         }
 
         private void Chip1_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://github.com/brianlima");
+            OpenUrl("http://github.com/brianlima");
         }
 
         private void Chip2_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
+            OpenUrl("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
         }
 
         private void update_button_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/BrianLima/UWPHook/releases");
+            OpenUrl("https://github.com/BrianLima/UWPHook/releases");
         }
 
         private void help_button_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://reddit.com/r/UWPHook/");
+            OpenUrl("https://reddit.com/r/UWPHook/");
         }
 
         private void clearAll_button_Click(object sender, RoutedEventArgs e)
@@ -100,7 +103,17 @@ namespace UWPHook
         {
             MessageBox.Show(messageBoxText: "You are being redirected to SteamGridDB website!\r\n" +
                 "Log-in, or create your account, go to your profile preferences and click 'Generate API Key', then paste the key back on UWPHook.", "Attention!", MessageBoxButton.OK, MessageBoxImage.Information );
-            System.Diagnostics.Process.Start("https://www.steamgriddb.com/profile/preferences/api");
+            OpenUrl("https://www.steamgriddb.com/profile/preferences/api");
+        }
+
+        private void OpenUrl(string url)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
         }
     }
 }
