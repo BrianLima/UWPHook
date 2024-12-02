@@ -553,6 +553,12 @@ namespace UWPHook
             string sourceFilePath = Path.Combine(userPath, "config", "shortcuts.vdf");
             string destinationFileName = Path.Combine(backupFolder, $"{user_id}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_shortcuts.vdf");
 
+            if (!File.Exists(sourceFilePath))
+            {
+               Log.Information("No VDF file found for user: " + sourceFilePath);
+               return;
+            }
+
             File.Copy(sourceFilePath, destinationFileName);
             Log.Debug("Backup created: " + destinationFileName);
         }
@@ -837,7 +843,10 @@ namespace UWPHook
 
         public static void SetLogLevel()
         {
-            switch (Settings.Default.SelectedLogLevel)
+            int logLevel_index;
+            int.TryParse(Settings.Default.SelectedLogLevel, out logLevel_index);
+
+            switch (logLevel_index)
             {
                 case 1:
                     Log.Information("Init log with DEBUG level.");
