@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Briano")]
 [assembly: AssemblyProduct("UWPHook")]
-[assembly: AssemblyCopyright("Copyright Brian Lima © 2020 2021 2022 2023 2024")]
+[assembly: AssemblyCopyright("Copyright Brian Lima ©  2020 2021 2022")]
 [assembly: AssemblyTrademark("Briano")]
 [assembly: AssemblyCulture("")]
 
@@ -51,6 +51,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.14.2.0")]
-[assembly: AssemblyFileVersion("2.14.2.0")]
+[assembly: AssemblyVersion("2.14.0.0")]
+[assembly: AssemblyFileVersion("2.14.0.0")]
 [assembly: NeutralResourcesLanguage("en")]

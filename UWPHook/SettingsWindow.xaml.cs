@@ -32,13 +32,10 @@ namespace UWPHook
                 }
             }
 
-            int logLevel_index = 0;
-            int.TryParse(Properties.Settings.Default.SelectedLogLevel, out logLevel_index);
-
             cultures_comboBox.SelectedItem = Properties.Settings.Default.TargetLanguage;
             language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
             streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
-            logLevel_comboBox.SelectedIndex = logLevel_index;
+            logLevel_comboBox.SelectedIndex = Properties.Settings.Default.SelectedLogLevel;
             steamgriddb_api_key.Text = Properties.Settings.Default.SteamGridDbApiKey;
             style_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Style;
             type_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Type;
@@ -53,7 +50,7 @@ namespace UWPHook
             Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem.ToString();
             Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
             Properties.Settings.Default.StreamMode = (bool)streaming_toggle.IsChecked;
-            Properties.Settings.Default.SelectedLogLevel = logLevel_comboBox.SelectedIndex.ToString();
+            Properties.Settings.Default.SelectedLogLevel = logLevel_comboBox.SelectedIndex;
             Properties.Settings.Default.SteamGridDbApiKey = steamgriddb_api_key.Text.Trim('\r', '\n');
             Properties.Settings.Default.SelectedSteamGridDB_Style = style_comboBox.SelectedIndex;
             Properties.Settings.Default.SelectedSteamGridDB_Type = type_comboBox.SelectedIndex;
