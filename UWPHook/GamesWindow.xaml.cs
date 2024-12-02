@@ -384,8 +384,9 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
-                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
-                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                var processModule = Process.GetCurrentProcess().MainModule;
+                var exePath = processModule?.FileName;
+                var exeDir = Path.GetDirectoryName(exePath);
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
                 bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
