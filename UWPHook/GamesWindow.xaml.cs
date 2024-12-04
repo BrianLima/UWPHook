@@ -113,6 +113,12 @@ namespace UWPHook
                     ScriptManager.RunScript("Set-WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
                 }
 
+                if (Settings.Default.ChangeResolution && !String.IsNullOrEmpty(Settings.Default.TargetResolution))
+                {
+                    var targetResolution = ExtractDimensions(Settings.Default.TargetResolution);
+                    ScriptManager.RunScript("Set-DisplayResolution -Width " + targetResolution.Width + " - Height " + targetResolution.Height + " -Force");
+                }
+
                 //The only other parameter Steam will send is the app AUMID
                 AppManager.LaunchUWPApp(args);
 
@@ -139,6 +145,19 @@ namespace UWPHook
             }
         }
 
+        static (int Width, int Height) ExtractDimensions(string resolution)
+        {
+            var parts = resolution.Split('x');
+            if (parts.Length == 2)
+            {
+                if (int.TryParse(parts[0].Trim(), out int width) && int.TryParse(parts[1].Trim(), out int height))
+                {
+                    return (width, height);
+                }
+            }
+            throw new FormatException("Invalid resolution format.");
+        }
+        
         /// <summary>
         /// Generates a CRC32 hash expected by Steam to link an image with a game in the library
         /// See https://blog.yo1.dog/calculate-id-for-non-steam-games-js/ for an example

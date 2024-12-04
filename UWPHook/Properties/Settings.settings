@@ -35,6 +35,9 @@
     <Setting Name="Tags" Type="System.String" Scope="User">
       <Value Profile="(Default)">READY TO PLAY,XBOX</Value>
     </Setting>
+    <Setting Name="SelectedLogLevel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
     <Setting Name="SteamGridDB_Style" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
@@ -78,8 +81,11 @@
   &lt;string&gt;TRACE&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
-    <Setting Name="SelectedLogLevel" Type="System.String" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="ChangeResolution" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="TargetResolution" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

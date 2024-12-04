@@ -12,6 +12,15 @@
         TextElement.FontSize="14"
         FontFamily="Segoe UI Light"
         Title="Settings" Height="750" Width="800" Icon="Resources/hook2.ico">
+    <Window.Resources>
+        <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="0.7" ScaleY="0.7" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="27*"/>
@@ -52,14 +61,14 @@
             <materialDesign:ColorZone Padding="16" Mode="PrimaryMid" VerticalAlignment="Top" Height="30" Grid.ColumnSpan="4" Grid.Row="0">
                 <Label  Content="Settings" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
             </materialDesign:ColorZone>
-            <ToggleButton x:Name="language_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" RenderTransformOrigin="0.304,0.444" Grid.Row="1" Margin="5,3,6,4" />
+            <ToggleButton x:Name="language_toggle" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" RenderTransformOrigin="0.304,0.444" Grid.Row="1" Margin="5,3,6,4" />
             <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label_cultures" Content="Set system language when launching an app*" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"/>
             <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="1"/>
             <Label x:Name="label_seconds" ToolTip="If 0, UWPHook will not run in the background and will not update the in-game status" Content="Check if the launched app is running every" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"/>
             <ComboBox x:Name="seconds_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="2"/>
-            <ToggleButton x:Name="streaming_toggle" Style="{DynamicResource MaterialDesignSwitchToggleButton}" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Grid.Row="3" Margin="6,3,5,4" />
+            <ToggleButton x:Name="streaming_toggle" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Grid.Row="3" Margin="6,3,5,4" />
             <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label_streaming" Content="Enable streaming mode" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"/>
-            <ToggleButton x:Name="change_resolution_toggle" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="Change host resolution on streaming mode" IsChecked="False" Grid.Row="4" Width="NaN" Margin="5,3,6,3" />
+            <ToggleButton x:Name="change_resolution_toggle" ToolTip="Change host resolution on streaming mode" IsChecked="False" Grid.Row="4" Margin="5,3,6,3" />
             <Label ToolTip="Change the host computer resolution on launch, return to previous after." x:Name="label_resolution" Content="Change host resolution to:" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="4"/>
             <ComboBox x:Name="resolution_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right"/>
             <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label_tags" Content="Export with these tags:" Margin="0,0,8,0" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="5"/>
