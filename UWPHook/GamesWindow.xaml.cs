@@ -211,7 +211,7 @@ namespace UWPHook
             }
 
             grid.IsEnabled = true;
-            progressBar.Visibility = Visibility.Collapsed;
+            progressBar.Visibility = Visibility.Hidden;
 
             MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -751,7 +751,7 @@ namespace UWPHook
             listGames.Columns[3].IsReadOnly = true;
 
             grid.IsEnabled = true;
-            progressBar.Visibility = Visibility.Collapsed;
+            progressBar.Visibility = Visibility.Hidden;
             label.Content = "Installed Apps";
         }
 
