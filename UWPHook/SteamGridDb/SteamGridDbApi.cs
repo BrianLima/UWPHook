@@ -32,11 +32,11 @@ namespace UWPHook.SteamGridDb
         /// </summary>
         /// <param name="gameName" type="String">Name of the game</param>
         /// <returns>Array of games corresponding to the provided name</returns>
-        public async Task<GameResponse[]> SearchGame(string gameName)
+        public async Task<GameResponse[]?> SearchGame(string gameName)
         {
             string path = $"search/autocomplete/{gameName}";
 
-            GameResponse[] games = null;
+            GameResponse[]? games = null;
             HttpResponseMessage response = await httpClient.GetAsync(path);
             
             if (response.IsSuccessStatusCode)
@@ -64,7 +64,7 @@ namespace UWPHook.SteamGridDb
         /// </summary>
         /// <param name="dimensions">Comma separated list of resolutions, see https://www.steamgriddb.com/api/v2#tag/GRIDS</param>
         /// <returns>A String with the formatted parameters</returns>
-        public string BuildParameters(string dimensions)
+        public string BuildParameters(string? dimensions)
         {
             String result = String.Empty;
             var style = settings.SteamGridDB_Style[settings.SelectedSteamGridDB_Style];
@@ -95,10 +95,10 @@ namespace UWPHook.SteamGridDb
         /// </summary>
         /// <param name="url">The url to perform the request</param>
         /// <returns>An array of ImageResponse with their urls</returns>
-        public async Task<ImageResponse[]> getResponse(string url)
+        public async Task<ImageResponse[]?> getResponse(string url)
         {
             HttpResponseMessage response = await httpClient.GetAsync(url);
-            ImageResponse[] images = null;
+            ImageResponse[]? images = null;
 
             if (response.IsSuccessStatusCode)
             {
@@ -115,21 +115,21 @@ namespace UWPHook.SteamGridDb
             return images;
         }
 
-        public async Task<ImageResponse[]> GetGameGrids(int gameId, string dimensions = null)
+        public async Task<ImageResponse[]?> GetGameGrids(int gameId, string? dimensions = null)
         {
             string path = $"grids/game/{gameId}?{BuildParameters(dimensions)}";
 
             return await getResponse(path);
         }
 
-        public async Task<ImageResponse[]> GetGameHeroes(int gameId, string dimensions = null)
+        public async Task<ImageResponse[]?> GetGameHeroes(int gameId, string? dimensions = null)
         {
             string path = $"heroes/game/{gameId}?{BuildParameters(dimensions)}";
 
             return await getResponse(path);
         }
 
-        public async Task<ImageResponse[]> GetGameLogos(int gameId, string dimensions = null)
+        public async Task<ImageResponse[]?> GetGameLogos(int gameId, string? dimensions = null)
         {
             string path = $"logos/game/{gameId}?{BuildParameters(dimensions)}";
 
@@ -139,7 +139,7 @@ namespace UWPHook.SteamGridDb
         private class ResponseWrapper<T>
         {
             public bool Success { get; set; }
-            public T[] Data { get; set; }
+            public T[]? Data { get; set; }
         }
     }
 }

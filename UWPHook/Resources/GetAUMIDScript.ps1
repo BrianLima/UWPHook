@@ -1,4 +1,8 @@
-﻿$installedapps = get-AppxPackage
+﻿if ($PSVersionTable.PSEdition -eq "Core") {
+    Import-module -Name Appx -UseWindowsPowerShell
+}
+
+$installedapps = Get-AppxPackage
 $invalidNames = '*ms-resource*', '*DisplayName*'
 $aumidList = @()
 

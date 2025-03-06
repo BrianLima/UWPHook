@@ -25,31 +25,31 @@ namespace UWPHook
         }
 
 
-        private string _name;
+        private string? _name;
         /// <summary>
         /// Gets or sets the name of the application
         /// </summary>
-        public string Name
+        public string? Name
         {
             get { return _name; }
             set { _name = value; }
         }
 
-        private string _executable;
+        private string? _executable;
         /// <summary>
         /// Gets or sets the executable of the application
         /// </summary>
-        public string Executable
+        public string? Executable
         {
             get { return _executable; }
             set { _executable = value; }
         }
 
-        private string _aumid;
+        private string? _aumid;
         /// <summary>
         /// Gets or sets the aumid of the application
         /// </summary>
-        public string Aumid
+        public string? Aumid
         {
             get { return _aumid; }
             set { _aumid = value; }
@@ -58,9 +58,9 @@ namespace UWPHook
         /// <summary>
         /// Gets or sets the icon for the app
         /// </summary>
-        private string _icon;
+        private string? _icon;
 
-        public string Icon
+        public string? Icon
         {
             get { return _icon; }
             set { _icon = value; }
@@ -70,9 +70,9 @@ namespace UWPHook
         /// <summary>
         /// Sets the path where icons for the app is 
         /// </summary>
-        private string _icon_path;
+        private string? _icon_path;
 
-        public string IconPath
+        public string? IconPath
         {
             get { return _icon_path; }
             set { _icon_path = value; }
@@ -84,6 +84,8 @@ namespace UWPHook
             Size size = new Size(0, 0);
             List<string> images = new List<string>();
 
+            if (_icon_path == null)
+                return string.Empty;
 
             try
             {
@@ -101,7 +103,7 @@ namespace UWPHook
             //Decide which is the largest
             foreach (string image in images)
             {
-                Image icon = null;
+                Image? icon = null;
 
                 //Try to load the image, if it's a invalid file, skip it
                 try
@@ -130,7 +132,7 @@ namespace UWPHook
 
         public string isKnownApp()
         {
-            if(AppManager.IsKnownApp(_aumid, out string name))
+            if(_aumid != null && AppManager.IsKnownApp(_aumid, out string? name) && name != null)
             {
                 return name;
             }
@@ -138,9 +140,9 @@ namespace UWPHook
             return "Name not found, double click here to edit";
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

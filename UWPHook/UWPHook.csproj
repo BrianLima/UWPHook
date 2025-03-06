@@ -13,6 +13,7 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+		<NoWarn>MSB3243;CA1416;CA2200;CS8629;CS8602;SYSLIB0014</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

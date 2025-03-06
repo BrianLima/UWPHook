@@ -21,7 +21,7 @@ namespace UWPHook
     {
         private static int runningProcessId;
         private static bool isLauncherProcess;
-        private static string executablePath;
+        private static string executablePath = "";
 
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
@@ -136,11 +136,12 @@ namespace UWPHook
             {
                 foreach (var process in searcher.Get())
                 {
-                    string processName = Convert.ToString(process.Properties["Name"].Value);
+                    string? processName = Convert.ToString(process.Properties["Name"].Value);
                     int processId = Convert.ToInt32(process.Properties["processid"].Value);
-                    string processPath = Convert.ToString(process.Properties["ExecutablePath"].Value);
+                    string? processPath = Convert.ToString(process.Properties["ExecutablePath"].Value);
 
-                    if (String.IsNullOrWhiteSpace(processName) || result.ContainsKey(processName)) continue;
+                    if (String.IsNullOrWhiteSpace(processName) || String.IsNullOrWhiteSpace(processPath)
+                        || result.ContainsKey(processName)) continue;
 
                     result.Add(processName, (processPath, processId));
                 }
@@ -155,14 +156,17 @@ namespace UWPHook
         /// <returns>List of installed UWP Apps</returns>
         public static List<String> GetInstalledApps()
         {
-            List<String> result = null;
+            List<String>? result = null;
             var assembly = Assembly.GetExecutingAssembly();
             //Load the powershell script to get installed apps
             var resourceName = "UWPHook.Resources.GetAUMIDScript.ps1";
             try
             {
-                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                 {
+                    if (stream == null)
+                        throw new Exception("Assembly::GetManifestResourceStream error, resourceName: " + resourceName);
+
                     using (StreamReader reader = new StreamReader(stream))
                     {
                         //Every entry is listed separated by ;
@@ -185,17 +189,29 @@ namespace UWPHook
         /// <param name="appName">Application user model ID (aumid)</param>
         /// <param name="readableName">User-friendly app name</param>
         /// <returns>Whether this is a known app</returns>
-        public static bool IsKnownApp(string appName, out string readableName)
+        public static bool IsKnownApp(string? appName, out string? readableName)
         {
-            string appsJson = GetEmbeddedResource("KnownApps.json");
-            var apps = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(appsJson);
-
-            foreach (var kvp in apps)
+            if (appName == null)
             {
-                if (appName.StartsWith(kvp.Key + "_"))
+                readableName = null;
+                return false;
+            }
+
+            string? appsJson = GetEmbeddedResource("KnownApps.json");
+
+            Dictionary<string, string>? apps = null;
+            if (appsJson != null)
+                apps = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(appsJson);
+
+            if (apps != null)
+            {
+                foreach (var kvp in apps)
                 {
-                    readableName = kvp.Value;
-                    return true;
+                    if (appName.StartsWith(kvp.Key + "_"))
+                    {
+                        readableName = kvp.Value;
+                        return true;
+                    }
                 }
             }
 
@@ -203,14 +219,19 @@ namespace UWPHook
             return false;
         }
 
-        static string GetEmbeddedResource(string resourceName)
+        static string? GetEmbeddedResource(string resourceName)
         {
             var assembly = Assembly.GetExecutingAssembly();
             resourceName = assembly.GetManifestResourceNames().First(r => r.Contains(resourceName));
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream))
+            using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
             {
-                return reader.ReadToEnd();
+                if (stream == null)
+                    return null;
+
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
             }
         }
 

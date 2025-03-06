@@ -9,7 +9,7 @@
         /// <summary>
         /// Name of the game in SteamgridDB
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
     }
 }
