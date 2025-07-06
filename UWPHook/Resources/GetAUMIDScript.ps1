@@ -31,7 +31,7 @@ foreach ($app in $installedapps)
                     # Exclude apps without a name acceptable
                     if($name -like '*DisplayName*' -or $name  -like '*ms-resource*')
                     {
-                        continue;
+                        $name = $app.Name;
                     }
 
                     $logo = $app.InstallLocation + "\" + $appx.Package.Applications.Application.VisualElements.Square150x150Logo;
