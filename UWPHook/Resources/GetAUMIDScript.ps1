@@ -1,20 +1,19 @@
-﻿$installedapps = get-AppxPackage
-$invalidNames = '*ms-resource*', '*DisplayName*'
-$aumidList = @()
+function Get-UWPApps {
+    $installedapps = get-AppxPackage
+    $invalidNames = '*ms-resource*', '*DisplayName*'
+    $aumidList = @()
 
-foreach ($app in $installedapps)
-{
-    try {
-            if(-not $app.IsFramework){
-            foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id)
-            {
+    foreach ($app in $installedapps) {
+        try {
+            if (-not $app.IsFramework) {
+                foreach ($id in (Get-AppxPackageManifest $app).package.applications.application.id) {
                     $appx = Get-AppxPackageManifest $app;
                     $name = $appx.Package.Properties.DisplayName;
                     $executable = $appx.Package.Applications.Application.Executable;
 
                     # Handle app running with microsoft launcher or which doesn't have an executable in the manifest
-                    if([string]::IsNullOrWhitespace($executable) -or $executable -eq "GameLaunchHelper.exe") {
-                        if(Test-Path -Path ($app.InstallLocation + "\MicrosoftGame.Config")) {
+                    if ([string]::IsNullOrWhitespace($executable) -or $executable -eq "GameLaunchHelper.exe") {
+                        if (Test-Path -Path ($app.InstallLocation + "\MicrosoftGame.Config")) {
                             [xml]$msconfig = Get-Content ($app.InstallLocation + "\MicrosoftGame.Config");
                             $executable = $msconfig.Game.ExecutableList.Executable.Name;
                         }
@@ -26,11 +25,10 @@ foreach ($app in $installedapps)
                     # Convert object to ensure is the String of execuble (cf Halo Master Chief Collection example below)
                     # mcclauncher.exe
                     # MCC\Binaries\Win64\MCCWinStore-Win64-Shipping.exe
-                    if($executable -is [Object[]]) { $executable = $executable[1].ToString() }
+                    if ($executable -is [Object[]]) { $executable = $executable[1].ToString() }
 
                     # Exclude apps without a name acceptable
-                    if($name -like '*DisplayName*' -or $name  -like '*ms-resource*')
-                    {
+                    if ($name -like '*DisplayName*' -or $name -like '*ms-resource*') {
                         continue;
                     }
 
@@ -38,26 +36,36 @@ foreach ($app in $installedapps)
                     
                     # Check for possible duplicate game like Halo MCC which have two version (one with AC and one witohut AC)
                     $duplicate = $false;
-                    foreach($item in $aumidList) {
+                    foreach ($item in $aumidList) {
                         #Write-host $item - $name
-                        if($item.StartsWith($name)) {
+                        if ($item.StartsWith($name)) {
                             $duplicate = $true;
                             break;
                         }
                     }
 
                     # Insert if not duplicated
-                    if(!$duplicate) {
+                    if (!$duplicate) {
                         $aumidList += $name + "|" + $logo + "|" + $app.packagefamilyname + "!" + $id + "|" + $executable + ";"
                     }
                 }
             }
         }
-        catch
-        {
+        catch {
             $ErrorMessage = $_.Exception.Message
             $FailedItem = $_.Exception.ItemName
         }
+    }
+
+    $aumidList
 }
 
-$aumidList;
+# Check if running in PowerShell Core (7+)
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+    # Re-run this script using Windows PowerShell 5.x
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command $([System.IO.File]::ReadAllText($PSCommandPath))
+}
+else {
+    # Running in Windows PowerShell 5.x, execute directly
+    Get-UWPApps
+}
