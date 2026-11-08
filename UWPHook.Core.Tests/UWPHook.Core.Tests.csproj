@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Steam\Fixtures\*.vdf" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
   </ItemGroup>
 
