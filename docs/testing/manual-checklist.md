@@ -72,7 +72,7 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 
 ## Task 11
 - [ ] Halo MCC (its launcher exits): Steam shows "Playing" until the game itself closes, then UWPHook exits within about 10 s plus the check interval. With Settings → log level DEBUG, `application.log` has `Session for ... finished: Ended` (at the default ERROR level no session line is written).
-- [ ] With Settings → log level DEBUG, a shortcut for a game that starts no process (e.g. uninstall the game but keep the shortcut, if activation still succeeds) logs the warning `No process of <family> was seen after launching <AUMID>`, and UWPHook exits after about 10 s.
+- [ ] At the default log level (ERROR), a shortcut for a game that starts no process (e.g. uninstall the game but keep the shortcut, if activation still succeeds) logs the error `No process of <family> was seen after launching <AUMID>`, and UWPHook exits after about 10 s.
 - [ ] Forza Horizon 5 is tracked for the whole session (Steam playtime matches how long you played).
 - [ ] A game launched from Steam opens no UWPHook window with stream mode off (nothing in the taskbar or Alt+Tab, `UWPHook.exe` still in Task Manager while the game runs).
 - [ ] Steam overlay (Shift+Tab) works in a game launched through UWPHook, with stream mode on and off.

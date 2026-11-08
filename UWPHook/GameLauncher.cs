@@ -59,8 +59,8 @@ namespace UWPHook
             switch (outcome)
             {
                 case SessionOutcome.NeverStarted:
-                    // Warning, above the normal Information outcome: a game that never ran is worth noticing.
-                    Log.Warning("No process of {FamilyName} was seen after launching {Aumid}; the game may have failed to start",
+                    // Error, so it is written at the default (Error) log level: a game that never ran is worth noticing.
+                    Log.Error("No process of {FamilyName} was seen after launching {Aumid}; the game may have failed to start",
                         request.PackageFamilyName, request.Aumid);
                     break;
                 case SessionOutcome.WatcherFailed:
