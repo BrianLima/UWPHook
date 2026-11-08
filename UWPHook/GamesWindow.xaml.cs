@@ -1,4 +1,3 @@
-using Force.Crc32;
 using Serilog;
 using Serilog.Core;
 using System;
@@ -15,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using UWPHook.Core.Steam;
 using UWPHook.Properties;
 using UWPHook.SteamGridDb;
 using VDFParser;
@@ -157,22 +157,6 @@ namespace UWPHook
         }
         
         /// <summary>
-        /// Generates a CRC32 hash expected by Steam to link an image with a game in the library
-        /// See https://blog.yo1.dog/calculate-id-for-non-steam-games-js/ for an example
-        /// </summary>
-        /// <param name="appName">The name of the executable to be displayed</param>
-        /// <param name="appTarget">The executable target path</param>
-        /// <returns></returns>
-        private UInt64 GenerateSteamGridAppId(string appName, string appTarget)
-        {
-            byte[] nameTargetBytes = Encoding.UTF8.GetBytes(appTarget + appName + "");
-            UInt64 crc = Crc32Algorithm.Compute(nameTargetBytes);
-            UInt64 gameId = crc | 0x80000000;
-
-            return gameId;
-        }
-
-        /// <summary>
         /// Task responsible for triggering the export, blocks the UI, and shows a message
         /// once the task is finished, unlocking the UI
         /// </summary>
@@ -314,7 +298,7 @@ namespace UWPHook
             {
                 var game = games[0];
                 Log.Verbose("Detected Game: " + game.ToString());
-                UInt64 gameId = GenerateSteamGridAppId(appName, appTarget);
+                uint gameId = SteamShortcutId.Compute(appTarget, appName);
 
                 SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
@@ -466,14 +450,14 @@ namespace UWPHook
 
                                         string[] images = Directory.GetFiles(tmpGridDirectory);
 
-                                        UInt64 gameId = GenerateSteamGridAppId(app.Name, exePath);
+                                        uint gameId = SteamShortcutId.Compute(exePath, app.Name);
                                         app.Icon = PersistAppIcon(app, tmpGridDirectory + gameId + "_logo.png");
                                     });
                                 }
 
                                 VDFEntry newApp = new VDFEntry()
                                 {
-                                    appid = ((int)GenerateSteamGridAppId(app.Name, exePath)),
+                                    appid = SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(exePath, app.Name)),
                                     AppName = app.Name,
                                     Exe = exePath,
                                     StartDir = exeDir,

@@ -12,7 +12,37 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  # Task 2 adds a `core` job here (ubuntu-latest, UWPHook.Core + tests).
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # GitHubActions logger: each failed test becomes an error annotation.
+      # TRX logger: feeds the summary step below.
+      - name: Test
+        run: >-
+          dotnet test UWPHook.Core.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      - name: Summarize tests
+        if: always()
+        shell: bash
+        run: |
+          # GitHub runs bash with -eo pipefail, so guard against a missing TestResults folder.
+          trx=$( { find TestResults -name '*.trx' 2>/dev/null || true; } | head -n 1)
+          if [ -z "$trx" ]; then
+            echo "::notice title=Test summary::no test results (the build failed before tests ran)"
+            exit 0
+          fi
+          counters=$(grep -o '<Counters [^>]*>' "$trx" | head -n 1)
+          attr() { sed -n "s/.* $1=\"\([0-9]*\)\".*/\1/p" <<<"$counters"; }
+          echo "::notice title=Test summary::$(attr passed)/$(attr total) passed, $(attr failed) failed"
 
   app:
     runs-on: windows-latest
