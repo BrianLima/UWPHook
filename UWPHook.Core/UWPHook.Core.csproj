@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="ValveKeyValue" />
   </ItemGroup>
 
 </Project>
