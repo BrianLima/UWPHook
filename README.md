@@ -10,7 +10,7 @@ If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to d
 
 Get UWPHook from the [latest release](https://github.com/BrianLima/UWPHook/releases/latest). Pick the files for your PC: `win-x64` for most PCs, `win-arm64` for ARM devices (Snapdragon and similar).
 
-- **Installer (recommended):** download and run `UWPHook-win-x64-Setup.exe` (or `UWPHook-win-arm64-Setup.exe`). It installs UWPHook for your Windows user only, into `%LocalAppData%\UWPHook`, without asking for administrator rights, and adds Start menu and desktop shortcuts. Updates keep your Steam shortcuts working because they always point at `%LocalAppData%\UWPHook\UWPHook.exe`.
+- **Installer (recommended):** download and run `UWPHook-win-x64-Setup.exe` (or `UWPHook-win-arm64-Setup.exe`). It installs UWPHook for your Windows user only, into `%LocalAppData%\UWPHook`, without asking for administrator rights, and adds Start menu and desktop shortcuts. Updates keep your Steam shortcuts working because they always point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, whose path never changes.
 - **Portable:** download `UWPHook-win-x64-Portable.zip` (or the `win-arm64` one), extract it to a folder that you won't move later (your Steam shortcuts point at it), and run `UWPHook.exe`.
 
 The `SHA256SUMS.txt` file in each release lists the checksums of every download.

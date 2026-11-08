@@ -45,10 +45,10 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 
 ## Task 7
 - [ ] Velopack `UWPHook-win-x64-Setup.exe` installs per-user without a UAC prompt into `%LocalAppData%\UWPHook` (`UWPHook.exe` stub + `Update.exe` in the root, the app in `current\`), adds Start menu/desktop shortcuts, and opens UWPHook.
-- [ ] Exported shortcut from the installed app: `Exe` in `shortcuts.vdf` is `"%LocalAppData%\UWPHook\UWPHook.exe"` (expanded, the root stub, **not** `...\current\UWPHook.exe`) and `StartDir` is `"%LocalAppData%\UWPHook"`.
-- [ ] Launching that shortcut from Steam: the game starts, Steam shows "Playing/Running" for the whole session (not only for a moment, i.e. the stub must not make Steam think the game exited), and Steam's "Stop" behaves as with 2.14.
+- [ ] Exported shortcut from the installed app: `Exe` in `shortcuts.vdf` is `"%LocalAppData%\UWPHook\current\UWPHook.exe"` (expanded; **not** the root stub `%LocalAppData%\UWPHook\UWPHook.exe`) and `StartDir` is `"%LocalAppData%\UWPHook\current"`.
+- [ ] Launching that shortcut from Steam: the game starts, Steam shows "Playing/Running" for the whole session (not only for a moment: the shortcut targets `current\UWPHook.exe` directly, so no launcher stub sits in between), and Steam's "Stop" behaves as with 2.14.
 - [ ] Simulated update: install a 2.15.0 pack, then a 2.15.1 test pack (`vpk pack ... --packVersion 2.15.1` from the same channel, applied via `Update.exe apply` or by running the 2.15.1 Setup.exe over it); the Steam shortcuts exported from 2.15.0 still launch, no duplicate entries after re-export.
 - [ ] Uninstall from Windows Settings → Apps: `%LocalAppData%\UWPHook` is removed, `%AppData%\Briano\UWPHook` (backups, icons, `application.log`) is left intact.
-- [ ] The win-x64 `Portable.zip`, extracted to a folder with spaces (e.g. `D:\My Games\UWPHook`), runs via the root `UWPHook.exe`; exported shortcuts point at that root `UWPHook.exe` and launch.
+- [ ] The win-x64 `Portable.zip`, extracted to a folder with spaces (e.g. `D:\My Games\UWPHook`), runs; exported shortcuts point at the path of the exe that is actually running (`...\current\UWPHook.exe` for Velopack's zip, or the exe's own path for a plain unzipped build) and launch.
 - [ ] The win-arm64 Setup.exe installs and runs on an ARM64 PC (or note it untested).
 - [ ] Acceptance (brief Step 3) on Windows 11 25H2 and Windows 10 22H2: list apps, export, launch from Steam, re-export (no duplicates), stream mode.

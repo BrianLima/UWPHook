@@ -16,7 +16,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 ### Changed
 - UWPHook now runs on .NET 10 as a self-contained single-file app. No separate .NET runtime install is needed.
 - App discovery runs the built-in Windows PowerShell 5.1 in a separate process instead of a bundled PowerShell 7. The app no longer changes your PowerShell execution policy.
-- Steam shortcuts now point at a launcher path that stays the same across updates (`%LocalAppData%\UWPHook\UWPHook.exe` for installed copies), so updating UWPHook doesn't break or duplicate your shortcuts.
+- Steam shortcuts of installed copies point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, a path that stays the same across updates, so updating UWPHook doesn't break or duplicate your shortcuts.
 - Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded.
 - The "Change resolution" option was removed. It did not work on desktop Windows (#124), and it will return in 3.0.
 - The NSIS installer was replaced by the Velopack installer.
