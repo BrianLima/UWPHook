@@ -12,6 +12,7 @@
     <PackageVersion Include="System.IO.Hashing" Version="10.0.0" />
     <PackageVersion Include="System.Management" Version="10.0.0" />
     <PackageVersion Include="ValveKeyValue" Version="0.80.0.542" />
+    <PackageVersion Include="Velopack" Version="1.2.161" />
   </ItemGroup>
   <!-- Test-only packages (UWPHook.Core.Tests). -->
   <ItemGroup>

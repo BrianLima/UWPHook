@@ -35,7 +35,7 @@ These tasks need a working `dotnet` SDK plus NuGet restore. The 2026-11-08 cloud
 - Version lives only in `Directory.Build.props` (`<Version>2.15.0</Version>` for Phase 1).
 - Keep the existing on-disk locations: `%AppData%\Briano\UWPHook\{application.log,backups,icons}`.
 - Shortcut launch contract stays: `Exe = "<quoted UWPHook.exe path>"`, `StartDir = "<quoted dir>"`, `LaunchOptions = "<AUMID> <executable> [extra]"`.
-- The shortcut `Exe` must be a path that survives updates. Under Velopack that is the stable launcher path in the per-user install root, never a versioned folder (verify the exact layout against the Velopack docs in Task 7).
+- The shortcut `Exe` must be a path that survives updates. Under Velopack that is `%LocalAppData%\UWPHook\current\UWPHook.exe` — **not** the root launcher stub, which starts the app and exits (breaking Steam's playtime/streaming tracking); `current\` keeps its path across updates (ruling R24, 2026-11-08).
 - **Never delete or rewrite shortcuts UWPHook did not create.** Always back up `shortcuts.vdf` before writing.
 - Code style per Sandi Metz (POODR / 99 Bottles): small classes with one responsibility, dependencies injected, no static mutable state in Core, methods ≤ ~10 lines where practical, and tests target public behaviour.
 - Executors in a Linux cloud session: install the SDK with `dotnet-install.sh --channel 10.0`. Build and test Core there. The WPF app builds only with `EnableWindowsTargeting=true` and must be smoke-tested on Windows by the user (manual checks are listed per task).
@@ -247,8 +247,8 @@ UWPHook/                            (existing WPF app, modified)
 - Create: `UWPHook/Program.cs`, `UWPHook.Core/Install/InstallLayout.cs`, `UWPHook.Core.Tests/Install/InstallLayoutTests.cs`
 - Delete: `UWPHook.nsi` (replaced by Velopack, decision 2)
 
-- [ ] **Step 0 (TDD):** `public static class InstallLayout { public static string StableExePath(string processPath); }`. It maps a path inside a Velopack versioned or `current` folder to the stable launcher path and returns any non-Velopack (portable zip) path unchanged. Tests:
-  - `StableExePath_UnderVelopackRoot_ReturnsStableLauncher`
+- [ ] **Step 0 (TDD):** `public static class InstallLayout { public static string StableExePath(string processPath); }`. Per ruling R24 it returns the running exe path unchanged (Velopack `current\` is already update-stable); it stays the single seam for this decision. Tests:
+  - `StableExePath_UnderVelopackRoot_ReturnsTheExeInsideCurrent`
   - `StableExePath_PortableZip_ReturnsSamePath`
 
   Use it wherever `ShortcutSpec.ForApp` gets the UWPHook path.
