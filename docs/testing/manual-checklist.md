@@ -44,7 +44,7 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] With a game whose own icon can't be read and whose SteamGridDB logo is a `.webp`/`.jpg`, export still uses the downloaded logo as the backup icon.
 
 ## Task 7
-- [ ] Velopack `UWPHook-win-x64-Setup.exe` (whatever name the release produces) installs per-user without a UAC prompt into `%LocalAppData%\UWPHook` (`UWPHook.exe` stub + `Update.exe` in the root, the app in `current\`), adds Start menu/desktop shortcuts, and opens UWPHook.
+- [ ] Velopack `UWPHook-win-x64-Setup.exe` installs per-user without a UAC prompt into `%LocalAppData%\UWPHook` (`UWPHook.exe` stub + `Update.exe` in the root, the app in `current\`), adds Start menu/desktop shortcuts, and opens UWPHook.
 - [ ] Exported shortcut from the installed app: `Exe` in `shortcuts.vdf` is `"%LocalAppData%\UWPHook\UWPHook.exe"` (expanded, the root stub, **not** `...\current\UWPHook.exe`) and `StartDir` is `"%LocalAppData%\UWPHook"`.
 - [ ] Launching that shortcut from Steam: the game starts, Steam shows "Playing/Running" for the whole session (not only for a moment, i.e. the stub must not make Steam think the game exited), and Steam's "Stop" behaves as with 2.14.
 - [ ] Simulated update: install a 2.15.0 pack, then a 2.15.1 test pack (`vpk pack ... --packVersion 2.15.1` from the same channel, applied via `Update.exe apply` or by running the 2.15.1 Setup.exe over it); the Steam shortcuts exported from 2.15.0 still launch, no duplicate entries after re-export.

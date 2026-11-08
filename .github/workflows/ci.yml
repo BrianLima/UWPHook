@@ -94,7 +94,9 @@ jobs:
         run: |
           $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
           $files = .github/scripts/pack-release.ps1 -Version $version
-          Write-Output "::notice title=velopack pack::$($files -join ', ')"
+          Write-Output "::notice title=velopack pack::upload: $($files -join ', ')"
+          $all = Get-ChildItem releases/win-x64 -File | ForEach-Object Name
+          Write-Output "::notice title=velopack output win-x64::$($all -join ', ')"
 
       - uses: actions/upload-artifact@v4
         with:

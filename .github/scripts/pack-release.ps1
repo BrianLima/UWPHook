@@ -33,13 +33,15 @@ foreach ($rid in $Rids) {
         --icon UWPHook/Resources/hook2.ico `
         --runtime $rid `
         --channel $rid `
-        --outputDir $out
+        --outputDir $out | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "vpk pack failed for $rid (exit code $LASTEXITCODE)" }
 
     # Upload the installer, the portable zip, the packages and the releases.<channel>.json feed.
     # Skip the legacy RELEASES file (only for apps migrating from Squirrel, which UWPHook never used)
     # and assets.<channel>.json (vpk's local list of build outputs).
-    $assets = Get-ChildItem $out -File | Where-Object { $_.Name -notlike 'RELEASES*' -and $_.Name -notlike 'assets.*.json' }
+    # (-cnotmatch: case-sensitive, so the releases.<channel>.json feed is kept.)
+    $assets = Get-ChildItem $out -File | Where-Object { $_.Name -cnotmatch '^RELEASES' -and $_.Name -notlike 'assets.*.json' }
+    if (-not ($assets | Where-Object Name -eq "releases.$rid.json")) { throw "vpk produced no releases.$rid.json feed for $rid." }
     foreach ($file in $assets) {
         $target = Join-Path $upload $file.Name
         if (Test-Path $target) { throw "Two runtimes produced $($file.Name); their release assets would overwrite each other." }

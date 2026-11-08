@@ -9,7 +9,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 A stabilization release: the app list loads again, existing shortcuts launch again, and exporting no longer hangs or crashes.
 
 ### Added
-- A per-user installer (`Setup.exe`), built with [Velopack](https://velopack.io). It installs to `%LocalAppData%\UWPHook` without asking for administrator rights. A portable zip is still available.
+- A per-user installer (`UWPHook-win-x64-Setup.exe`), built with [Velopack](https://velopack.io). It installs to `%LocalAppData%\UWPHook` without asking for administrator rights. A portable zip is still available.
 - Builds for ARM64 PCs (`win-arm64`) alongside x64.
 - A global error handler. Unexpected errors are written to `application.log` and shown in a message box, and the app stays open instead of closing silently.
 
