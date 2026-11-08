@@ -35,6 +35,21 @@ public class ScriptManagerTests
     }
 
     [Fact]
+    public void RunScript_ThrowsScriptFailedException_WhenACmdletFails()
+    {
+        // Without $ErrorActionPreference = 'Stop' this only writes to stderr and exits 0.
+        var failure = Assert.Throws<ScriptFailedException>(
+            () => ScriptManager.RunScript("Get-Item -LiteralPath 'C:\\UWPHook\\does-not-exist'\r\nWrite-Output 'kept going'", Timeout));
+
+        Assert.NotEqual(0, failure.ExitCode);
+        Assert.Contains("does-not-exist", failure.Stderr);
+    }
+
+    [Fact]
+    public void RunScript_ThrowsScriptFailedException_WhenSetWinUILanguageOverrideIsGivenAnUnknownLanguage() =>
+        Assert.Throws<ScriptFailedException>(() => ScriptManager.RunScript("Set-WinUILanguageOverride -Language 'not a language'", Timeout));
+
+    [Fact]
     public void RunScript_ThrowsTimeoutExceptionAndRemovesTheTempScript()
     {
         var before = TempScripts();

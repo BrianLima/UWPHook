@@ -30,4 +30,12 @@ public class PowerShellScriptTests
     [Fact]
     public void WithOutString_KeepsSemicolonsBetweenStatementsOnTheLastLine() =>
         Assert.Equal("$a = 1; $a | Out-String", PowerShellScript.WithOutString("$a = 1; $a;"));
+
+    [Fact]
+    public void Prepare_MakesCmdletErrorsStopTheScript() =>
+        Assert.StartsWith("$ErrorActionPreference = 'Stop'" + Environment.NewLine, PowerShellScript.Prepare("Get-Date"));
+
+    [Fact]
+    public void Prepare_PipesTheLastStatementIntoOutString() =>
+        Assert.EndsWith(Environment.NewLine + "Get-Date | Out-String", PowerShellScript.Prepare("Get-Date;"));
 }
