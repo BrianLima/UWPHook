@@ -122,9 +122,51 @@ public class GameSessionTests
         Assert.Empty(_processes.Queries);
     }
 
+    [Fact]
+    public async Task Run_WatcherThrowsBriefly_ReportsTheErrors_AndKeepsTheSessionAlive()
+    {
+        // Two bad polls at 20 s and 21 s while the game runs 0–30 s: the session must not end there.
+        _processes.Alive(Family, from: 0, until: 30);
+        _processes.Failing(from: 20, until: 22);
+        var errors = new List<Exception>();
+
+        var outcome = await Drive(NewSession(errors.Add).RunAsync(Request, Poll, Grace, Ct));
+
+        Assert.Equal(SessionOutcome.Ended, outcome);
+        AssertEndedAround(TimeSpan.FromSeconds(30) + Grace);
+        Assert.Equal(2, errors.Count);
+    }
+
+    [Fact]
+    public async Task Run_WatcherThrowingOnAlternatePolls_NeverHitsTheCap()
+    {
+        _processes.Alive(Family, from: 0, until: 60);
+        _processes.FailingOnOddSeconds(from: 0, until: 40);
+
+        var outcome = await Drive(NewSession().RunAsync(Request, Poll, Grace, Ct));
+
+        Assert.Equal(SessionOutcome.Ended, outcome);
+        AssertEndedAround(TimeSpan.FromSeconds(60) + Grace);
+    }
+
+    [Fact]
+    public async Task Run_WatcherAlwaysThrows_EndsWithWatcherFailed_AfterTheCap()
+    {
+        _processes.Alive(Family, from: 0, until: 6000);
+        _processes.Failing(from: 0, until: 6000);
+        var errors = new List<Exception>();
+
+        var outcome = await Drive(NewSession(errors.Add).RunAsync(Request, Poll, Grace, Ct));
+
+        Assert.Equal(SessionOutcome.WatcherFailed, outcome);
+        Assert.Equal(GameSession.MaxConsecutiveWatcherFailures, errors.Count);
+        Assert.True(GameSession.MaxConsecutiveWatcherFailures >= 5);
+    }
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private GameSession NewSession() => new(_activator, _processes, _time);
+    private GameSession NewSession(Action<Exception>? onWatcherError = null) =>
+        new(_activator, _processes, _time) { OnWatcherError = onWatcherError ?? (_ => { }) };
 
     private void AssertEndedAround(TimeSpan expected)
     {
@@ -166,6 +208,7 @@ public class GameSessionTests
     {
         private readonly DateTimeOffset _start = time.GetUtcNow();
         private readonly List<(string Family, TimeSpan From, TimeSpan Until)> _lifetimes = [];
+        private readonly List<(TimeSpan From, TimeSpan Until, bool OddSecondsOnly)> _failures = [];
 
         public List<string> Queries { get; } = [];
         public TimeSpan Elapsed => time.GetUtcNow() - _start;
@@ -173,10 +216,19 @@ public class GameSessionTests
         public void Alive(string family, int from, int until) =>
             _lifetimes.Add((family, TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(until)));
 
+        /// <summary>Every query in [from, until) throws, like a watcher hitting a transient Windows error.</summary>
+        public void Failing(int from, int until) =>
+            _failures.Add((TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(until), false));
+
+        public void FailingOnOddSeconds(int from, int until) =>
+            _failures.Add((TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(until), true));
+
         public bool AnyAlive(string packageFamilyName)
         {
             Queries.Add(packageFamilyName);
             var now = Elapsed;
+            if (_failures.Any(f => f.From <= now && now < f.Until && (!f.OddSecondsOnly || (int)now.TotalSeconds % 2 == 1)))
+                throw new InvalidOperationException($"watcher failed at {now}");
             return _lifetimes.Any(p => p.Family == packageFamilyName && p.From <= now && now < p.Until);
         }
     }
