@@ -156,70 +156,63 @@ namespace UWPHook
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            bool result = false, restartSteam = true;
-            string msg = String.Empty;
+            string? msg = null;
 
             try
             {
                 await ExportGames();
-                await RestartSteam(restartSteam);
 
-                msg = "Your apps were successfuly exported!";
-                if (!restartSteam)
-                {
-                    msg += " Please restart Steam in order to see them.";
-                }
-                else if (result)
-                {
-                    msg += " Steam has been restarted.";
-                }
+                var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
+                    timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
+                var outcome = await restarter.RestartAsync();
+                Log.Information("Steam restart outcome: {Outcome}", outcome);
 
+                msg = "Your apps were successfully exported!" + outcome switch
+                {
+                    RestartOutcome.Restarted => " Steam has been restarted.",
+                    RestartOutcome.NotRunning => " They will show up the next time you start Steam.",
+                    _ => " Please restart Steam to see your games.",
+                };
             }
-            catch (TaskCanceledException exception)
+            catch (Exception exception)
             {
-                Log.Error(exception.Message);
-                msg = exception.Message;
+                Infrastructure.ErrorReporter.Report(exception, "Exporting your games failed.");
+            }
+            finally
+            {
+                grid.IsEnabled = true;
+                progressBar.Visibility = Visibility.Collapsed;
             }
 
-            grid.IsEnabled = true;
-            progressBar.Visibility = Visibility.Collapsed;
-
-            MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (msg != null)
+            {
+                MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
+        private static readonly System.Net.Http.HttpClient imageClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+
         /// <summary>
-        /// Downloads the given image in the url to a given path in a given format
+        /// Downloads the image at the url and saves its bytes untouched (animated images stay animated).
+        /// The extension of <paramref name="destinationFilename"/> is replaced with the one from the url.
+        /// A failed download is logged and skipped: artwork is optional.
         /// </summary>
         /// <param name="imageUrl">The url for the image</param>
-        /// <param name="destinationFilename">Path to store the image</param>
-        /// <param name="format"></param>
+        /// <param name="destinationFilename">Path to store the image, ending in .png</param>
         /// <returns></returns>
-        private async Task SaveImage(string imageUrl, string destinationFilename, ImageFormat format)
+        private async Task SaveImage(string imageUrl, string destinationFilename)
         {
-            await Task.Run(() =>
-            {
-                WebClient client = new WebClient();
-                Stream stream = null;
-                try
-                {
-                    stream = client.OpenRead(imageUrl);
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception.Message);
-                    //Image with error?
-                    //Skip for now
-                }
+            string destination = Path.ChangeExtension(destinationFilename, Core.Artwork.ArtworkFile.ExtensionFromUrl(imageUrl));
 
-                if (stream != null)
-                {
-                    Bitmap bitmap; bitmap = new Bitmap(stream);
-                    bitmap.Save(destinationFilename, format);
-                    stream.Flush();
-                    stream.Close();
-                    client.Dispose();
-                }
-            });
+            try
+            {
+                byte[] bytes = await imageClient.GetByteArrayAsync(imageUrl);
+                await File.WriteAllBytesAsync(destination, bytes);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Could not save image {Url} to {Destination}", imageUrl, destination);
+            }
         }
 
         /// <summary>
@@ -353,25 +346,25 @@ namespace UWPHook
                 if (gridsHorizontal != null && gridsHorizontal.Length > 0)
                 {
                     var grid = gridsHorizontal[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}.png"));
                 }
 
                 if (gridsVertical != null && gridsVertical.Length > 0)
                 {
                     var grid = gridsVertical[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}p.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}p.png"));
                 }
 
                 if (heroes != null && heroes.Length > 0)
                 {
                     var hero = heroes[0];
-                    saveImagesTasks.Add(SaveImage(hero.Url, $"{tmpGridDirectory}\\{gameId}_hero.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(hero.Url, $"{tmpGridDirectory}\\{gameId}_hero.png"));
                 }
 
                 if (logos != null && logos.Length > 0)
                 {
                     var logo = logos[0];
-                    saveImagesTasks.Add(SaveImage(logo.Url, $"{tmpGridDirectory}\\{gameId}_logo.png", ImageFormat.Png));
+                    saveImagesTasks.Add(SaveImage(logo.Url, $"{tmpGridDirectory}\\{gameId}_logo.png"));
                 }
 
                 await Task.WhenAll(saveImagesTasks);
@@ -605,57 +598,6 @@ namespace UWPHook
             }
 
             return dest_file;
-        }
-
-        /// <summary>
-        /// Restarts the Steam.exe process
-        /// </summary>
-        /// <param name="restartSteam"></param>
-        /// <returns></returns>
-        private async Task<bool> RestartSteam(bool restartSteam)
-        {
-            Func<Process> getSteam = () => Process.GetProcessesByName("steam").SingleOrDefault();
-            Process steam = getSteam();
-
-            if (steam != null)
-            {
-                string steamExe = steam.MainModule.FileName;
-
-                //we always ask politely
-                Log.Debug("Requesting Steam shutdown");
-                Process.Start(steamExe, "-exitsteam");
-
-                bool restarted = false;
-                Stopwatch watch = new Stopwatch();
-                watch.Start();
-
-                //give it N seconds to sort itself out
-                int waitSeconds = 8;
-                while (!restarted || watch.Elapsed.TotalSeconds < waitSeconds)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.5f));
-                    if (getSteam() == null)
-                    {
-                        Log.Debug("Restarting Steam");
-                        Process.Start(steamExe);
-                        restarted = true;
-                        break;
-                    }
-                }
-
-                if (!restarted)
-                {
-                    Log.Debug("Steam instance not restarted");
-                    MessageBox.Show("Failed to restart Steam, please launch it manually", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-            }
-            else
-            {
-                Log.Debug("Steam instance not found to be restarted");
-            }
-
-            return true;
         }
 
         public static void ClearAllShortcuts()

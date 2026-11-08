@@ -101,27 +101,25 @@ namespace UWPHook
             //Decide which is the largest
             foreach (string image in images)
             {
-                Image icon = null;
-
                 //Try to load the image, if it's a invalid file, skip it
+                Size? iconSize = null;
                 try
                 {
-                    icon = Image.FromFile(image);
+                    //Dispose right away so the file is not left locked
+                    using var icon = Image.FromFile(image);
+                    iconSize = icon.Size;
                 }
                 catch (System.Exception)
                 {
 
                 }
 
-                if (icon != null)
+                //UWP apps usually store live tile images inside the same directory
+                //Let's check if the image is square for use as icon on Steam and pick the largest one
+                if (iconSize is Size candidate && candidate.Width == candidate.Height && candidate.Height > size.Height)
                 {
-                    //UWP apps usually store live tile images inside the same directory
-                    //Let's check if the image is square for use as icon on Steam and pick the largest one
-                    if (icon.Width == icon.Height && (icon.Size.Height > size.Height))
-                    {
-                        size = icon.Size;
-                        result = image;
-                    }
+                    size = candidate;
+                    result = image;
                 }
             }
 
