@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using UWPHook.Core.Launch;
 using UWPHook.Properties;
 
 namespace UWPHook
@@ -26,32 +27,27 @@ namespace UWPHook
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
         /// </summary>
-        /// <param name="aumid">The AUMID of the app to launch</param>
-        public static void LaunchUWPApp(string[] args)
+        /// <param name="request">The AUMID, executable and extra arguments Steam asked us to launch</param>
+        public static void LaunchUWPApp(LaunchRequest request)
         {
-            // We receive the args from Steam, 
-            // 0 is application location, 
-            // 1 is the aumid,
-            // 2 is the executable, the rest are extras
-            string aumid = args[1];
-            executablePath = args[2].Contains("/") ? args[2].Replace('/', '\\') : args[2];
-            Log.Verbose("Arguments => " + String.Join("/", args));
+            executablePath = request.Executable;
+            Log.Verbose("Launch request => " + request);
             var mgr = new ApplicationActivationManager();
             uint processId;
 
-            string extra_args = String.Join(" ", args.Skip(3)
-                                                 .Take(args.Length - 3)
-                                                 .Select(eachElement => eachElement.Clone()
-                                            ).ToArray());
-
             try
             {
-                mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
+                mgr.ActivateApplication(request.Aumid, request.ExtraArguments, ActivateOptions.None, out processId);
                 runningProcessId = (int) processId;
                 Log.Verbose("Process ID => " + runningProcessId.ToString());
 
                 //Bring the launched app to the foreground, this fixes in-home streaming
                 BringProcess();
+            }
+            catch (Exception e) when (e is COMException || e is ArgumentException)
+            {
+                Log.Error($"Activating {request.Aumid} failed with HRESULT 0x{e.HResult:X8} ({e.GetType().Name}): {e.Message}");
+                throw new Exception("Error while trying to launch your app." + Environment.NewLine + e.Message, e);
             }
             catch (Exception e)
             {
@@ -86,6 +82,12 @@ namespace UWPHook
                 // Check only at launch if started by a launcher
                 if (!isLauncherProcess)
                 {
+                    if (String.IsNullOrEmpty(executablePath))
+                    {
+                        Log.Debug("initial PID is not running anymore and the shortcut names no executable, stopping");
+                        return false;
+                    }
+
                     Log.Debug("initial PID is not running anymore, checking other possible process runing before stop");
                     bool secondCheck = false;
                     do
@@ -94,10 +96,9 @@ namespace UWPHook
                         var processes = GetProcess();
                         foreach (var process in processes)
                         {
-                            string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
-                            Log.Verbose("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
-                            Log.Verbose("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
-                            if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
+                            bool isGame = ProcessMatch.IsGameProcess(process.Value.Path, process.Key, executablePath);
+                            Log.Verbose("Process " + process.Key + " (" + process.Value.Path + ") is " + executablePath + " ? : " + isGame);
+                            if (isGame)
                             {
                                 int pid = process.Value.Pid;
                                 Log.Verbose($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");

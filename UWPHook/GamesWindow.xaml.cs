@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using UWPHook.Core.Launch;
 using UWPHook.Core.Steam;
 using UWPHook.Properties;
 using UWPHook.SteamGridDb;
@@ -104,6 +105,14 @@ namespace UWPHook
 
             try
             {
+                if (!LaunchRequest.TryParse(args, out var request))
+                {
+                    Log.Error("Invalid launch arguments => " + String.Join(" | ", args));
+                    this.Show();
+                    MessageBox.Show("Invalid launch arguments", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 //Some apps have their language locked to the UI language of the system, so overriding it might change the language of the game
                 //I my self couldn't get this to work on neither Forza Horizon 3 or Halo 5 Forge, @AbGedreht reported it works tho
                 if (Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Settings.Default.TargetLanguage))
@@ -117,8 +126,7 @@ namespace UWPHook
                     ScriptManager.RunScript("Set-DisplayResolution -Width " + targetResolution.Width + " - Height " + targetResolution.Height + " -Force");
                 }
 
-                //The only other parameter Steam will send is the app AUMID
-                AppManager.LaunchUWPApp(args);
+                AppManager.LaunchUWPApp(request!);
 
                 //While the current launched app is running, sleep for n seconds and then check again
                 while (AppManager.IsRunning())
