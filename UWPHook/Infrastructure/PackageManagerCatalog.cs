@@ -2,6 +2,7 @@ using System.IO;
 using Serilog;
 using UWPHook.Core.Catalog;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
 using Windows.Management.Deployment;
 
 namespace UWPHook.Infrastructure
@@ -58,14 +59,29 @@ namespace UWPHook.Infrastructure
                 return null;
 
             string installLocation = package.InstalledPath;
+            string familyName = package.Id.FamilyName;
+            string? manifestXml = await ReadIfExists(Path.Combine(installLocation, "AppxManifest.xml"), ct);
             return new PackageSnapshot(
-                package.Id.FamilyName,
+                familyName,
                 DisplayNameOf(package),
                 installLocation,
                 package.InstalledDate,
-                entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
-                await ReadIfExists(Path.Combine(installLocation, "AppxManifest.xml"), ct),
+                EntrySnapshots(familyName, entries, manifestXml),
+                manifestXml,
                 await ReadIfExists(Path.Combine(installLocation, "MicrosoftGame.config"), ct));
+        }
+
+        // AppListEntry.AppUserModelId only exists from Windows 10 1903. On 1809 the AUMIDs come from the manifest's
+        // application ids instead, without entry names (CatalogEntryBuilder then falls back to the manifest names).
+        private static IReadOnlyList<AppListEntrySnapshot> EntrySnapshots(
+            string familyName, IReadOnlyList<AppListEntry> entries, string? manifestXml)
+        {
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 18362))
+                return entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList();
+
+            return AppxManifest.ReadApplications(manifestXml ?? "")
+                .Select(application => new AppListEntrySnapshot(familyName + "!" + application.Id, null))
+                .ToList();
         }
 
         // Resolving a package's display name can fail on its own; the entry and manifest names may still work.
