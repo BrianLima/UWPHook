@@ -18,7 +18,7 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
         if (!steam.IsRunning()) return StopOutcome.NotRunning;
 
         var exePath = steam.ExecutablePath();
-        if (exePath is null) return StopOutcome.StillRunning;
+        if (exePath is null) return StopOutcome.ExecutableUnknown;
 
         steam.RequestExit();
         if (!await ExitedInTimeAsync(ct).ConfigureAwait(false)) return StopOutcome.StillRunning;
@@ -40,13 +40,14 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
 
     /// <summary>
     /// Runs <paramref name="write"/> while Steam is closed: stops a running Steam, writes, and starts it again,
-    /// also when the write throws. Steam may write its own copy of its files when it exits, so when it can't be
-    /// stopped the write is skipped (and <see cref="StopOutcome.StillRunning"/> returned) rather than risked.
+    /// also when the write throws. Steam may write its own copy of its files when it exits, so when it is still
+    /// running (<see cref="StopOutcome.StillRunning"/> or <see cref="StopOutcome.ExecutableUnknown"/>) the write
+    /// is skipped rather than risked.
     /// </summary>
     public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, CancellationToken ct = default)
     {
         var outcome = await StopAsync(ct).ConfigureAwait(false);
-        if (outcome == StopOutcome.StillRunning) return outcome;
+        if (outcome is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown) return outcome;
 
         try
         {

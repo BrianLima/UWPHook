@@ -371,6 +371,7 @@ namespace UWPHook
 
             int written = 0;
             int failed = 0;
+            var artworkFailedUsers = new List<string>();
             StopOutcome steam = await NewSteamRestarter().WhileStoppedAsync(async () =>
             {
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
@@ -396,18 +397,27 @@ namespace UWPHook
                 {
                     foreach (var (user, gridIdsByKey) in gridIdsByUser)
                     {
-                        CopyTempGridImagesToSteamUser(user, gridIdsByKey);
+                        try
+                        {
+                            CopyTempGridImagesToSteamUser(user, gridIdsByKey);
+                        }
+                        catch (Exception ex)
+                        {
+                            // The shortcuts are already written: a note in the summary, not a failed export
+                            artworkFailedUsers.Add(Path.GetFileName(user));
+                            Log.Error(ex, "Could not copy the artwork to {User}", user);
+                        }
                     }
                 });
             });
 
-            if (steam == StopOutcome.StillRunning)
+            if (steam is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
             {
-                Log.Warning("Steam did not close within the timeout; nothing was exported");
-                return ExportSummary.SteamStillRunning();
+                Log.Warning("Steam is still running ({Outcome}); nothing was exported", steam);
+                return ExportSummary.SteamNotStopped(steam);
             }
 
-            return ExportSummary.ForUsers(written, failed, steam);
+            return ExportSummary.ForUsers(written, failed, steam).WithArtworkFailures(artworkFailedUsers);
         }
 
         /// <summary>
@@ -539,9 +549,12 @@ namespace UWPHook
                 }
             });
 
-            if (steam == StopOutcome.StillRunning)
+            if (steam is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
             {
-                MessageBox.Show("Steam did not close in time, so nothing was removed. Close Steam, then try again.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                string why = steam == StopOutcome.StillRunning
+                    ? "Steam did not close in time"
+                    : "Steam is running, but UWPHook could not find steam.exe to close and restart it";
+                MessageBox.Show(why + ", so nothing was removed. Close Steam, then try again.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

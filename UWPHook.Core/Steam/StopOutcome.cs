@@ -8,6 +8,12 @@ public enum StopOutcome
     /// <summary>Steam exited; <see cref="SteamRestarter.Start"/> brings it back.</summary>
     Stopped,
 
-    /// <summary>Steam is still running: it did not exit in time, or it could not be asked to (its path is unknown).</summary>
+    /// <summary>Steam was asked to exit but is still running after the timeout.</summary>
     StillRunning,
+
+    /// <summary>
+    /// Steam is running but steam.exe could not be found, so it was left alone (never asked to exit):
+    /// without the path it could not be started again.
+    /// </summary>
+    ExecutableUnknown,
 }
