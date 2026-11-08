@@ -17,7 +17,7 @@ using System.Windows;
 using UWPHook.Core.Launch;
 using UWPHook.Core.Steam;
 using UWPHook.Properties;
-using UWPHook.SteamGridDb;
+using UWPHook.Core.Artwork.SteamGridDb;
 
 namespace UWPHook
 {
@@ -336,17 +336,19 @@ namespace UWPHook
         /// <summary>
         /// Task responsible for downloading grid images to a temporary location,
         /// in a folder per app named after <paramref name="gridKey"/>, with <see cref="GridIdPlaceholder"/>
-        /// in place of the appid (renamed when copied to each user),
-        /// Throws TaskCanceledException if cannot communicate with SteamGridDB properly
+        /// in place of the appid (renamed when copied to each user).
+        /// Takes the first search result and the first image of each kind. SteamGridDB errors are
+        /// logged and leave the app without artwork; they never stop the export.
         /// </summary>
         /// <param name="appName">The name of the app</param>
         /// <param name="gridKey">The app's grid key, see <see cref="GridKey"/></param>
-        /// <returns></returns>
-        private async Task DownloadTempGridImages(string appName, string gridKey)
+        /// <returns>True when SteamGridDB rejected the API key</returns>
+        private async Task<bool> DownloadTempGridImages(string appName, string gridKey)
         {
-            SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
+            SteamGridDbClient api = Infrastructure.SteamGridDbService.Client;
+            ArtworkFilter filter = Infrastructure.SteamGridDbService.FilterFromSettings();
+            CancellationToken ct = CancellationToken.None;
             string tmpGridDirectory = TempGridDirectoryFor(gridKey);
-            GameResponse[] games = null;
 
             // Start from an empty folder, so images left by an earlier, interrupted export are never used
             if (Directory.Exists(tmpGridDirectory))
@@ -354,70 +356,47 @@ namespace UWPHook
                 Directory.Delete(tmpGridDirectory, true);
             }
 
-            try
+            var search = await api.SearchAsync(appName, ct);
+            if (search.Status == SgdbStatus.InvalidApiKey)
             {
-                games = await api.SearchGame(appName);
+                return true;
             }
-            catch (TaskCanceledException exception)
+            if (!search.IsOk || search.Value.Count == 0)
             {
-                Log.Error(exception.Message);
+                Log.Information("No SteamGridDB game found for {App} ({Result})", appName, search);
+                return false;
             }
 
-            if (games != null)
+            var game = search.Value[0];
+            Log.Verbose("Detected game {Name} (SteamGridDB id {Id}) for {App}", game.Name, game.Id, appName);
+            string gameId = GridIdPlaceholder;
+
+            var results = await Task.WhenAll(
+                api.GetGridsAsync(game.Id, filter, "460x215,920x430", ct),
+                api.GetGridsAsync(game.Id, filter, "600x900,342x482,660x930", ct),
+                api.GetHeroesAsync(game.Id, filter, null, ct),
+                api.GetLogosAsync(game.Id, filter, null, ct));
+
+            string[] fileNames = { $"{gameId}.png", $"{gameId}p.png", $"{gameId}_hero.png", $"{gameId}_logo.png" };
+
+            SafellyCreateTmpGridDirectory(tmpGridDirectory);
+
+            List<Task> saveImagesTasks = new List<Task>();
+            for (int i = 0; i < results.Length; i++)
             {
-                var game = games[0];
-                Log.Verbose("Detected Game: " + game.ToString());
-                string gameId = GridIdPlaceholder;
-
-                SafellyCreateTmpGridDirectory(tmpGridDirectory);
-
-                var gameGridsVertical = api.GetGameGrids(game.Id, "600x900,342x482,660x930");
-                var gameGridsHorizontal = api.GetGameGrids(game.Id, "460x215,920x430");
-                var gameHeroes = api.GetGameHeroes(game.Id);
-                var gameLogos = api.GetGameLogos(game.Id);
-
-                Log.Verbose("Game ID: " + game.Id);
-
-                await Task.WhenAll(
-                    gameGridsVertical,
-                    gameGridsHorizontal,
-                    gameHeroes,
-                    gameLogos
-                );
-
-                var gridsVertical = await gameGridsVertical;
-                var gridsHorizontal = await gameGridsHorizontal;
-                var heroes = await gameHeroes;
-                var logos = await gameLogos;
-
-                List<Task> saveImagesTasks = new List<Task>();
-
-                if (gridsHorizontal != null && gridsHorizontal.Length > 0)
+                if (results[i].IsOk && results[i].Value.Count > 0)
                 {
-                    var grid = gridsHorizontal[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}.png"));
+                    saveImagesTasks.Add(SaveImage(results[i].Value[0].Url, $"{tmpGridDirectory}\\{fileNames[i]}"));
                 }
-
-                if (gridsVertical != null && gridsVertical.Length > 0)
+                else if (!results[i].IsOk)
                 {
-                    var grid = gridsVertical[0];
-                    saveImagesTasks.Add(SaveImage(grid.Url, $"{tmpGridDirectory}\\{gameId}p.png"));
+                    Log.Warning("SteamGridDB has no {File} for {App}: {Result}", fileNames[i], appName, results[i]);
                 }
-
-                if (heroes != null && heroes.Length > 0)
-                {
-                    var hero = heroes[0];
-                    saveImagesTasks.Add(SaveImage(hero.Url, $"{tmpGridDirectory}\\{gameId}_hero.png"));
-                }
-
-                if (logos != null && logos.Length > 0)
-                {
-                    var logo = logos[0];
-                    saveImagesTasks.Add(SaveImage(logo.Url, $"{tmpGridDirectory}\\{gameId}_logo.png"));
-                }
-
-                await Task.WhenAll(saveImagesTasks);
             }
+
+            await Task.WhenAll(saveImagesTasks);
+
+            return results.Any(result => result.Status == SgdbStatus.InvalidApiKey);
         }
 
         private void SafellyCreateTmpGridDirectory(string tmpGridDirectory)
@@ -475,7 +454,7 @@ namespace UWPHook
                 string exePath = UWPHook.Core.Install.InstallLayout.StableExePath(Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe"));
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
 
-                List<Task> gridImagesDownloadTasks = new List<Task>();
+                List<Task<bool>> gridImagesDownloadTasks = new List<Task<bool>>();
                 bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
                 //To make things faster, decide icons and download grid images before looping users
                 Log.Verbose("downloadGridImages: " + (downloadGridImages));
@@ -492,7 +471,13 @@ namespace UWPHook
                     }
                 }
 
-                await Task.WhenAll(gridImagesDownloadTasks);
+                bool[] keyRejected = await Task.WhenAll(gridImagesDownloadTasks);
+                if (keyRejected.Any(rejected => rejected))
+                {
+                    // Once per export; the key is kept so the user can fix it in Settings
+                    Log.Warning("SteamGridDB rejected the API key (HTTP 401); exporting without artwork");
+                    MessageBox.Show(Infrastructure.SteamGridDbService.InvalidKeyMessage, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
 
                 // Export the selected apps and the downloaded images to each user
                 // in the steam folder by modifying it's VDF file
