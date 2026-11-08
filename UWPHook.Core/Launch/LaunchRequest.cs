@@ -7,10 +7,13 @@ namespace UWPHook.Core.Launch;
 /// <c>&lt;AUMID&gt; &lt;executable&gt; [extra...]</c> after UWPHook's own path.
 /// </summary>
 /// <param name="Aumid">The app's Application User Model ID, e.g. <c>Microsoft.Forza_8wekyb3d8bbwe!App</c>.</param>
-/// <param name="Executable">The game's executable (backslash-separated), used to find a process a launcher spawns. Empty when Steam sent none.</param>
+/// <param name="Executable">The game's executable (backslash-separated), as the shortcut names it. Empty when Steam sent none.</param>
 /// <param name="ExtraArguments">Everything after the executable, joined with spaces.</param>
 public sealed partial record LaunchRequest(string Aumid, string Executable, string ExtraArguments)
 {
+    /// <summary>The package family of the app: the AUMID before its <c>!</c>, e.g. <c>Microsoft.Forza_8wekyb3d8bbwe</c>.</summary>
+    public string PackageFamilyName => Aumid.IndexOf('!') is var bang and >= 0 ? Aumid[..bang] : Aumid;
+
     /// <summary>
     /// Parses the full command line (<c>Environment.GetCommandLineArgs()</c>, index 0 is UWPHook itself).
     /// The AUMID is the first argument after index 0 that looks like one, so an unquoted

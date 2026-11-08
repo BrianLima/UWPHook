@@ -53,6 +53,12 @@ public class LaunchRequestTests
         Assert.Null(request);
     }
 
+    [Theory]
+    [InlineData("Microsoft.Forza_8wekyb3d8bbwe!App", "Microsoft.Forza_8wekyb3d8bbwe")]
+    [InlineData("Microsoft.Chelan_8wekyb3d8bbwe!Game", "Microsoft.Chelan_8wekyb3d8bbwe")]
+    public void PackageFamilyName_IsTheAumidBeforeTheBang(string aumid, string family) =>
+        Assert.Equal(family, new LaunchRequest(aumid, "", "").PackageFamilyName);
+
     private static LaunchRequest Parse(params string[] args)
     {
         Assert.True(LaunchRequest.TryParse(args, out var request));

@@ -75,3 +75,16 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] With an invalid SteamGridDB key, export shows "Your SteamGridDB API key was rejected; artwork was skipped. Check it in Settings." once (not once per game), the shortcut is still added to Steam, and the key is still in Settings afterwards; `application.log` has the warning.
 - [ ] Changing the SteamGridDB key in Settings and exporting again (without restarting UWPHook) uses the new key.
 - [ ] Style "no_logo" in Settings returns no-logo grids (the stored value had a trailing space that is now trimmed).
+
+## Task 11
+- [ ] Halo MCC (its launcher exits): Steam shows "Playing" until the game itself closes, then UWPHook exits within about 10 s plus the check interval. With Settings → log level DEBUG, `application.log` has `Session for ... finished: Ended` (at the default ERROR level no session line is written).
+- [ ] At the default log level (ERROR), a shortcut for a game that starts no process (e.g. uninstall the game but keep the shortcut, if activation still succeeds) logs the error `No process of <family> was seen after launching <AUMID>`, and UWPHook exits after about 10 s.
+- [ ] Forza Horizon 5 is tracked for the whole session (Steam playtime matches how long you played).
+- [ ] A game launched from Steam opens no UWPHook window with stream mode off (nothing in the taskbar or Alt+Tab, `UWPHook.exe` still in Task Manager while the game runs).
+- [ ] Steam overlay (Shift+Tab) works in a game launched through UWPHook, with stream mode on and off.
+- [ ] Steam Remote Play / in-home streaming of a UWPHook game, with stream mode on (the splash shows for about 10 s, then the game streams) and off.
+- [ ] On an NVIDIA Advanced Optimus laptop: launching a game through UWPHook no longer blocks the switch to dGPU-only mode (#165), with stream mode on and off.
+- [ ] Steam launch options (e.g. `-windowed` added after the executable in the shortcut's launch options) reach the game.
+- [ ] With Settings → language override on: the game starts in the target language, and the Windows UI language is back to what it was after the game exits; with the override script failing (e.g. an invalid language), UWPHook still exits when the game ends.
+- [ ] A shortcut for a game that is no longer installed shows an error box and UWPHook exits; a shortcut whose launch options have no AUMID shows "Invalid launch arguments" and exits.
+- [ ] Opening UWPHook normally (no arguments, Start menu) shows the games list; closing it exits the process.

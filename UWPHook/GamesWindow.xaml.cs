@@ -28,119 +28,15 @@ namespace UWPHook
     {
         AppEntryModel Apps;
         BackgroundWorker bwrLoad;
-        static LoggingLevelSwitch levelSwitch = new LoggingLevelSwitch();
 
         public GamesWindow()
         {
             InitializeComponent();
             Log.Debug("Init GamesWindow");
             Apps = new AppEntryModel();
-            var args = Environment.GetCommandLineArgs();
 
-            // Init log file to AppData\Roaming\Briano\UWPHook directory with size rotation on 10Mb with max 5 files
-            string loggerFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "application.log");
-
-            Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.ControlledBy(levelSwitch)
-            .WriteTo.File(path: loggerFilePath, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10485760, retainedFileCountLimit: 5)
-            .WriteTo.Console()
-            .CreateLogger();
-
-            // Switch to Info by default to inform logger level in log file and switch to the correct log level
-            levelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
-            SetLogLevel();
-
-            // If null or 1, the app was launched normally
-            if (args?.Length > 1)
-            {
-                // When length is 1, the only argument is the path where the app is installed
-                _ = LauncherAsync(args); // Launches the requested game
-            }
-            else
-            {
-                //auto refresh on load
-                LoadButton_Click(null, null);
-            }
-        }
-
-        /// <summary>
-        /// We have to wait a little untill Steam catches up, otherwise it will stream a black screen
-        /// </summary>
-        /// <returns></returns>
-        async Task LaunchDelay()
-        {
-            await Task.Delay(10000);
-        }
-
-        /// <summary>
-        /// Main task that launches a game
-        /// Usually invoked by steam
-        /// </summary>
-        /// <param name="args">launch args received from the program execution</param>
-        /// <returns></returns>
-        private async Task LauncherAsync(string[] args)
-        {
-            FullScreenLauncher launcher = null;
-            //So, for some reason, Steam is now stopping in-home streaming if the launched app is minimized, so not hiding UWPHook's window is doing the trick for now
-            if (Settings.Default.StreamMode)
-            {
-                this.Hide();
-                launcher = new FullScreenLauncher();
-                launcher.Show();
-
-                await LaunchDelay();
-
-                launcher.Close();
-            }
-            else
-            {
-                this.Title = "UWPHook: Playing a game";
-                this.Hide();
-            }
-
-            //Hide the window so the app is launched seamless making UWPHook run in the background without bothering the user
-            string currentLanguage = CultureInfo.CurrentCulture.ToString();
-
-            try
-            {
-                if (!LaunchRequest.TryParse(args, out var request))
-                {
-                    Log.Error("Invalid launch arguments => " + String.Join(" | ", args));
-                    this.Show();
-                    MessageBox.Show("Invalid launch arguments", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                //Some apps have their language locked to the UI language of the system, so overriding it might change the language of the game
-                //I my self couldn't get this to work on neither Forza Horizon 3 or Halo 5 Forge, @AbGedreht reported it works tho
-                if (Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Settings.Default.TargetLanguage))
-                {
-                    ScriptManager.RunScript("Set-WinUILanguageOverride " + Properties.Settings.Default.TargetLanguage);
-                }
-
-                AppManager.LaunchUWPApp(request!);
-
-                //While the current launched app is running, sleep for n seconds and then check again
-                while (AppManager.IsRunning())
-                {
-                    Thread.Sleep(Settings.Default.Seconds * 1000);
-                }
-            }
-            catch (Exception e)
-            {
-                this.Show();
-                MessageBox.Show(e.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            finally
-            {
-                if (Settings.Default.ChangeLanguage && !String.IsNullOrEmpty(Settings.Default.TargetLanguage))
-                {
-                    ScriptManager.RunScript("Set-WinUILanguageOverride " + currentLanguage);
-                }
-
-                //The user has probably finished using the app, so let's close UWPHook to keep the experience clean 
-                this.Close();
-            }
+            //auto refresh on load
+            LoadButton_Click(null, null);
         }
 
         /// <summary>
@@ -735,26 +631,7 @@ namespace UWPHook
             }
         }
 
-        public static void SetLogLevel()
-        {
-            int logLevel_index;
-            int.TryParse(Settings.Default.SelectedLogLevel, out logLevel_index);
-
-            switch (logLevel_index)
-            {
-                case 1:
-                    Log.Information("Init log with DEBUG level.");
-                    levelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
-                    break;
-                case 2:
-                    Log.Information("Init log with TRACE level.");
-                    levelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
-                    break;
-                default:
-                    Log.Information("Init log with ERROR level.");
-                    levelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Error;
-                    break;
-            }
-        }
+        /// <summary>Applies the log level picked in Settings.</summary>
+        public static void SetLogLevel() => Infrastructure.AppLog.ApplySelectedLevel();
     }
 }
