@@ -207,6 +207,7 @@ namespace UWPHook
             try
             {
                 byte[] bytes = await imageClient.GetByteArrayAsync(imageUrl);
+                DeleteStaleArtworkSiblings(destination);
                 await File.WriteAllBytesAsync(destination, bytes);
             }
             catch (Exception exception)
@@ -244,8 +245,22 @@ namespace UWPHook
                 {
                     // e.g. "appid_hero.png" -> "3144859588_hero.png", keeping whatever extension was saved
                     string destFile = userGridDirectory + gridId + Path.GetFileName(image).Substring(GridIdPlaceholder.Length);
+                    DeleteStaleArtworkSiblings(destFile);
                     File.Copy(image, destFile, true);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Deletes the files next to <paramref name="artworkPath"/> that have its base name and another
+        /// supported extension, so a re-export can't leave e.g. "123p.png" beside a new "123p.webp"
+        /// </summary>
+        private static void DeleteStaleArtworkSiblings(string artworkPath)
+        {
+            string directory = Path.GetDirectoryName(artworkPath) ?? "";
+            foreach (string sibling in Core.Artwork.ArtworkFile.SiblingNames(Path.GetFileName(artworkPath)))
+            {
+                File.Delete(Path.Combine(directory, sibling));
             }
         }
 
@@ -404,7 +419,10 @@ namespace UWPHook
             if (Directory.Exists(steam_folder))
             {
                 var users = SteamManager.GetUsers(steam_folder);
-                var selected_apps = Apps.Entries.Where(app => app.Selected);
+                // One entry per AUMID, so two downloads never share a temp grid folder
+                var selected_apps = Apps.Entries.Where(app => app.Selected)
+                    .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
                 string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe");
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
 
@@ -468,9 +486,10 @@ namespace UWPHook
 
                                         SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
-                                        // Any extension; a missing logo makes PersistAppIcon keep app.Icon
-                                        string logo = Directory.GetFiles(tmpGridDirectory, GridIdPlaceholder + "_logo.*").FirstOrDefault()
-                                            ?? tmpGridDirectory + GridIdPlaceholder + "_logo.png";
+                                        // Any supported extension; a missing logo makes PersistAppIcon keep app.Icon
+                                        string[] logos = Core.Artwork.ArtworkFile.NamesFor(GridIdPlaceholder + "_logo")
+                                            .Select(name => tmpGridDirectory + name).ToArray();
+                                        string logo = logos.FirstOrDefault(File.Exists) ?? logos[0];
                                         app.Icon = PersistAppIcon(app, logo);
                                     });
                                 }

@@ -17,4 +17,26 @@ public static class ArtworkFile
         var extension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
         return Supported.Contains(extension) ? extension : Fallback;
     }
+
+    /// <summary>
+    /// Every name an artwork file called <paramref name="baseName"/> can have,
+    /// one per supported extension, .png first.
+    /// </summary>
+    public static IReadOnlyList<string> NamesFor(string baseName) =>
+        Supported.Select(extension => baseName + extension).ToArray();
+
+    /// <summary>
+    /// The names that would be stale next to <paramref name="fileName"/>: the same base name
+    /// with every other supported extension (all of them when its own extension isn't supported).
+    /// </summary>
+    public static IReadOnlyList<string> SiblingNames(string fileName)
+    {
+        var extension = Path.GetExtension(fileName);
+        var baseName = fileName[..^extension.Length];
+
+        return Supported
+            .Where(other => !other.Equals(extension, StringComparison.OrdinalIgnoreCase))
+            .Select(other => baseName + other)
+            .ToArray();
+    }
 }

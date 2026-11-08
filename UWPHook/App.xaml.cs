@@ -29,7 +29,8 @@ namespace UWPHook
 
         private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            ErrorReporter.Report(e.Exception, UnexpectedError);
+            // Raised on the finalizer thread: queue the box instead of blocking finalization on the UI.
+            ErrorReporter.ReportWithoutWaiting(e.Exception, UnexpectedError);
             e.SetObserved();
         }
 
