@@ -52,6 +52,7 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 
 ## Task 9b
 - [ ] Settings → "Remove UWPHook shortcuts" removes only UWPHook entries; non-Steam games added by Steam itself or other tools (e.g. Heroic, Playnite, added by hand) remain, and a backup `<userid>_<timestamp>_shortcuts.vdf` appears in `%AppData%\Briano\UWPHook\backups`.
+- [ ] With Steam running, "Remove UWPHook shortcuts" → Steam restarts and the entries stay gone (also after closing and reopening Steam). With Steam not running, the message says the changes apply the next time Steam starts; with nothing to remove, it says nothing was changed and Steam is not restarted.
 - [ ] A non-Steam game added by another tool keeps its Steam collections and its "sort as" name after a UWPHook export.
 - [ ] Steam starts normally and lists every shortcut after an export written by the new `shortcuts.vdf` writer (no lost or duplicated entries; a game exported with 2.14 keeps its art and playtime).
 - [ ] A Steam user with no `config\shortcuts.vdf` yet gets one after an export, and the game shows up in Steam.

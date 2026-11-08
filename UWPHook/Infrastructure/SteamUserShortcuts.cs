@@ -78,14 +78,36 @@ namespace UWPHook.Infrastructure
             Backup();
 
             string temporary = ShortcutsPath + ".tmp";
-            using (FileStream stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+            try
             {
-                file.Save(stream);
-                stream.Flush(flushToDisk: true);
+                using (FileStream stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    file.Save(stream);
+                    stream.Flush(flushToDisk: true);
+                }
+
+                File.Move(temporary, ShortcutsPath, overwrite: true);
+            }
+            catch
+            {
+                // The original file is still intact; don't leave a half-written copy next to it
+                DeleteQuietly(temporary);
+                throw;
             }
 
-            File.Move(temporary, ShortcutsPath, overwrite: true);
             Log.Debug("Shortcuts written to {Path}", ShortcutsPath);
+        }
+
+        private static void DeleteQuietly(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception exception)
+            {
+                Log.Warning(exception, "Could not delete {Path}", path);
+            }
         }
 
         /// <summary>Copies the current file to the backup folder as <c>&lt;user id&gt;_&lt;timestamp&gt;_shortcuts.vdf</c>.</summary>

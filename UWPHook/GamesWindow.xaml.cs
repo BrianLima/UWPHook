@@ -160,17 +160,9 @@ namespace UWPHook
             {
                 await ExportGames();
 
-                var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
-                    timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
-                var outcome = await restarter.RestartAsync();
-                Log.Information("Steam restart outcome: {Outcome}", outcome);
-
-                msg = "Your apps were successfully exported!" + outcome switch
-                {
-                    RestartOutcome.Restarted => " Steam has been restarted.",
-                    RestartOutcome.NotRunning => " They will show up the next time you start Steam.",
-                    _ => " Please restart Steam to see your games.",
-                };
+                msg = "Your apps were successfully exported!" + await RestartSteamAsync(
+                    notRunning: " They will show up the next time you start Steam.",
+                    timedOut: " Please restart Steam to see your games.");
             }
             catch (Exception exception)
             {
@@ -186,6 +178,27 @@ namespace UWPHook
             {
                 MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+        }
+
+        /// <summary>
+        /// Restarts Steam if it is running, so it rereads shortcuts.vdf instead of writing its own copy back
+        /// on exit, and describes the outcome as a sentence to append to a message.
+        /// </summary>
+        /// <param name="notRunning">The sentence for when Steam wasn't running</param>
+        /// <param name="timedOut">The sentence for when Steam didn't exit in time</param>
+        internal static async Task<string> RestartSteamAsync(string notRunning, string timedOut)
+        {
+            var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
+                timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
+            var outcome = await restarter.RestartAsync();
+            Log.Information("Steam restart outcome: {Outcome}", outcome);
+
+            return outcome switch
+            {
+                RestartOutcome.Restarted => " Steam has been restarted.",
+                RestartOutcome.NotRunning => notRunning,
+                _ => timedOut,
+            };
         }
 
         private static readonly System.Net.Http.HttpClient imageClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
@@ -585,7 +598,7 @@ namespace UWPHook
         /// Removes the shortcuts UWPHook created from every Steam user, backing up each changed
         /// shortcuts.vdf first. Shortcuts created by Steam, other tools or by hand are kept.
         /// </summary>
-        public static void RemoveUwpHookShortcuts()
+        public static async Task RemoveUwpHookShortcuts()
         {
             Log.Debug("Removing UWPHook's shortcuts from shortcuts.vdf");
             string steam_folder = SteamManager.GetSteamFolder();
@@ -597,7 +610,7 @@ namespace UWPHook
                 {
                     try
                     {
-                        removed += new Infrastructure.SteamUserShortcuts(user, BackupFolder).RemoveUwpHookShortcuts();
+                        removed += await Task.Run(() => new Infrastructure.SteamUserShortcuts(user, BackupFolder).RemoveUwpHookShortcuts());
                     }
                     catch (Exception ex)
                     {
@@ -606,7 +619,17 @@ namespace UWPHook
                     }
                 }
 
-                MessageBox.Show(removed + " UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept.");
+                if (removed == 0)
+                {
+                    MessageBox.Show("No UWPHook shortcuts were found, so nothing was changed.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // A running Steam would write the removed shortcuts back when it exits
+                string msg = removed + " UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept." + await RestartSteamAsync(
+                    notRunning: " The changes apply the next time you start Steam.",
+                    timedOut: " Please restart Steam now, or it may restore the removed shortcuts.");
+                MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
