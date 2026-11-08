@@ -39,7 +39,7 @@ public static class ShortcutMerger
 
             if (spec is not null && matchedAumids.Add(spec.Aumid))
             {
-                merged.Add(new MergedShortcut(shortcut.AppId, spec, index));
+                merged.Add(new MergedShortcut(KeptAppId(shortcut), spec, index));
                 continue;
             }
 
@@ -81,6 +81,16 @@ public static class ShortcutMerger
 
         return byAumid;
     }
+
+    /// <summary>
+    /// The appid an updated entry keeps. Older shortcuts.vdf files may have no appid key (read as 0);
+    /// Steam then derives the id from the stored Exe (exactly as stored, quoted or not) and AppName,
+    /// so that is the id its art is already filed under.
+    /// </summary>
+    private static int KeptAppId(ExistingShortcut shortcut) =>
+        shortcut.AppId != 0
+            ? shortcut.AppId
+            : SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(shortcut.Exe, shortcut.AppName));
 
     private static int NewAppId(ShortcutSpec spec) =>
         SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(spec.Exe, spec.AppName));
