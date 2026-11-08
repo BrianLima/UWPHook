@@ -140,6 +140,21 @@ public sealed class SteamUserShortcutsTests : IDisposable
     }
 
     [Fact]
+    public void Export_WhenTheFileCantBeReplaced_DeletesTheTemporaryFileAndKeepsTheOriginal()
+    {
+        SeedShortcuts(Seed);
+
+        // Another process holding the file open without delete sharing makes the final move fail.
+        using (new FileStream(ShortcutsPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            Assert.ThrowsAny<Exception>(() => Shortcuts().Export([Wanted]));
+        }
+
+        Assert.False(File.Exists(ShortcutsPath + ".tmp"));
+        Assert.Equal(Seed, File.ReadAllBytes(ShortcutsPath));
+    }
+
+    [Fact]
     public void Export_WithoutAShortcutsFile_CreatesOne()
     {
         Shortcuts().Export([Wanted]);
