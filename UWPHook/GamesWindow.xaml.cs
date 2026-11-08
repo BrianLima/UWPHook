@@ -423,7 +423,7 @@ namespace UWPHook
                 var selected_apps = Apps.Entries.Where(app => app.Selected)
                     .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase)
                     .ToList();
-                string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe");
+                string exePath = UWPHook.Core.Install.InstallLayout.StableExePath(Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe"));
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();

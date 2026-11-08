@@ -11,6 +11,8 @@
 		<UseWPF>true</UseWPF>
 		<ApplicationIcon>Resources\hook2.ico</ApplicationIcon>
 		<RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+		<!-- Program.Main runs Velopack's hooks before WPF starts (the Main generated for App.xaml is not used). -->
+		<StartupObject>UWPHook.Program</StartupObject>
 	</PropertyGroup>
 
 	<!-- Single-file publish (dotnet publish -r win-x64 | win-arm64). Compression requires
@@ -56,6 +58,8 @@
 		<PackageReference Include="Serilog.Sinks.File" />
 		<!-- WMI process lookup in AppManager (it used to come in through the PowerShell SDK). -->
 		<PackageReference Include="System.Management" />
+		<!-- Installer and updates (per-user install under %LocalAppData%\UWPHook). -->
+		<PackageReference Include="Velopack" />
 	</ItemGroup>
 
 	<ItemGroup>
