@@ -30,5 +30,5 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Forza Motorsport, Forza Horizon (4/5), Halo: The Master Chief Collection, Starfield and Gears of War: Ultimate Edition appear in the app list with readable names.
 - [ ] A game installed on a non-system drive (e.g. `D:\XboxGames\...`) appears in the app list.
 - [ ] The app list loads in under ~5 s after pressing Load.
-- [ ] Exported games still get an icon (picked from the logo folder) and launch; Halo MCC still tracks `MCCWinStore-Win64-Shipping.exe`.
+- [ ] Exported games still get an icon (picked from the logo folder) and launch; Halo MCC still tracks `MCCWinStore-Win64-Shipping.exe`. Halo MCC shows one row per launchable app; check for an unexpected duplicate.
 - [ ] A package with several Start-menu apps shows each app as its own row.

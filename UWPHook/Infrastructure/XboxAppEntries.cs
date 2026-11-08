@@ -1,4 +1,3 @@
-using System.IO;
 using UWPHook.Core.Catalog;
 
 namespace UWPHook.Infrastructure
@@ -8,14 +7,14 @@ namespace UWPHook.Infrastructure
     {
         /// <summary>
         /// Maps an app to a row. <c>KnownApps.json</c> still overrides the name, and <see cref="AppEntry.IconPath"/>
-        /// is the logo's folder, where <see cref="AppEntry.widestSquareIcon"/> looks for the largest square image.
+        /// is the declared logo's folder, where <see cref="AppEntry.widestSquareIcon"/> looks for the largest square image.
         /// </summary>
         public static AppEntry ToAppEntry(this XboxApp app) => new AppEntry
         {
             Name = AppManager.IsKnownApp(app.Aumid, out string knownName) ? knownName : app.DisplayName,
             Executable = app.Executable,
             Aumid = app.Aumid,
-            IconPath = (app.LogoPath is null ? null : Path.GetDirectoryName(app.LogoPath)) ?? app.InstallLocation,
+            IconPath = app.IconFolder,
             Selected = false,
         };
     }

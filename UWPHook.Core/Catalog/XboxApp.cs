@@ -15,4 +15,11 @@ public sealed record XboxApp(
     string Executable,
     string? LogoPath,
     string InstallLocation,
-    DateTimeOffset InstalledDate);
+    DateTimeOffset InstalledDate)
+{
+    /// <summary>
+    /// The folder that holds the app's logo images (its declared <c>Square150x150Logo</c>'s folder), searched for the
+    /// largest square icon even when the declared file itself was not found. Defaults to <see cref="InstallLocation"/>.
+    /// </summary>
+    public string IconFolder { get; init; } = InstallLocation;
+}

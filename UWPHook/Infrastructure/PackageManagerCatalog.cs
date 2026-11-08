@@ -35,7 +35,14 @@ namespace UWPHook.Infrastructure
                     return [];
 
                 var snapshot = await SnapshotOf(package, ct);
-                return snapshot is null ? [] : CatalogEntryBuilder.Build(snapshot, File.Exists).ToList();
+                if (snapshot is null)
+                    return [];
+
+                var apps = CatalogEntryBuilder.Build(snapshot, File.Exists).ToList();
+                if (apps.Count == 0)
+                    LogNoAppsBuilt(snapshot);
+
+                return apps;
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
@@ -43,6 +50,15 @@ namespace UWPHook.Infrastructure
                 return [];
             }
         }
+
+        // Helps diagnose "my game is missing" reports: it has Start-menu entries, but none became an app.
+        private static void LogNoAppsBuilt(PackageSnapshot snapshot) =>
+            Log.Debug(
+                "Package {FamilyName} has {EntryCount} app list entries but yielded no apps (manifest readable: {ManifestReadable}, MicrosoftGame.config: {HasGameConfig})",
+                snapshot.FamilyName,
+                snapshot.Entries.Count,
+                snapshot.ManifestXml is not null && AppxManifest.ReadApplications(snapshot.ManifestXml).Count > 0,
+                snapshot.MicrosoftGameConfigXml is not null);
 
         private static bool IsCandidate(Package package, bool includeSystem) =>
             !package.IsFramework
@@ -61,6 +77,7 @@ namespace UWPHook.Infrastructure
             string installLocation = package.InstalledLocation.Path;
             return new PackageSnapshot(
                 package.Id.FamilyName,
+                package.Id.Name,
                 DisplayNameOf(package),
                 installLocation,
                 package.InstalledDate,

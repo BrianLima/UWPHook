@@ -5,7 +5,8 @@ public static class CatalogEntryBuilder
 {
     /// <summary>
     /// Returns one <see cref="XboxApp"/> per Start-menu entry that has a matching manifest application,
-    /// a usable executable and a human-readable name; other entries are skipped. AUMIDs are unique (case-insensitive).
+    /// and a usable executable; other entries are skipped. The name falls back from the entry's to the manifest
+    /// application's, the package's display name and finally the package identity name. AUMIDs are unique (case-insensitive).
     /// </summary>
     public static IEnumerable<XboxApp> Build(PackageSnapshot package, Func<string, bool> fileExists)
     {
@@ -29,7 +30,7 @@ public static class CatalogEntryBuilder
             return null;
 
         var executable = GameExecutable.Resolve(application, package.MicrosoftGameConfigXml);
-        var name = FirstResolvedName(entry.DisplayName, application.DisplayName, package.PackageDisplayName);
+        var name = FirstResolvedName(entry.DisplayName, application.DisplayName, package.PackageDisplayName, package.PackageName);
         if (executable is null || name is null)
             return null;
 
@@ -40,7 +41,10 @@ public static class CatalogEntryBuilder
             executable,
             LogoPath.Resolve(package.InstallLocation, application.Square150x150Logo, fileExists),
             package.InstallLocation,
-            package.InstalledDate);
+            package.InstalledDate)
+        {
+            IconFolder = LogoPath.Folder(package.InstallLocation, application.Square150x150Logo),
+        };
     }
 
     private static ManifestApplication? MatchingApplication(string aumid, IReadOnlyList<ManifestApplication> applications)
