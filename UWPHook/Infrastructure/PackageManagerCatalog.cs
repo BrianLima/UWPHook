@@ -1,3 +1,4 @@
+using System.IO;
 using Serilog;
 using UWPHook.Core.Catalog;
 using Windows.ApplicationModel;

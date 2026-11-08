@@ -1,3 +1,4 @@
+using System.IO;
 using UWPHook.Core.Catalog;
 
 namespace UWPHook.Infrastructure
