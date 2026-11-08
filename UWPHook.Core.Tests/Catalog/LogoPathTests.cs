@@ -67,4 +67,17 @@ public class LogoPathTests
         Assert.Equal(
             @"C:\Apps\Contoso.Game\Assets.v2\Logo.scale-200.png",
             LogoPath.Resolve(@"C:\Apps\Contoso.Game", @"Assets.v2\Logo.png", Only(@"C:\Apps\Contoso.Game\Assets.v2\Logo.scale-200.png")));
+
+    [Theory]
+    [InlineData(@"Assets\Logo150.png", @"D:\XboxGames\Forza Horizon 5\Content\Assets")]
+    [InlineData("Assets/Images/Logo150.png", @"D:\XboxGames\Forza Horizon 5\Content\Assets\Images")]
+    [InlineData("Logo150.png", @"D:\XboxGames\Forza Horizon 5\Content")]
+    [InlineData(null, @"D:\XboxGames\Forza Horizon 5\Content")]
+    [InlineData("", @"D:\XboxGames\Forza Horizon 5\Content")]
+    public void Folder_IsTheDeclaredLogosFolderElseTheInstallRoot(string? relativeLogo, string expected) =>
+        Assert.Equal(expected, LogoPath.Folder(Install, relativeLogo));
+
+    [Fact]
+    public void Folder_DropsATrailingBackslashFromTheInstallRoot() =>
+        Assert.Equal(@"C:\Apps\Contoso", LogoPath.Folder(@"C:\Apps\Contoso\", "Logo.png"));
 }

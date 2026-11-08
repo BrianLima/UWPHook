@@ -14,7 +14,7 @@ public class CatalogEntryBuilderTests
         IReadOnlyList<AppListEntrySnapshot> entries,
         string? configFixture = null,
         string familyName = "Contoso.Game_8wekyb3d8bbwe") =>
-        new(familyName, packageDisplayName, Install, Installed, entries,
+        new(familyName, "Contoso.Game", packageDisplayName, Install, Installed, entries,
             Fixture.Read(manifestFixture),
             configFixture is null ? null : Fixture.Read(configFixture));
 
@@ -33,7 +33,7 @@ public class CatalogEntryBuilderTests
 
         Assert.Equal(
             new XboxApp("Contoso.Game_8wekyb3d8bbwe!App", "Contoso.Game_8wekyb3d8bbwe", "Solitaire Deluxe", "App.exe",
-                Install + @"\Assets\Square150x150Logo.png", Install, Installed),
+                Install + @"\Assets\Square150x150Logo.png", Install, Installed) { IconFolder = Install + @"\Assets" },
             app);
     }
 
@@ -88,12 +88,13 @@ public class CatalogEntryBuilderTests
     [Theory]
     [InlineData(null)]
     [InlineData("ms-resource:AppDisplayName")]
-    public void Build_SkipsAnAppWithNoResolvedName(string? packageName)
+    public void Build_FallsBackToThePackageIdentityName(string? packageDisplayName)
     {
-        var package = Package("ForzaLike.AppxManifest.xml", packageName,
+        // Like the 2.14 script's $app.Name fallback: an app is never dropped just because its names are unresolved.
+        var package = Package("ForzaLike.AppxManifest.xml", packageDisplayName,
             [Entry("Contoso.Game_8wekyb3d8bbwe!App", "ms-resource:AppDisplayName")]);
 
-        Assert.Empty(Build(package));
+        Assert.Equal("Contoso.Game", Assert.Single(Build(package)).DisplayName);
     }
 
     [Fact]
@@ -150,12 +151,30 @@ public class CatalogEntryBuilderTests
         Assert.Null(Assert.Single(Build(package, _ => false)).LogoPath);
     }
 
+    [Fact]
+    public void Build_KeepsTheDeclaredLogoFolderAsIconFolderWhenNoLogoFileExists()
+    {
+        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")]);
+
+        Assert.Equal(Install + @"\Assets", Assert.Single(Build(package, _ => false)).IconFolder);
+    }
+
+    [Fact]
+    public void Build_UsesTheInstallRootAsIconFolderForALogoAtTheRoot()
+    {
+        var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")], "GdkGame.MicrosoftGame.xml");
+
+        Assert.Equal(Install, Assert.Single(Build(package, _ => false)).IconFolder);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("Malformed.xml")]
     public void Build_ReturnsNothingWithoutAReadableManifest(string? manifestFixture)
     {
-        var package = new PackageSnapshot("Contoso.Game_8wekyb3d8bbwe", "Solitaire Deluxe", Install, Installed,
+        var package = new PackageSnapshot("Contoso.Game_8wekyb3d8bbwe", "Contoso.Game", "Solitaire Deluxe", Install, Installed,
             [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")],
             manifestFixture is null ? null : Fixture.Read(manifestFixture), null);
 

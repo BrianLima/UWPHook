@@ -15,6 +15,11 @@ public class XboxAppTests
     }
 
     [Fact]
+    public void IconFolder_DefaultsToTheInstallLocation() =>
+        Assert.Equal(@"C:\XboxGames\Game",
+            new XboxApp("Pfn_abc!App", "Pfn_abc", "Game", "Game.exe", null, @"C:\XboxGames\Game", DateTimeOffset.UnixEpoch).IconFolder);
+
+    [Fact]
     public async Task IAppCatalog_CanBeImplementedByAFake()
     {
         IAppCatalog catalog = new FakeCatalog();
