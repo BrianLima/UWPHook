@@ -1,5 +1,3 @@
-using System.IO.Hashing;
-using System.Text;
 using UWPHook.Core.Steam;
 using Xunit;
 
@@ -17,7 +15,7 @@ public class SteamShortcutIdTests
 
     [Fact]
     public void Compute_UsesUtf8Bytes() =>
-        Assert.Equal(Crc32.HashToUInt32(Encoding.UTF8.GetBytes("e太鼓")) | 0x80000000u, SteamShortcutId.Compute("e", "太鼓"));
+        Assert.Equal(2724150879u, SteamShortcutId.Compute("e", "太鼓"));
 
     [Fact]
     public void ToVdfAppId_IsTwosComplement() =>

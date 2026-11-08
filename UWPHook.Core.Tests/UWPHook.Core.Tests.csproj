@@ -17,7 +17,6 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="System.IO.Hashing" />
   </ItemGroup>
 
   <ItemGroup>
