@@ -1,15 +1,17 @@
-using System.IO;
+using Microsoft.Extensions.Time.Testing;
+using UWPHook.Core.Diagnostics;
 using UWPHook.Core.Steam;
-using UWPHook.Core.Tests.Steam;
-using UWPHook.Infrastructure;
 using Xunit;
 
-namespace UWPHook.Windows.Tests;
+namespace UWPHook.Core.Tests.Steam;
 
 // End-to-end export into a fake Steam user folder (userdata/<id>) in a temp directory:
-// the Core merge and ShortcutsFile plus the file handling the app uses (backup, atomic save).
+// the merge and ShortcutsFile plus the file handling (backup, atomic save).
+// The one Windows-only case (a locked file) is in UWPHook.Windows.Tests.
 public sealed class SteamUserShortcutsTests : IDisposable
 {
+    private static readonly DateTimeOffset Now = new(2026, 11, 8, 14, 30, 15, 123, TimeSpan.Zero);
+
     private const string UwpHookExePath = @"C:\Program Files (x86)\UWPHook\UWPHook.exe";
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "UWPHook.Windows.Tests", Guid.NewGuid().ToString("N"));
@@ -33,7 +35,9 @@ public sealed class SteamUserShortcutsTests : IDisposable
 
     private string ShortcutsPath => Path.Combine(_userPath, "config", "shortcuts.vdf");
 
-    private SteamUserShortcuts Shortcuts() => new(_userPath, _backupFolder);
+    private readonly FakeTimeProvider _time = new(Now);
+
+    private SteamUserShortcuts Shortcuts() => new(_userPath, new ShortcutsBackupFolder(_backupFolder, _time, NullLog.Instance), NullLog.Instance);
 
     // Another tool's shortcut, with keys UWPHook doesn't model.
     private static void ForeignEntry(BinaryVdf entry) => entry
@@ -114,7 +118,7 @@ public sealed class SteamUserShortcutsTests : IDisposable
         Assert.Equal(1_650_000_000, legacy["LastPlayTime"].Value);
 
         var backup = Assert.Single(Backups());
-        Assert.StartsWith("12345_", Path.GetFileName(backup));
+        Assert.Equal(ShortcutsBackup.FileName("12345", Now.DateTime), Path.GetFileName(backup)); // named from the injected clock
         Assert.Equal(Seed, File.ReadAllBytes(backup));
     }
 
@@ -137,21 +141,6 @@ public sealed class SteamUserShortcutsTests : IDisposable
 
         var onlyFile = Assert.Single(Directory.GetFiles(Path.GetDirectoryName(ShortcutsPath)!));
         Assert.Equal("shortcuts.vdf", Path.GetFileName(onlyFile));
-    }
-
-    [Fact]
-    public void Export_WhenTheFileCantBeReplaced_DeletesTheTemporaryFileAndKeepsTheOriginal()
-    {
-        SeedShortcuts(Seed);
-
-        // Another process holding the file open without delete sharing makes the final move fail.
-        using (new FileStream(ShortcutsPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-        {
-            Assert.ThrowsAny<Exception>(() => Shortcuts().Export([Wanted]));
-        }
-
-        Assert.False(File.Exists(ShortcutsPath + ".tmp"));
-        Assert.Equal(Seed, File.ReadAllBytes(ShortcutsPath));
     }
 
     [Fact]

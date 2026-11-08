@@ -1,0 +1,32 @@
+"users"
+{
+	"76561197960287930"
+	{
+		"AccountName"		"gaben"
+		"PersonaName"		"Rabscuttle"
+		"RememberPassword"		"1"
+		"WantsOfflineMode"		"0"
+		"SkipOfflineModeWarning"		"0"
+		"AllowAutoLogin"		"1"
+		"MostRecent"		"1"
+		"Timestamp"		"1700000000"
+	}
+	"76561198000000000"
+	{
+		"AccountName"		"second_account"
+		"PersonaName"		"Zwölf Ünïcode"
+		"RememberPassword"		"1"
+		"mostrecent"		"0"
+		"Timestamp"		"1600000000"
+	}
+	"76561198100000000"
+	{
+		"AccountName"		"no_folder"
+		"PersonaName"		"Signed in once, no userdata"
+		"MostRecent"		"0"
+	}
+	"not-a-steam-id"
+	{
+		"AccountName"		"junk"
+	}
+}

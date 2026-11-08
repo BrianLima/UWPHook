@@ -49,6 +49,8 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public static ExportSummary SteamNotFound() => new(ExportStatus.SteamNotFound, 0, 0, StopOutcome.NotRunning);
 
+    public static ExportSummary NoSteamUsers() => throw new NotImplementedException();
+
     public static ExportSummary SteamStillRunning() => new(ExportStatus.SteamStillRunning, 0, 0, StopOutcome.StillRunning);
 
     /// <summary>Nothing was written because Steam kept running: it timed out, or its steam.exe was unknown.</summary>

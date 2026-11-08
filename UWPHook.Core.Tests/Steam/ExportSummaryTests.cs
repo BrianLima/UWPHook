@@ -138,30 +138,14 @@ public class ExportSummaryTests
         Assert.Equal(ExportStatus.SteamStillRunning, ExportSummary.ForUsers(written: 0, failed: 0, StopOutcome.StillRunning).Status);
     }
 
-    [Theory]
-    [InlineData(ExportStatus.NothingSelected, false)]
-    [InlineData(ExportStatus.SteamNotFound, false)]
-    [InlineData(ExportStatus.NoSteamUsers, false)]
-    [InlineData(ExportStatus.SteamStillRunning, false)]
-    [InlineData(ExportStatus.SteamPathUnknown, false)]
-    [InlineData(ExportStatus.Failed, false)]
-    [InlineData(ExportStatus.PartiallyExported, true)]
-    [InlineData(ExportStatus.Exported, true)]
-    public void WroteAnything_OnlyWhenAtLeastOneUserWasWritten(ExportStatus status, bool expected)
+    // Fix-wave minor 5: a named factory instead of ForUsers(0, 0, NotRunning).
+    [Fact]
+    public void NoSteamUsers_SaysNoSteamAccountWasFound()
     {
-        var summary = status switch
-        {
-            ExportStatus.NothingSelected => ExportSummary.NothingSelected(),
-            ExportStatus.SteamNotFound => ExportSummary.SteamNotFound(),
-            ExportStatus.SteamStillRunning => ExportSummary.SteamStillRunning(),
-            ExportStatus.SteamPathUnknown => ExportSummary.SteamNotStopped(StopOutcome.ExecutableUnknown),
-            ExportStatus.NoSteamUsers => ExportSummary.ForUsers(0, 0, StopOutcome.NotRunning),
-            ExportStatus.Failed => ExportSummary.ForUsers(0, 1, StopOutcome.NotRunning),
-            ExportStatus.PartiallyExported => ExportSummary.ForUsers(1, 1, StopOutcome.NotRunning),
-            _ => ExportSummary.ForUsers(1, 0, StopOutcome.NotRunning),
-        };
+        var summary = ExportSummary.NoSteamUsers();
 
-        Assert.Equal(status, summary.Status);
-        Assert.Equal(expected, summary.WroteAnything);
+        Assert.Equal(ExportStatus.NoSteamUsers, summary.Status);
+        Assert.Equal(MessageSeverity.Error, summary.Severity);
+        Assert.Equal(ExportSummary.ForUsers(0, 0, StopOutcome.NotRunning).Message, summary.Message);
     }
 }

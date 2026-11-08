@@ -7,8 +7,12 @@ namespace UWPHook.Infrastructure
     /// The app's one SteamGridDB client. Its <see cref="HttpClient"/> lives as long as the app and
     /// reads the API key from Settings on every request, so a key changed in Settings applies at once.
     /// </summary>
-    internal static class SteamGridDbService
+    internal sealed class SteamGridDbService
     {
+        public SteamGridDbService(Func<UWPHook.Core.Configuration.AppSettings> settings)
+        {
+        }
+
         private static readonly Uri BaseAddress = new Uri("https://www.steamgriddb.com/api/v2/");
 
         private static readonly HttpClient http = new HttpClient(

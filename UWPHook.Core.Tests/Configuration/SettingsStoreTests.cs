@@ -203,6 +203,55 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Empty(FilesInFolder());
     }
 
+    // 10b minor 6: each save writes its own temp file, so a leftover or a second process's temp file can't block it.
+    [Fact]
+    public void Save_IsNotBlockedBySomethingInTheWayOfAFixedTempName()
+    {
+        Directory.CreateDirectory(SettingsPath + ".tmp");
+
+        Store().Save(Changed);
+
+        Assert.Equal(Changed, Store().Load());
+        Assert.Equal(new[] { "settings.json" }, FilesInFolder());
+    }
+
+    [Fact]
+    public void Save_ThatFails_LeavesNoTempFileOfAnyName()
+    {
+        Directory.CreateDirectory(SettingsPath);
+
+        Assert.ThrowsAny<Exception>(() => Store().Save(Changed));
+
+        Assert.Empty(Directory.GetFiles(folder, "*.tmp"));
+    }
+
+    // 10b minor 7: the second .bad name comes from the injected clock.
+    [Fact]
+    public void Load_ASecondCorruptFile_IsNamedFromTheInjectedClock()
+    {
+        var time = new Microsoft.Extensions.Time.Testing.FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, 678, TimeSpan.Zero));
+        File.WriteAllText(SettingsPath, "{ first");
+        new SettingsStore(SettingsPath, new FakeProtector(), time).Load();
+        File.WriteAllText(SettingsPath, "{ second");
+
+        new SettingsStore(SettingsPath, new FakeProtector(), time).Load();
+
+        Assert.Equal("{ second", File.ReadAllText(SettingsPath + ".bad-20260102-030405-678"));
+    }
+
+    [Fact]
+    public void HasMovedAsideFile_OnlyAfterACorruptFileWasMovedAside()
+    {
+        var store = Store();
+        store.Save(Changed);
+        Assert.False(store.HasMovedAsideFile);
+
+        File.WriteAllText(SettingsPath, "{ broken");
+        store.Load();
+
+        Assert.True(store.HasMovedAsideFile);
+    }
+
     [Fact]
     public void Save_WhenProtectingFails_Throws_AndLeavesTheOldFile()
     {

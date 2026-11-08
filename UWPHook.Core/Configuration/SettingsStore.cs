@@ -10,8 +10,15 @@ namespace UWPHook.Core.Configuration;
 /// the defaults, a corrupt one is moved aside (<c>settings.json.bad</c>) and gives the defaults too, and one
 /// that cannot be read right now is left alone and gives the defaults for this run.
 /// </summary>
-public sealed class SettingsStore(string path, ISecretProtector protector)
+public sealed class SettingsStore(string path, ISecretProtector protector, TimeProvider? time = null)
 {
+    // Red stub: not used yet.
+    public TimeProvider Clock { get; } = time ?? TimeProvider.System;
+
+    public string FilePath => path;
+
+    public bool HasMovedAsideFile => false;
+
     private const string ProtectedKeyProperty = "steamGridDbApiKeyProtected";
 
     private static readonly JsonSerializerOptions Json = new()
