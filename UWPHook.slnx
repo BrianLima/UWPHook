@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="UWPHook/UWPHook.csproj" />
+  <Project Path="VDFParser/VDFParser.csproj" />
+</Solution>

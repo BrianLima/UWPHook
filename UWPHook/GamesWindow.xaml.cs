@@ -39,9 +39,7 @@ namespace UWPHook
             var args = Environment.GetCommandLineArgs();
 
             // Init log file to AppData\Roaming\Briano\UWPHook directory with size rotation on 10Mb with max 5 files
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
-            string loggerFilePath = String.Join("\\", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fvi.CompanyName, fvi.ProductName, "application.log");
+            string loggerFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "application.log");
 
             Log.Logger = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
@@ -684,8 +682,8 @@ namespace UWPHook
             if (Directory.Exists(steam_folder))
             {
                 var users = SteamManager.GetUsers(steam_folder);
-                var exePath = @"""" + System.Reflection.Assembly.GetExecutingAssembly().Location + @"""";
-                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                var exePath = @"""" + Environment.ProcessPath + @"""";
+                var exeDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
 
                 foreach (var user in users)
                 {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using UWPHook.Properties;
 using System.Diagnostics;
@@ -11,6 +13,7 @@ namespace UWPHook.SteamGridDb
     class SteamGridDbApi
     {
         private const string BASE_URL = "https://www.steamgriddb.com/api/v2/";
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
         private HttpClient httpClient;
         private Settings settings;
@@ -41,7 +44,7 @@ namespace UWPHook.SteamGridDb
             
             if (response.IsSuccessStatusCode)
             {
-                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<GameResponse>>();
+                var parsedResponse = await response.Content.ReadFromJsonAsync<ResponseWrapper<GameResponse>>(JsonOptions);
                 games = parsedResponse.Data;
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -102,7 +105,7 @@ namespace UWPHook.SteamGridDb
 
             if (response.IsSuccessStatusCode)
             {
-                var parsedResponse = await response.Content.ReadAsAsync<ResponseWrapper<ImageResponse>>();
+                var parsedResponse = await response.Content.ReadFromJsonAsync<ResponseWrapper<ImageResponse>>(JsonOptions);
                 if (parsedResponse != null)
                 {
                     if (parsedResponse.Success)

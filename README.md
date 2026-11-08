@@ -58,11 +58,17 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 
 # Building
 
-- Clone project or forked project.
-- Install Visual Studio 2022 with .NET Framework 4.8.
-- Install [SharpSteam by BrianLima](https://github.com/BrianLima/SharpSteam/releases/) and [VDFParser](https://github.com/brianlima/VDFParser) and build.
-- If the project asks for the references for VDFParser and Sharpsteam, point it to the most recent build.
-- Press run!
+- Clone the project (or your fork). No other repositories are needed: the VDF parser is vendored in `VDFParser/`.
+- Install [Visual Studio 2026](https://visualstudio.microsoft.com/) with the ".NET desktop development" workload, **or** just the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). The SDK version is pinned in `global.json`.
+- Build from the repository root:
+  ```
+  dotnet build UWPHook.slnx
+  ```
+- Publish a single-file `UWPHook.exe` (use `win-arm64` for ARM devices):
+  ```
+  dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64
+  ```
+- Every push is built by GitHub Actions (`.github/workflows/ci.yml`), which uploads the `win-x64` and `win-arm64` builds as artifacts.
 
 ## Installer 
 

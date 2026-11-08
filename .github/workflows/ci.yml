@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  # Task 2 adds a `core` job here (ubuntu-latest, UWPHook.Core + tests).
+
+  app:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build UWPHook.slnx -c Release
+
+      - name: Publish win-x64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64 -o publish/win-x64
+
+      - name: Publish win-arm64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-arm64 -o publish/win-arm64
+
+      - name: Summarize publish output
+        shell: pwsh
+        run: |
+          foreach ($rid in 'win-x64', 'win-arm64') {
+            $files = Get-ChildItem "publish/$rid" -File | ForEach-Object { "$($_.Name) ($([math]::Round($_.Length / 1MB, 1)) MB)" }
+            Write-Output "::notice title=publish $rid::$($files -join ', ')"
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-win-x64
+          path: publish/win-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-win-arm64
+          path: publish/win-arm64
