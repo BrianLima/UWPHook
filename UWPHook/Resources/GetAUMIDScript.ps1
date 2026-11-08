@@ -31,18 +31,23 @@ foreach ($app in $installedapps)
                     # Exclude apps without a name acceptable
                     if($name -like '*DisplayName*' -or $name  -like '*ms-resource*')
                     {
-                        continue;
+                        $name = $app.Name;
                     }
 
                     $logo = $app.InstallLocation + "\" + $appx.Package.Applications.Application.VisualElements.Square150x150Logo;
                     
-                    # Check for possible duplicate game like Halo MCC which have two version (one with AC and one witohut AC)
+                    # Check for possible duplicate game like Halo MCC which have two versions (one with AC and one without AC)
                     $duplicate = $false;
                     foreach($item in $aumidList) {
-                        #Write-host $item - $name
-                        if($item.StartsWith($name)) {
-                            $duplicate = $true;
-                            break;
+                        # Format: name|logo|packageFamily!id|executable;
+                        $parts = $item -split '\|'
+                        $existingName = $parts[0]
+                        $existingPkgFamily = ($parts[2] -split '!')[0]
+
+                        # Consider duplicate only if both name and package family match
+                        if($existingName -eq $name -and $existingPkgFamily -eq $app.packagefamilyname) {
+                            $duplicate = $true
+                            break
                         }
                     }
 

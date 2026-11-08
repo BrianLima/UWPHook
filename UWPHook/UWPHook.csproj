@@ -23,6 +23,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- The Windows integration tests drive internal types such as ScriptManager. -->
+		<InternalsVisibleTo Include="UWPHook.Windows.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
 		<ProjectReference Include="..\VDFParser\VDFParser.csproj" />
 	</ItemGroup>
@@ -45,11 +50,12 @@
 	<ItemGroup>
 		<PackageReference Include="MaterialDesignColors" />
 		<PackageReference Include="MaterialDesignThemes" />
-		<PackageReference Include="Microsoft.PowerShell.SDK" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.Sinks.Console" />
 		<PackageReference Include="Serilog.Sinks.File" />
+		<!-- WMI process lookup in AppManager (it used to come in through the PowerShell SDK). -->
+		<PackageReference Include="System.Management" />
 	</ItemGroup>
 
 	<ItemGroup>

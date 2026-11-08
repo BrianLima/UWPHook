@@ -33,16 +33,7 @@ jobs:
       - name: Summarize tests
         if: always()
         shell: bash
-        run: |
-          # GitHub runs bash with -eo pipefail, so guard against a missing TestResults folder.
-          trx=$( { find TestResults -name '*.trx' 2>/dev/null || true; } | head -n 1)
-          if [ -z "$trx" ]; then
-            echo "::notice title=Test summary::no test results (the build failed before tests ran)"
-            exit 0
-          fi
-          counters=$(grep -o '<Counters [^>]*>' "$trx" | head -n 1)
-          attr() { sed -n "s/.* $1=\"\([0-9]*\)\".*/\1/p" <<<"$counters"; }
-          echo "::notice title=Test summary::$(attr passed)/$(attr total) passed, $(attr failed) failed"
+        run: bash .github/scripts/summarize-trx.sh "Test summary" TestResults
 
   app:
     runs-on: windows-latest
@@ -64,6 +55,19 @@ jobs:
           $byCode = $warnings | ForEach-Object { [regex]::Match($_, 'warning ([A-Z]+[0-9]+)').Groups[1].Value } |
             Group-Object | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
           Write-Output "::notice title=build warnings::$($warnings.Count) unique warnings ($($byCode -join ', '))"
+
+      # Integration tests of real Windows behaviour (powershell.exe, Appx, ...).
+      - name: Windows tests
+        run: >-
+          dotnet test UWPHook.Windows.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      - name: Summarize Windows tests
+        if: always()
+        shell: bash
+        run: bash .github/scripts/summarize-trx.sh "Windows test summary" TestResults
 
       - name: Publish win-x64
         run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64 -o publish/win-x64

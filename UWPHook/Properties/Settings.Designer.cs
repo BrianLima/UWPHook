@@ -246,29 +246,5 @@ namespace UWPHook.Properties {
                 this["LogLevel"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ChangeResolution {
-            get {
-                return ((bool)(this["ChangeResolution"]));
-            }
-            set {
-                this["ChangeResolution"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string TargetResolution {
-            get {
-                return ((string)(this["TargetResolution"]));
-            }
-            set {
-                this["TargetResolution"] = value;
-            }
-        }
     }
 }

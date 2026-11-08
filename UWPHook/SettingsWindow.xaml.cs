@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Management;
 using System.Security.Policy;
 using System.Windows;
 using UWPHook.Properties;
@@ -26,15 +25,11 @@ namespace UWPHook
             seconds_comboBox.ItemsSource = Enumerable.Range(0, 10).Select(i => i + " seconds");
             seconds_comboBox.SelectedIndex = Properties.Settings.Default.Seconds;
             
-            resolution_comboBox.ItemsSource = GetResolutions();
-            resolution_comboBox.SelectedItem = string.IsNullOrEmpty(Settings.Default.TargetResolution) ? GetCurrentResolution() : Properties.Settings.Default.TargetResolution;
-
             int logLevel_index = 0;
             int.TryParse(Properties.Settings.Default.SelectedLogLevel, out logLevel_index);
 
             language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
             streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
-            change_resolution_toggle.IsChecked = Properties.Settings.Default.ChangeResolution;
             logLevel_comboBox.SelectedIndex = logLevel_index;
             steamgriddb_api_key.Text = Properties.Settings.Default.SteamGridDbApiKey;
             style_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Style;
@@ -44,45 +39,14 @@ namespace UWPHook
             tags_textBox.Text = Properties.Settings.Default.Tags;
         }
 
-#pragma warning disable CA1416 // Validate platform compatibility
-        private IEnumerable<string> GetResolutions()
-        {
-
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM CIM_VideoControllerResolution");
-            foreach (var resolution in searcher.Get())
-            {
-                uint horizontalResolution = (uint)resolution["HorizontalResolution"];
-                uint verticalResolution = (uint)resolution["VerticalResolution"];
-                yield return horizontalResolution + " x " + verticalResolution;
-            }
-
-        }
-
-        private string GetCurrentResolution()
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController");
-            foreach (var mo in searcher.Get())
-            {
-                var currentHorizontalResolution = mo["CurrentHorizontalResolution"];
-                var currentVerticalResolution = mo["CurrentVerticalResolution"];
-                if (currentHorizontalResolution != null && currentVerticalResolution != null)
-                {
-                    return $"{currentHorizontalResolution} x {currentVerticalResolution}";
-                }
-            }
-
-            return string.Empty;
-        }
-#pragma warning restore CA1416 // Validate platform compatibility
-
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.ChangeLanguage = (bool)language_toggle.IsChecked;
-            Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem.ToString();
-            Properties.Settings.Default.Seconds = Int32.Parse(seconds_comboBox.SelectedItem.ToString().Substring(0, 1));
-            Properties.Settings.Default.StreamMode = (bool)streaming_toggle.IsChecked;
-            Properties.Settings.Default.ChangeResolution = (bool)change_resolution_toggle.IsChecked;
-            Properties.Settings.Default.TargetResolution = resolution_comboBox.SelectedItem.ToString();
+            // Nothing selected keeps the stored value instead of crashing.
+            Properties.Settings.Default.ChangeLanguage = language_toggle.IsChecked == true;
+            Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem as string ?? Properties.Settings.Default.TargetLanguage;
+            // Item i reads "i seconds".
+            Properties.Settings.Default.Seconds = seconds_comboBox.SelectedIndex >= 0 ? seconds_comboBox.SelectedIndex : Properties.Settings.Default.Seconds;
+            Properties.Settings.Default.StreamMode = streaming_toggle.IsChecked == true;
             Properties.Settings.Default.SelectedLogLevel = logLevel_comboBox.SelectedIndex.ToString();
             Properties.Settings.Default.SteamGridDbApiKey = steamgriddb_api_key.Text.Trim('\r', '\n');
             Properties.Settings.Default.SelectedSteamGridDB_Style = style_comboBox.SelectedIndex;
