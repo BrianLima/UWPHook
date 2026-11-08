@@ -85,7 +85,7 @@ internal sealed class BinaryVdf
                 ObjectType => new VdfNode(key, ReadChildren(bytes, ref position)),
                 StringType => new VdfNode(key, ReadText(bytes, ref position)),
                 Int32Type => new VdfNode(key, ReadInt(bytes, ref position)),
-                _ => throw new InvalidDataException($"Unexpected type 0x{type:x2} at {position - 1}"),
+                _ => throw new System.IO.InvalidDataException($"Unexpected type 0x{type:x2} at {position - 1}"),
             });
         }
 
