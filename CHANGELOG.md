@@ -36,6 +36,10 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - **Different games from the same publisher were hidden as duplicates** (for example Hollow Knight and Hollow Knight: Silksong). Thanks to @RXA7 (PR #182).
 - A game launched without an executable name is no longer matched to an unrelated running process.
 - Artwork downloaded in a different image format replaces the old file instead of leaving a stale copy next to it.
+- **Settings were reset after every update, and the SteamGridDB key was wiped on first run.**
+  - Settings now live in `%AppData%\Briano\UWPHook\settings.json`, imported once from 2.14.
+  - The SteamGridDB key is encrypted for your Windows user.
+  - A damaged settings file is set aside as `settings.json.bad`, and UWPHook starts with the defaults.
 
 <!-- 8b/9+ entries added at merge -->
 
