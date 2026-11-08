@@ -23,6 +23,9 @@ namespace UWPHook
         private static bool isLauncherProcess;
         private static string executablePath;
 
+        // Reading every package manifest can take a while on machines with many apps.
+        private static readonly TimeSpan DiscoveryTimeout = TimeSpan.FromMinutes(5);
+
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
         /// </summary>
@@ -166,7 +169,7 @@ namespace UWPHook
                     using (StreamReader reader = new StreamReader(stream))
                     {
                         //Every entry is listed separated by ;
-                        result = ScriptManager.RunScript(reader.ReadToEnd()).Split(';').ToList<string>();
+                        result = ScriptManager.RunScript(reader.ReadToEnd(), DiscoveryTimeout).Split(';').ToList<string>();
                     }
                 }
             }

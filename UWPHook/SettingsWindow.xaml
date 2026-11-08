@@ -68,9 +68,6 @@
             <ComboBox x:Name="seconds_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="2"/>
             <ToggleButton x:Name="streaming_toggle" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Grid.Row="3" Margin="6,3,5,4" />
             <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label_streaming" Content="Enable streaming mode" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"/>
-            <ToggleButton x:Name="change_resolution_toggle" ToolTip="Change host resolution on streaming mode" IsChecked="False" Grid.Row="4" Margin="5,3,6,3" />
-            <Label ToolTip="Change the host computer resolution on launch, return to previous after." x:Name="label_resolution" Content="Change host resolution to:" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="4"/>
-            <ComboBox x:Name="resolution_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right"/>
             <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label_tags" Content="Export with these tags:" Margin="0,0,8,0" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="5"/>
             <TextBox x:Name="tags_textBox" Grid.Column="2" Height="32" Margin="0,0,10,0" Grid.Row="5" TextWrapping="Wrap" VerticalAlignment="Center" Grid.ColumnSpan="2" Width="220" HorizontalAlignment="Right"/>
             <Label x:Name="label_logLevel" Content="Define log severity level" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
