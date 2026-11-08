@@ -31,3 +31,47 @@ public class ArtworkFileTests
     public void ExtensionFromUrl_FallsBackToPng(string url) =>
         Assert.Equal(".png", ArtworkFile.ExtensionFromUrl(url));
 }
+
+public class ArtworkFileNamesTests
+{
+    [Fact]
+    public void NamesFor_ListsTheBaseNameWithEverySupportedExtension_PngFirst() =>
+        Assert.Equal(
+            ["appid_logo.png", "appid_logo.jpg", "appid_logo.jpeg", "appid_logo.webp"],
+            ArtworkFile.NamesFor("appid_logo"));
+
+    [Theory]
+    [InlineData("123p.png", new[] { "123p.jpg", "123p.jpeg", "123p.webp" })]
+    [InlineData("123p.webp", new[] { "123p.png", "123p.jpg", "123p.jpeg" })]
+    [InlineData("123_hero.jpg", new[] { "123_hero.png", "123_hero.jpeg", "123_hero.webp" })]
+    [InlineData("123_logo.jpeg", new[] { "123_logo.png", "123_logo.jpg", "123_logo.webp" })]
+    public void SiblingNames_AreTheSameBaseNameWithEveryOtherSupportedExtension(string fileName, string[] expected) =>
+        Assert.Equal(expected, ArtworkFile.SiblingNames(fileName));
+
+    [Fact]
+    public void SiblingNames_MatchesTheOwnExtensionCaseInsensitively() =>
+        Assert.Equal(["123.jpg", "123.jpeg", "123.webp"], ArtworkFile.SiblingNames("123.PNG"));
+
+    [Fact]
+    public void SiblingNames_OnlyStripsTheLastExtension() =>
+        Assert.Equal(["a.b.png", "a.b.jpeg", "a.b.webp"], ArtworkFile.SiblingNames("a.b.jpg"));
+
+    [Fact]
+    public void SiblingNames_NeverIncludeOtherArtTypes()
+    {
+        var siblings = ArtworkFile.SiblingNames("123.png");
+
+        Assert.DoesNotContain("123p.png", siblings);
+        Assert.DoesNotContain("123_hero.png", siblings);
+        Assert.DoesNotContain("123_logo.png", siblings);
+    }
+
+    [Theory]
+    [InlineData("123")]
+    [InlineData("123.gif")]
+    public void SiblingNames_OfAnUnsupportedOrMissingExtension_AreEverySupportedName(string fileName)
+    {
+        string baseName = fileName.Split('.')[0];
+        Assert.Equal(ArtworkFile.NamesFor(baseName), ArtworkFile.SiblingNames(fileName));
+    }
+}
