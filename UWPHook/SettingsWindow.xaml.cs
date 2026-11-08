@@ -84,12 +84,26 @@ namespace UWPHook
             OpenUrl("https://reddit.com/r/UWPHook/");
         }
 
-        private void clearAll_button_Click(object sender, RoutedEventArgs e)
+        private async void clearAll_button_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("This action will remove ALL shortcuts from non-Steam games." + Environment.NewLine + " Are you sure you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result == MessageBoxResult.Yes)
+            MessageBoxResult result = MessageBox.Show("This action will remove every shortcut UWPHook added to Steam. Non-Steam games added by Steam or other tools are kept, and shortcuts.vdf is backed up first." + Environment.NewLine + "Are you sure you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes)
             {
-                GamesWindow.ClearAllShortcuts();
+                return;
+            }
+
+            clearAll_button.IsEnabled = false;
+            try
+            {
+                await GamesWindow.RemoveUwpHookShortcuts();
+            }
+            catch (Exception exception)
+            {
+                Infrastructure.ErrorReporter.Report(exception, "Removing UWPHook's shortcuts failed.");
+            }
+            finally
+            {
+                clearAll_button.IsEnabled = true;
             }
         }
 

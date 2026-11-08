@@ -30,4 +30,17 @@ public class UwpHookShortcutTests
     [InlineData("")]
     public void IsUwpHookExe_RejectsOtherExecutables(string exe) =>
         Assert.False(UwpHookShortcut.IsUwpHookExe(exe));
+
+    [Theory]
+    [InlineData("\"C:\\x y\\UWPHook.exe\"", "Pfn_abc!App game.exe")]
+    [InlineData("C:\\x y\\UWPHook.exe", "Pfn_abc!App")]
+    public void IsCreatedByUwpHook_NeedsUwpHookExeAndAnAumid(string exe, string launchOptions) =>
+        Assert.True(UwpHookShortcut.IsCreatedByUwpHook(new ExistingShortcut(1, "Game", exe, launchOptions)));
+
+    [Theory]
+    [InlineData("\"C:\\Games\\x.exe\"", "Pfn_abc!App game.exe")]
+    [InlineData("\"C:\\x y\\UWPHook.exe\"", "")]
+    [InlineData("\"C:\\x y\\UWPHook.exe\"", "   ")]
+    public void IsCreatedByUwpHook_RejectsOtherShortcuts(string exe, string launchOptions) =>
+        Assert.False(UwpHookShortcut.IsCreatedByUwpHook(new ExistingShortcut(1, "Game", exe, launchOptions)));
 }

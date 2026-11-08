@@ -281,6 +281,120 @@ public class ShortcutsFileTests
     }
 
     [Fact]
+    public void Apply_RejectsAMergeThatDropsAnExistingEntry() =>
+        AssertApplyRejected<InvalidOperationException>([new MergedShortcut(-5555, null, 0)]);
+
+    [Fact]
+    public void Apply_RejectsAMergeThatDuplicatesAnExistingEntry() =>
+        AssertApplyRejected<InvalidOperationException>([
+            new MergedShortcut(-5555, null, 0),
+            new MergedShortcut(-1111, null, 1),
+            new MergedShortcut(-5555, null, 0),
+        ]);
+
+    [Fact]
+    public void Apply_RejectsAnOutOfRangeIndex() =>
+        AssertApplyRejected<InvalidOperationException>([
+            new MergedShortcut(-5555, null, 0),
+            new MergedShortcut(-1111, null, 1),
+            new MergedShortcut(-9999, Spec, 2),
+        ]);
+
+    [Fact]
+    public void Apply_RejectsANegativeIndex() =>
+        AssertApplyRejected<InvalidOperationException>([
+            new MergedShortcut(-5555, null, -1),
+            new MergedShortcut(-5555, null, 0),
+            new MergedShortcut(-1111, null, 1),
+        ]);
+
+    [Fact]
+    public void Apply_RejectsAShortcutWithNeitherIndexNorSpec() =>
+        AssertApplyRejected<ArgumentException>([
+            new MergedShortcut(-5555, null, 0),
+            new MergedShortcut(-1111, null, 1),
+            new MergedShortcut(-3333, null, null),
+        ]);
+
+    /// <summary>A rejected merge throws and leaves the file exactly as it was.</summary>
+    private static void AssertApplyRejected<TException>(IReadOnlyList<MergedShortcut> shortcuts)
+        where TException : Exception
+    {
+        var original = TwoEntries();
+        var file = Load(original);
+        var entriesBefore = file.Entries;
+
+        var exception = Assert.Throws<TException>(() => file.Apply(new MergeResult(shortcuts)));
+
+        Assert.False(string.IsNullOrWhiteSpace(exception.Message));
+        Assert.Same(entriesBefore, file.Entries);
+        Assert.Equal(original, Save(file));
+    }
+
+    [Fact]
+    public void Empty_HasNoEntries_AndSavesAnEmptyShortcutsRoot()
+    {
+        var file = ShortcutsFile.Empty();
+
+        Assert.Empty(file.Entries);
+        Assert.Equal(BinaryVdf.Document("shortcuts", _ => { }), Save(file));
+    }
+
+    [Fact]
+    public void Empty_AcceptsNewShortcuts()
+    {
+        var file = ShortcutsFile.Empty();
+
+        file.Apply(ShortcutMerger.Merge(file.Entries, [Spec]));
+
+        Assert.Equal(Spec.AppName, Assert.Single(Load(Save(file)).Entries).AppName);
+    }
+
+    [Fact]
+    public void RemoveWhere_RemovesMatchingEntries_KeepingTheOthersByteIdentical()
+    {
+        var original = TwoEntries();
+        var file = Load(original);
+
+        var removed = file.RemoveWhere(entry => entry.AppName == "Old Name");
+
+        Assert.Equal(1, removed);
+        Assert.Equal("Heroic Game", Assert.Single(file.Entries).AppName);
+        Assert.Equal(BinaryVdf.Document("shortcuts", root => root.Object("0", ForeignEntry)), Save(file));
+    }
+
+    [Fact]
+    public void RemoveWhere_RenumbersTheRemainingEntries()
+    {
+        var file = Load(TwoEntries());
+
+        file.RemoveWhere(entry => entry.AppName == "Heroic Game");
+
+        var root = BinaryVdf.Parse(Save(file));
+        Assert.Equal(new[] { "0" }, root.Keys);
+        Assert.Equal("Old Name", root["0"]["AppName"].Value);
+    }
+
+    [Fact]
+    public void RemoveWhere_WithNoMatch_ReturnsZeroAndChangesNothing()
+    {
+        var original = TwoEntries();
+        var file = Load(original);
+
+        Assert.Equal(0, file.RemoveWhere(_ => false));
+        Assert.Equal(original, Save(file));
+    }
+
+    [Fact]
+    public void RemoveWhere_UwpHookShortcuts_KeepsEveryoneElses()
+    {
+        var file = Load(TwoEntries());
+
+        Assert.Equal(1, file.RemoveWhere(UwpHookShortcut.IsCreatedByUwpHook));
+        Assert.Equal("Heroic Game", Assert.Single(file.Entries).AppName);
+    }
+
+    [Fact]
     public void Apply_ToEmptyFile_WritesShortcutsRoot()
     {
         var file = Load([]);

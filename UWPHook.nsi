@@ -107,7 +107,6 @@ File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Numeric
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Runtime.CompilerServices.Unsafe.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Threading.Channels.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\System.Threading.Tasks.Extensions.dll"
-File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\VDFParser.dll"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe"
 File "C:\Users\Brian\Documents\GitHub\UWPHook\UWPHook\bin\Release\UWPHook.exe.config"
 

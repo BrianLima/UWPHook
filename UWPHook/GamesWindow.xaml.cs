@@ -18,8 +18,6 @@ using UWPHook.Core.Launch;
 using UWPHook.Core.Steam;
 using UWPHook.Properties;
 using UWPHook.SteamGridDb;
-using VDFParser;
-using VDFParser.Models;
 
 namespace UWPHook
 {
@@ -162,17 +160,9 @@ namespace UWPHook
             {
                 await ExportGames();
 
-                var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
-                    timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
-                var outcome = await restarter.RestartAsync();
-                Log.Information("Steam restart outcome: {Outcome}", outcome);
-
-                msg = "Your apps were successfully exported!" + outcome switch
-                {
-                    RestartOutcome.Restarted => " Steam has been restarted.",
-                    RestartOutcome.NotRunning => " They will show up the next time you start Steam.",
-                    _ => " Please restart Steam to see your games.",
-                };
+                msg = "Your apps were successfully exported!" + await RestartSteamAsync(
+                    notRunning: " They will show up the next time you start Steam.",
+                    timedOut: " Please restart Steam to see your games.");
             }
             catch (Exception exception)
             {
@@ -188,6 +178,27 @@ namespace UWPHook
             {
                 MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+        }
+
+        /// <summary>
+        /// Restarts Steam if it is running, so it rereads shortcuts.vdf instead of writing its own copy back
+        /// on exit, and describes the outcome as a sentence to append to a message.
+        /// </summary>
+        /// <param name="notRunning">The sentence for when Steam wasn't running</param>
+        /// <param name="timedOut">The sentence for when Steam didn't exit in time</param>
+        internal static async Task<string> RestartSteamAsync(string notRunning, string timedOut)
+        {
+            var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
+                timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
+            var outcome = await restarter.RestartAsync();
+            Log.Information("Steam restart outcome: {Outcome}", outcome);
+
+            return outcome switch
+            {
+                RestartOutcome.Restarted => " Steam has been restarted.",
+                RestartOutcome.NotRunning => notRunning,
+                _ => timedOut,
+            };
         }
 
         private static readonly System.Net.Http.HttpClient imageClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
@@ -245,8 +256,17 @@ namespace UWPHook
                 {
                     // e.g. "appid_hero.png" -> "3144859588_hero.png", keeping whatever extension was saved
                     string destFile = userGridDirectory + gridId + Path.GetFileName(image).Substring(GridIdPlaceholder.Length);
-                    DeleteStaleArtworkSiblings(destFile);
-                    File.Copy(image, destFile, true);
+                    try
+                    {
+                        // Copy first, so a failed copy never leaves the user without the old art
+                        File.Copy(image, destFile, true);
+                        DeleteStaleArtworkSiblings(destFile);
+                    }
+                    catch (Exception exception)
+                    {
+                        // One locked file must not stop the remaining apps and users
+                        Log.Error(exception, "Could not copy artwork {Image} to {Destination}", image, destFile);
+                    }
                 }
             }
         }
@@ -299,9 +319,17 @@ namespace UWPHook
         private void RemoveTempGridImages()
         {
             string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
-            if (Directory.Exists(tmpGridDirectory))
+            try
             {
-                Directory.Delete(tmpGridDirectory, true);
+                if (Directory.Exists(tmpGridDirectory))
+                {
+                    Directory.Delete(tmpGridDirectory, true);
+                }
+            }
+            catch (Exception exception)
+            {
+                // Runs in a finally: a leftover temp folder must not hide the export's own outcome
+                Log.Warning(exception, "Could not remove the temporary grid images in {Directory}", tmpGridDirectory);
             }
         }
 
@@ -319,6 +347,12 @@ namespace UWPHook
             SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
             string tmpGridDirectory = TempGridDirectoryFor(gridKey);
             GameResponse[] games = null;
+
+            // Start from an empty folder, so images left by an earlier, interrupted export are never used
+            if (Directory.Exists(tmpGridDirectory))
+            {
+                Directory.Delete(tmpGridDirectory, true);
+            }
 
             try
             {
@@ -407,11 +441,26 @@ namespace UWPHook
         }
 
         /// <summary>
-        /// Main Task to export the selected games to steam
+        /// Main Task to export the selected games to steam. The temporary grid images are removed
+        /// afterwards even when the export fails.
         /// </summary>
-        /// <param name="restartSteam"></param>
         /// <returns></returns>
         private async Task<bool> ExportGames()
+        {
+            try
+            {
+                return await ExportSelectedApps();
+            }
+            finally
+            {
+                await Task.Run(() => RemoveTempGridImages());
+            }
+        }
+
+        private static string BackupFolder =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "backups");
+
+        private async Task<bool> ExportSelectedApps()
         {
             string[] tags = Settings.Default.Tags.Split(',');
             string steam_folder = SteamManager.GetSteamFolder();
@@ -451,131 +500,57 @@ namespace UWPHook
                 {
                     try
                     {
-                        VDFEntry[] shortcuts = new VDFEntry[0];
-                        try
+                        var wanted = new List<ShortcutSpec>();
+                        foreach (var app in selected_apps)
                         {
-                            shortcuts = SteamManager.ReadShortcuts(user);
-                        }
-                        catch (Exception ex)
-                        {
-                            //If it's a short VDF, let's just overwrite it
-                            if (ex.GetType() != typeof(VDFTooShortException))
-                            {
-                                Log.Error("Error: Program failed to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
-                                throw new Exception("Error: Program failed to load existing Steam shortcuts." + Environment.NewLine + ex.Message);
-                            }
-                        }
-
-                        if (shortcuts != null)
-                        {
-                            var wanted = new List<ShortcutSpec>();
-                            foreach (var app in selected_apps)
-                            {
-                                try
-                                {
-                                    app.Icon = PersistAppIcon(app);
-                                    Log.Verbose("Defaulting to app.Icon for app " + app.Name);
-                                }
-                                catch (System.IO.IOException)
-                                {
-                                    Log.Verbose("Using backup icon for app " + app.Name);
-
-                                    await Task.Run(() =>
-                                    {
-                                        string tmpGridDirectory = TempGridDirectoryFor(GridKey(app.Aumid));
-
-                                        SafellyCreateTmpGridDirectory(tmpGridDirectory);
-
-                                        // Any supported extension; a missing logo makes PersistAppIcon keep app.Icon
-                                        string[] logos = Core.Artwork.ArtworkFile.NamesFor(GridIdPlaceholder + "_logo")
-                                            .Select(name => tmpGridDirectory + name).ToArray();
-                                        string logo = logos.FirstOrDefault(File.Exists) ?? logos[0];
-                                        app.Icon = PersistAppIcon(app, logo);
-                                    });
-                                }
-
-                                wanted.Add(ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exePath, app.Icon, tags));
-                            }
-
-                            // Update UWPHook's own shortcuts in place (keeping their appid), never touch anyone else's
-                            MergeResult merge = ShortcutMerger.Merge(shortcuts.Select(VdfShortcuts.ToExisting).ToList(), wanted);
-                            foreach (int duplicate in merge.UntouchedDuplicateIndexes)
-                            {
-                                Log.Warning("Leaving duplicate UWPHook shortcut untouched: " + shortcuts[duplicate].AppName + " (" + shortcuts[duplicate].LaunchOptions + ")");
-                            }
-
-                            shortcuts = VdfShortcuts.Apply(merge, shortcuts);
-
                             try
                             {
-                                if (!Directory.Exists(user + @"\\config\\"))
-                                {
-                                    Directory.CreateDirectory(user + @"\\config\\");
-                                }
-
-                                BackupShortcutsVDF(user, @"\\config\\shortcuts.vdf");
-
-                                //Write the file with all the shortcuts
-                                File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
-                                Log.Debug("Shortcuts written to " + user + @"\\config\\shortcuts.vdf");
+                                app.Icon = PersistAppIcon(app);
+                                Log.Verbose("Defaulting to app.Icon for app " + app.Name);
                             }
-                            catch (Exception ex)
+                            catch (System.IO.IOException)
                             {
-                                Log.Error("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.InnerException + ex.StackTrace);
-                                throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
+                                Log.Verbose("Using backup icon for app " + app.Name);
+
+                                await Task.Run(() =>
+                                {
+                                    string tmpGridDirectory = TempGridDirectoryFor(GridKey(app.Aumid));
+
+                                    SafellyCreateTmpGridDirectory(tmpGridDirectory);
+
+                                    // Any supported extension; a missing logo makes PersistAppIcon keep app.Icon
+                                    string[] logos = Core.Artwork.ArtworkFile.NamesFor(GridIdPlaceholder + "_logo")
+                                        .Select(name => tmpGridDirectory + name).ToArray();
+                                    string logo = logos.FirstOrDefault(File.Exists) ?? logos[0];
+                                    app.Icon = PersistAppIcon(app, logo);
+                                });
                             }
 
-                            gridIdsByUser[user] = GridIdsByKey(merge);
+                            wanted.Add(ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exePath, app.Icon, tags));
                         }
+
+                        // Update UWPHook's own shortcuts in place (keeping their appid), never touch anyone else's.
+                        // A shortcuts.vdf that can't be read throws here and is left as it is.
+                        MergeResult merge = await Task.Run(() => new Infrastructure.SteamUserShortcuts(user, BackupFolder).Export(wanted));
+                        gridIdsByUser[user] = GridIdsByKey(merge);
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        Log.Error(ex, "Error: Program failed exporting your games to {User}", user);
                         MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
 
-                if (gridImagesDownloadTasks.Count > 0)
+                await Task.Run(() =>
                 {
-                    await Task.WhenAll(gridImagesDownloadTasks);
-
-                    await Task.Run(() =>
+                    foreach (var (user, gridIdsByKey) in gridIdsByUser)
                     {
-                        foreach (var (user, gridIdsByKey) in gridIdsByUser)
-                        {
-                            CopyTempGridImagesToSteamUser(user, gridIdsByKey);
-                        }
-
-                        RemoveTempGridImages();
-                    });
-                }
+                        CopyTempGridImagesToSteamUser(user, gridIdsByKey);
+                    }
+                });
             }
 
             return true;
-        }
-
-        private void BackupShortcutsVDF(string userPath, string vdfSubPath)
-        {
-            string backupFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "backups");
-            if (!Directory.Exists(backupFolder))
-            {
-                Directory.CreateDirectory(backupFolder);
-                Log.Debug("Created backup folder: " + backupFolder);
-            }
-
-            string user_id = userPath.Split('\\').Last();
-
-            string sourceFilePath = Path.Combine(userPath, "config", "shortcuts.vdf");
-            string destinationFileName = Path.Combine(backupFolder, $"{user_id}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_shortcuts.vdf");
-
-            if (!File.Exists(sourceFilePath))
-            {
-               Log.Information("No VDF file found for user: " + sourceFilePath);
-               return;
-            }
-
-            File.Copy(sourceFilePath, destinationFileName);
-            Log.Debug("Backup created: " + destinationFileName);
         }
 
         /// <summary>
@@ -619,46 +594,42 @@ namespace UWPHook
             return dest_file;
         }
 
-        public static void ClearAllShortcuts()
+        /// <summary>
+        /// Removes the shortcuts UWPHook created from every Steam user, backing up each changed
+        /// shortcuts.vdf first. Shortcuts created by Steam, other tools or by hand are kept.
+        /// </summary>
+        public static async Task RemoveUwpHookShortcuts()
         {
-            Log.Debug("Clearing all elements in shortcuts.vdf");
-            string[] tags = Settings.Default.Tags.Split(',');
+            Log.Debug("Removing UWPHook's shortcuts from shortcuts.vdf");
             string steam_folder = SteamManager.GetSteamFolder();
 
             if (Directory.Exists(steam_folder))
             {
-                var users = SteamManager.GetUsers(steam_folder);
-                var exePath = @"""" + Environment.ProcessPath + @"""";
-                var exeDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
-
-                foreach (var user in users)
+                int removed = 0;
+                foreach (var user in SteamManager.GetUsers(steam_folder))
                 {
                     try
                     {
-                        VDFEntry[] shortcuts = new VDFEntry[0];
-
-                        try
-                        {
-                            if (!Directory.Exists(user + @"\\config\\"))
-                            {
-                                Directory.CreateDirectory(user + @"\\config\\");
-                            }
-                            //Write the file with all the shortcuts
-                            File.WriteAllBytes(user + @"\\config\\shortcuts.vdf", VDFSerializer.Serialize(shortcuts));
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
-                            throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
-                        }
+                        removed += await Task.Run(() => new Infrastructure.SteamUserShortcuts(user, BackupFolder).RemoveUwpHookShortcuts());
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("Error: Program failed while trying to clear your Steam shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
-                        MessageBox.Show("Error: Program failed while trying to clear your Steam shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        Log.Error(ex, "Error: Program failed while trying to remove UWPHook's shortcuts from {User}", user);
+                        MessageBox.Show("Error: Program failed while trying to remove UWPHook's shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
                     }
                 }
-                MessageBox.Show("All non-Steam shortcuts has been cleared.");
+
+                if (removed == 0)
+                {
+                    MessageBox.Show("No UWPHook shortcuts were found, so nothing was changed.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // A running Steam would write the removed shortcuts back when it exits
+                string msg = removed + " UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept." + await RestartSteamAsync(
+                    notRunning: " The changes apply the next time you start Steam.",
+                    timedOut: " Please restart Steam now, or it may restore the removed shortcuts.");
+                MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

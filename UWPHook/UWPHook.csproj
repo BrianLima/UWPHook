@@ -29,7 +29,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
-		<ProjectReference Include="..\VDFParser\VDFParser.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -49,3 +49,13 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] The app list loads in under ~5 s after pressing Load.
 - [ ] Exported games still get an icon (picked from the logo folder) and launch; Halo MCC still tracks `MCCWinStore-Win64-Shipping.exe`. Halo MCC shows one row per launchable app; check for an unexpected duplicate.
 - [ ] A package with several Start-menu apps shows each app as its own row.
+
+## Task 9b
+- [ ] Settings → "Remove UWPHook shortcuts" removes only UWPHook entries; non-Steam games added by Steam itself or other tools (e.g. Heroic, Playnite, added by hand) remain, and a backup `<userid>_<timestamp>_shortcuts.vdf` appears in `%AppData%\Briano\UWPHook\backups`.
+- [ ] With Steam running, "Remove UWPHook shortcuts" → Steam restarts and the entries stay gone (also after closing and reopening Steam). With Steam not running, the message says the changes apply the next time Steam starts; with nothing to remove, it says nothing was changed and Steam is not restarted.
+- [ ] A non-Steam game added by another tool keeps its Steam collections and its "sort as" name after a UWPHook export.
+- [ ] Steam starts normally and lists every shortcut after an export written by the new `shortcuts.vdf` writer (no lost or duplicated entries; a game exported with 2.14 keeps its art and playtime).
+- [ ] A Steam user with no `config\shortcuts.vdf` yet gets one after an export, and the game shows up in Steam.
+- [ ] With one user's `shortcuts.vdf` replaced by garbage bytes, export shows an error for that user only, leaves that file byte-for-byte unchanged, and still exports to the other users.
+- [ ] No `shortcuts.vdf.tmp` is left in `userdata\<id>\config\` after an export, and `%TEMP%\UWPHook\tmp_grid` is gone afterwards, also after an export that failed.
+- [ ] With an artwork file in `userdata\<id>\config\grid\` locked (e.g. opened in an image editor that holds a lock), export still copies the other images and other users' art; the failure is in `application.log`.

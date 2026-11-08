@@ -18,4 +18,22 @@ public static class UwpHookShortcut
         var firstToken = launchOptions.TrimStart().Split(' ', 2)[0];
         return ShortcutPaths.Unquote(firstToken);
     }
+
+    /// <summary>
+    /// The AUMID of a shortcut UWPHook created (its Exe is UWPHook.exe and its LaunchOptions start
+    /// with an AUMID), or null for anyone else's shortcut.
+    /// </summary>
+    public static string? CreatedAumidOf(ExistingShortcut shortcut)
+    {
+        if (!IsUwpHookExe(shortcut.Exe))
+        {
+            return null;
+        }
+
+        var aumid = AumidOf(shortcut.LaunchOptions);
+        return aumid.Length > 0 ? aumid : null;
+    }
+
+    /// <summary>True for a shortcut UWPHook created; see <see cref="CreatedAumidOf"/>.</summary>
+    public static bool IsCreatedByUwpHook(ExistingShortcut shortcut) => CreatedAumidOf(shortcut) is not null;
 }

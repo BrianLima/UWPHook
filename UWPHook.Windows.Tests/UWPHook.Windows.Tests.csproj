@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The hand-written binary VDF builder/reader, shared with the Core tests so seeds don't depend on the code under test. -->
+    <Compile Include="..\UWPHook.Core.Tests\Steam\BinaryVdf.cs" Link="Steam\BinaryVdf.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UWPHook\UWPHook.csproj" />
   </ItemGroup>
 
