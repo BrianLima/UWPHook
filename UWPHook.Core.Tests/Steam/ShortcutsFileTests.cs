@@ -134,15 +134,16 @@ public class ShortcutsFileTests
     [Fact]
     public void Load_DuplicateKeys_DoesNotThrow()
     {
-        var bytes = BinaryVdf.Document("shortcuts", root => root
-            .Object("0", entry => entry.String("AppName", "First").String("AppName", "Again"))
-            .Object("0", entry => entry.String("AppName", "Second")));
+        static void First(BinaryVdf entry) => entry.String("AppName", "First").String("AppName", "Again");
+        static void Second(BinaryVdf entry) => entry.String("AppName", "Second");
+        var bytes = BinaryVdf.Document("shortcuts", root => root.Object("0", First).Object("0", Second));
 
         var file = Load(bytes);
 
         Assert.Equal(2, file.Entries.Count);
         Assert.Equal("Second", file.Entries[1].AppName);
-        Assert.Equal(bytes, Save(file));
+        // Both entries and the duplicate AppName survive; Save renumbers the entries as always.
+        Assert.Equal(BinaryVdf.Document("shortcuts", root => root.Object("0", First).Object("1", Second)), Save(file));
     }
 
     [Fact]

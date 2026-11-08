@@ -67,9 +67,9 @@ internal sealed class BinaryVdf
     public static VdfNode Parse(byte[] bytes)
     {
         var position = 0;
+        // The top level is a list holding just the root; its closing 0x08 is the file's final byte.
         var root = Assert.Single(ReadChildren(bytes, ref position));
-        Assert.Equal(End, bytes[position]);
-        Assert.Equal(bytes.Length, position + 1);
+        Assert.Equal(bytes.Length, position);
         return root;
     }
 
