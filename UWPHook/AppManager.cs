@@ -24,8 +24,6 @@ namespace UWPHook
         private static bool isLauncherProcess;
         private static string executablePath;
 
-        // Reading every package manifest can take a while on machines with many apps.
-        private static readonly TimeSpan DiscoveryTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
@@ -148,36 +146,6 @@ namespace UWPHook
 
                     result.Add(processName, (processPath, processId));
                 }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Gets a list of installed UWP Apps on the system, containing each app name + AUMID + executable path, separated by '|' 
-        /// </summary>
-        /// <returns>List of installed UWP Apps</returns>
-        public static List<String> GetInstalledApps()
-        {
-            List<String> result = null;
-            var assembly = Assembly.GetExecutingAssembly();
-            //Load the powershell script to get installed apps
-            var resourceName = "UWPHook.Resources.GetAUMIDScript.ps1";
-            try
-            {
-                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                {
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        //Every entry is listed separated by ;
-                        result = ScriptManager.RunScript(reader.ReadToEnd(), DiscoveryTimeout).Split(';').ToList<string>();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error("Error trying to get installed apps on your PC " + Environment.NewLine + e.Message, e.InnerException);
-                throw new Exception("Error trying to get installed apps on your PC " + Environment.NewLine + e.Message, e.InnerException);
             }
 
             return result;

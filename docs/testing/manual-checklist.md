@@ -42,3 +42,10 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Re-export an existing game with the animated SGDB filter → the grid folder has only one file per art type (no `<id>p.png` left beside `<id>p.webp`, and likewise for `<id>`, `<id>_hero` and `<id>_logo`).
 - [ ] An error raised while an error dialog is open does not stack dialogs (only one error box is shown; the later errors are in `application.log` with "An error dialog is already open").
 - [ ] With a game whose own icon can't be read and whose SteamGridDB logo is a `.webp`/`.jpg`, export still uses the downloaded logo as the backup icon.
+
+## Task 8b
+- [ ] Forza Motorsport, Forza Horizon (4/5), Halo: The Master Chief Collection, Starfield and Gears of War: Ultimate Edition appear in the app list with readable names.
+- [ ] A game installed on a non-system drive (e.g. `D:\XboxGames\...`) appears in the app list.
+- [ ] The app list loads in under ~5 s after pressing Load.
+- [ ] Exported games still get an icon (picked from the logo folder) and launch; Halo MCC still tracks `MCCWinStore-Win64-Shipping.exe`. Halo MCC shows one row per launchable app; check for an unexpected duplicate.
+- [ ] A package with several Start-menu apps shows each app as its own row.

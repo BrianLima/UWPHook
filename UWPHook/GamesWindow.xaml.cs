@@ -708,41 +708,18 @@ namespace UWPHook
         {
             try
             {
-                //Get all installed apps on the system excluding frameworks
-                List<String> installedApps = AppManager.GetInstalledApps();
+                // The 2.14 script listed every non-framework package, system apps included, and the UI has no
+                // "hide system apps" option, so keep listing them all.
+                Core.Catalog.IAppCatalog catalog = new Infrastructure.PackageManagerCatalog();
+                var installedApps = catalog.GetInstalledAppsAsync(includeSystem: true, CancellationToken.None).GetAwaiter().GetResult();
 
-                //Alfabetic sort
-                installedApps.Sort();
-
-                //Split every app that we couldn't resolve the app name
-                var nameNotFound = (from s in installedApps where s.Contains("double click") select s).ToList<String>();
-
-                //Remove them from the original list
-                installedApps.RemoveAll(item => item.Contains("double click"));
-
-                //Rejoin them in the original list, but putting them into last
-                installedApps = installedApps.Union(nameNotFound).ToList<String>();
-
-                foreach (var app in installedApps)
+                foreach (var app in installedApps.OrderBy(a => a.DisplayName, StringComparer.CurrentCultureIgnoreCase))
                 {
-                    //Remove end lines from the String and split both values, I split the appname and the AUMID using |
-                    //I hope no apps have that in their name. Ever.
-                    var values = app.Replace("\r\n", "").Split('|');
-
-                    if (values.Length >= 3 && AppManager.IsKnownApp(values[2], out string readableName))
+                    AppEntry entry = Infrastructure.XboxAppEntries.ToAppEntry(app);
+                    Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
                     {
-                        values[0] = readableName;
-                    }
-
-                    if (!String.IsNullOrWhiteSpace(values[0]))
-                    {
-                        //We get the default square tile to find where the app stores it's icons, then we resolve which one is the widest
-                        string logosPath = Path.GetDirectoryName(values[1]);
-                        Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
-                        {
-                            Apps.Entries.Add(new AppEntry() { Name = values[0], Executable = values[3], IconPath = logosPath, Aumid = values[2], Selected = false });
-                        });
-                    }
+                        Apps.Entries.Add(entry);
+                    });
                 }
             }
             catch (Exception ex)
