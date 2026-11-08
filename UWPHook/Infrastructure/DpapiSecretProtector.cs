@@ -7,6 +7,8 @@ namespace UWPHook.Infrastructure
     /// <summary>
     /// Protects secrets with Windows DPAPI for the current Windows user, as Base64. Only that user,
     /// on this machine, can read them back.
+    /// <see cref="ProtectedData"/> ships in the Windows Desktop runtime that WPF already uses; a package
+    /// reference to System.Security.Cryptography.ProtectedData would be pruned (NU1510).
     /// </summary>
     internal sealed class DpapiSecretProtector : ISecretProtector
     {

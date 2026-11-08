@@ -36,7 +36,8 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            OnUnreadableFile?.Invoke(e, MoveAside());
+            var movedTo = MoveAside(); // not inside ?.Invoke(...): its arguments only run when there is a handler
+            OnUnreadableFile?.Invoke(e, movedTo);
             return AppSettings.Defaults;
         }
     }
