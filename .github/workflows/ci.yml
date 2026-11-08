@@ -34,7 +34,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          trx=$(find TestResults -name '*.trx' 2>/dev/null | head -n 1)
+          # GitHub runs bash with -eo pipefail, so guard against a missing TestResults folder.
+          trx=$( { find TestResults -name '*.trx' 2>/dev/null || true; } | head -n 1)
           if [ -z "$trx" ]; then
             echo "::notice title=Test summary::no test results (the build failed before tests ran)"
             exit 0

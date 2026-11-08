@@ -3,7 +3,6 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Crc32.NET" Version="1.2.0" />
     <PackageVersion Include="MaterialDesignColors" Version="3.1.0" />
     <PackageVersion Include="MaterialDesignThemes" Version="5.1.0" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.6" />

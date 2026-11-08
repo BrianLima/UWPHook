@@ -23,6 +23,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
 		<ProjectReference Include="..\VDFParser\VDFParser.csproj" />
 	</ItemGroup>
 
@@ -42,7 +43,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Crc32.NET" />
 		<PackageReference Include="MaterialDesignColors" />
 		<PackageReference Include="MaterialDesignThemes" />
 		<PackageReference Include="Microsoft.PowerShell.SDK" />
