@@ -23,6 +23,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- The Windows integration tests drive internal types such as ScriptManager. -->
+		<InternalsVisibleTo Include="UWPHook.Windows.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
 		<ProjectReference Include="..\VDFParser\VDFParser.csproj" />
 	</ItemGroup>
