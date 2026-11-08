@@ -58,7 +58,7 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 
 # Building
 
-- Clone the project (or your fork). No other repositories are needed: the VDF parser is vendored in `VDFParser/`.
+- Clone the project (or your fork). No other repositories are needed: `shortcuts.vdf` is read and written with the ValveKeyValue NuGet package.
 - Install [Visual Studio 2026](https://visualstudio.microsoft.com/) with the ".NET desktop development" workload, **or** just the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). The SDK version is pinned in `global.json`.
 - Build from the repository root:
   ```

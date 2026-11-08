@@ -10,7 +10,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>latest</LangVersion>
     <!-- Symbols live inside each DLL/EXE, so no .pdb files ship in the publish folder
-         (this also covers referenced projects such as VDFParser). -->
+         (this also covers referenced projects such as UWPHook.Core). -->
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 </Project>

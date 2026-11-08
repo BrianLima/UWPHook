@@ -35,7 +35,7 @@ public static class ShortcutMerger
         for (var index = 0; index < existing.Count; index++)
         {
             var shortcut = existing[index];
-            var spec = UwpHookAumidOf(shortcut) is { } aumid && pending.TryGetValue(aumid, out var match) ? match : null;
+            var spec = UwpHookShortcut.CreatedAumidOf(shortcut) is { } aumid && pending.TryGetValue(aumid, out var match) ? match : null;
 
             if (spec is not null && matchedAumids.Add(spec.Aumid))
             {
@@ -56,18 +56,6 @@ public static class ShortcutMerger
             .Select(spec => new MergedShortcut(NewAppId(spec), spec, null)));
 
         return new MergeResult(merged) { UntouchedDuplicateIndexes = duplicates };
-    }
-
-    /// <summary>The AUMID of a shortcut UWPHook created, or null for anyone else's shortcut.</summary>
-    private static string? UwpHookAumidOf(ExistingShortcut shortcut)
-    {
-        if (!UwpHookShortcut.IsUwpHookExe(shortcut.Exe))
-        {
-            return null;
-        }
-
-        var aumid = UwpHookShortcut.AumidOf(shortcut.LaunchOptions);
-        return aumid.Length > 0 ? aumid : null;
     }
 
     /// <summary>Wanted specs keyed by AUMID, first one wins, in their original order.</summary>

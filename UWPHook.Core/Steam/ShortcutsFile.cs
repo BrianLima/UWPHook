@@ -25,6 +25,9 @@ public sealed class ShortcutsFile
     /// <summary>The shortcuts in file order; a missing key reads as 0 or "".</summary>
     public IReadOnlyList<ExistingShortcut> Entries { get; private set; }
 
+    /// <summary>A shortcuts.vdf with no shortcuts, for a Steam user who has none yet.</summary>
+    public static ShortcutsFile Empty() => new(DefaultRootName, []);
+
     /// <summary>Reads a shortcuts.vdf. An empty stream is a file with no shortcuts.</summary>
     public static ShortcutsFile Load(Stream s)
     {
@@ -32,7 +35,7 @@ public sealed class ShortcutsFile
         s.CopyTo(buffer);
         if (buffer.Length == 0)
         {
-            return new ShortcutsFile(DefaultRootName, []);
+            return Empty();
         }
 
         buffer.Position = 0;
@@ -44,11 +47,29 @@ public sealed class ShortcutsFile
     /// Replaces the entries with <paramref name="merge"/>'s, where <see cref="MergedShortcut.ExistingIndex"/>
     /// indexes <see cref="Entries"/>: a kept entry stays exactly as it is, a matched entry gets the spec's
     /// fields over its own, and a new entry starts from Steam's defaults.
+    /// The merge must account for every existing entry exactly once, so no shortcut can be lost or
+    /// doubled; otherwise this throws <see cref="InvalidOperationException"/> and nothing changes.
     /// </summary>
     public void Apply(MergeResult merge)
     {
+        EnsureCoversEveryEntryOnce(merge);
         _entries = [.. merge.Shortcuts.Select(EntryFor)];
         Entries = ReadEntries();
+    }
+
+    /// <summary>Removes every entry <paramref name="match"/> selects, keeping the others as they are.</summary>
+    /// <returns>How many entries were removed.</returns>
+    public int RemoveWhere(Func<ExistingShortcut, bool> match)
+    {
+        var kept = _entries.Where((_, index) => !match(Entries[index])).ToList();
+        var removed = _entries.Count - kept.Count;
+        if (removed > 0)
+        {
+            _entries = kept;
+            Entries = ReadEntries();
+        }
+
+        return removed;
     }
 
     /// <summary>Writes the file, with the entries renumbered "0".."n-1".</summary>
@@ -61,6 +82,22 @@ public sealed class ShortcutsFile
         }
 
         Serializer().Serialize(s, root, _rootName);
+    }
+
+    private void EnsureCoversEveryEntryOnce(MergeResult merge)
+    {
+        var indexes = merge.Shortcuts
+            .Select(merged => merged.ExistingIndex)
+            .OfType<int>()
+            .Order()
+            .ToList();
+
+        if (!indexes.SequenceEqual(Enumerable.Range(0, _entries.Count)))
+        {
+            throw new InvalidOperationException(
+                $"The merge must keep each of the {_entries.Count} existing shortcuts exactly once " +
+                $"(indexes 0..{_entries.Count - 1}), but it refers to [{string.Join(", ", indexes)}].");
+        }
     }
 
     private KVObject EntryFor(MergedShortcut merged) => (merged.ExistingIndex, merged.Spec) switch

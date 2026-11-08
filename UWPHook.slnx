@@ -3,5 +3,4 @@
   <Project Path="UWPHook.Core/UWPHook.Core.csproj" />
   <Project Path="UWPHook.Windows.Tests/UWPHook.Windows.Tests.csproj" />
   <Project Path="UWPHook/UWPHook.csproj" />
-  <Project Path="VDFParser/VDFParser.csproj" />
 </Solution>
