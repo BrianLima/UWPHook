@@ -24,7 +24,16 @@ jobs:
           global-json-file: global.json
 
       - name: Build
-        run: dotnet build UWPHook.slnx -c Release
+        run: dotnet build UWPHook.slnx -c Release "-flp:warningsonly;logfile=build-warnings.log"
+
+      # GitHub shows at most 10 warning annotations per step, so also report the full count.
+      - name: Summarize build warnings
+        shell: pwsh
+        run: |
+          $warnings = @(Get-Content build-warnings.log | Where-Object { $_ -match 'warning [A-Z]+[0-9]+' } | Sort-Object -Unique)
+          $byCode = $warnings | ForEach-Object { [regex]::Match($_, 'warning ([A-Z]+[0-9]+)').Groups[1].Value } |
+            Group-Object | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
+          Write-Output "::notice title=build warnings::$($warnings.Count) unique warnings ($($byCode -join ', '))"
 
       - name: Publish win-x64
         run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64 -o publish/win-x64
