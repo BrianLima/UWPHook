@@ -9,10 +9,10 @@ public class ChoiceListTests
     [Fact]
     public void ArtworkChoices_AreTheListsSettingsShows()
     {
-        Assert.Equal(["any", "alternate", "blurred", "white_logo", "material", "no_logo"], ArtworkChoices.Styles.Values);
-        Assert.Equal(["any", "static", "animated"], ArtworkChoices.Types.Values);
-        Assert.Equal(["false", "any", "true"], ArtworkChoices.Nsfw.Values);
-        Assert.Equal(["false", "any", "true"], ArtworkChoices.Humor.Values);
+        Assert.Equal(new[] { "any", "alternate", "blurred", "white_logo", "material", "no_logo" }, ArtworkChoices.Styles.Values);
+        Assert.Equal(new[] { "any", "static", "animated" }, ArtworkChoices.Types.Values);
+        Assert.Equal(new[] { "false", "any", "true" }, ArtworkChoices.Nsfw.Values);
+        Assert.Equal(new[] { "false", "any", "true" }, ArtworkChoices.Humor.Values);
     }
 
     [Theory]

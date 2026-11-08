@@ -39,7 +39,7 @@ public sealed class SettingsStoreTests : IDisposable
 
     private JsonObject SavedJson() => JsonNode.Parse(File.ReadAllText(SettingsPath))!.AsObject();
 
-    private string[] FilesInFolder() => Directory.GetFiles(folder).Select(Path.GetFileName).ToArray()!;
+    private string[] FilesInFolder() => Directory.GetFiles(folder).Select(file => Path.GetFileName(file)).ToArray();
 
     [Fact]
     public void Save_ThenLoad_GivesBackTheSameSettings()
@@ -189,7 +189,7 @@ public sealed class SettingsStoreTests : IDisposable
         Store().Save(Changed);
 
         Assert.Equal(Changed, Store().Load());
-        Assert.Equal(["settings.json"], FilesInFolder());
+        Assert.Equal(new[] { "settings.json" }, FilesInFolder());
     }
 
     [Fact]
@@ -212,7 +212,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.ThrowsAny<Exception>(() => Store(new FailingProtector()).Save(Changed));
 
         Assert.Equal(before, File.ReadAllText(SettingsPath));
-        Assert.Equal(["settings.json"], FilesInFolder());
+        Assert.Equal(new[] { "settings.json" }, FilesInFolder());
     }
 
     /// <summary>Reversible, and the result never contains the plain text.</summary>

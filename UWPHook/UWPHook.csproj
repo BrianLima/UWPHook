@@ -54,22 +54,10 @@
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.Sinks.Console" />
 		<PackageReference Include="Serilog.Sinks.File" />
+		<!-- DPAPI for the SteamGridDB key in settings.json. -->
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" />
 		<!-- Installer and updates (per-user install under %LocalAppData%\UWPHook). -->
 		<PackageReference Include="Velopack" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Compile Update="Properties\Settings.Designer.cs">
-			<DesignTimeSharedInput>True</DesignTimeSharedInput>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Settings.settings</DependentUpon>
-		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="Properties\Settings.settings">
-			<Generator>SettingsSingleFileGenerator</Generator>
-			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
-		</None>
-	</ItemGroup>
 </Project>

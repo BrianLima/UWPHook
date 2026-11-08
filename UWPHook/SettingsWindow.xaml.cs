@@ -3,7 +3,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Security.Policy;
 using System.Windows;
-using UWPHook.Properties;
+using UWPHook.Core.Configuration;
+using UWPHook.Infrastructure;
 using static System.Net.WebRequestMethods;
 
 namespace UWPHook
@@ -19,45 +20,56 @@ namespace UWPHook
 
             Title = "UWPHook version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
+            var settings = UserSettings.Current;
             cultures_comboBox.ItemsSource = CultureInfo.GetCultures(CultureTypes.AllCultures).Select(c => c.TextInfo.CultureName);
-            cultures_comboBox.SelectedItem = string.IsNullOrEmpty(Settings.Default.TargetLanguage) ? CultureInfo.CurrentCulture.TextInfo.CultureName : Properties.Settings.Default.TargetLanguage;
-            
-            seconds_comboBox.ItemsSource = Enumerable.Range(0, 10).Select(i => i + " seconds");
-            seconds_comboBox.SelectedIndex = Properties.Settings.Default.Seconds;
-            
-            int logLevel_index = 0;
-            int.TryParse(Properties.Settings.Default.SelectedLogLevel, out logLevel_index);
+            cultures_comboBox.SelectedItem = string.IsNullOrEmpty(settings.TargetLanguage) ? CultureInfo.CurrentCulture.TextInfo.CultureName : settings.TargetLanguage;
 
-            language_toggle.IsChecked = Properties.Settings.Default.ChangeLanguage;
-            streaming_toggle.IsChecked = Properties.Settings.Default.StreamMode;
-            logLevel_comboBox.SelectedIndex = logLevel_index;
-            steamgriddb_api_key.Text = Properties.Settings.Default.SteamGridDbApiKey;
-            style_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Style;
-            type_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Type;
-            nfsw_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_nfsw;
-            humor_comboBox.SelectedIndex = Properties.Settings.Default.SelectedSteamGridDB_Humor;
-            tags_textBox.Text = Properties.Settings.Default.Tags;
+            // Item i reads "i seconds".
+            seconds_comboBox.ItemsSource = Enumerable.Range(0, 10).Select(i => i + " seconds");
+            seconds_comboBox.SelectedIndex = settings.Seconds;
+
+            language_toggle.IsChecked = settings.ChangeLanguage;
+            streaming_toggle.IsChecked = settings.StreamMode;
+            // Items: ERROR, DEBUG, TRACE, in the order of AppLogLevel.
+            logLevel_comboBox.SelectedIndex = (int)settings.LogLevel;
+            steamgriddb_api_key.Text = settings.SteamGridDbApiKey;
+            style_comboBox.SelectedIndex = ArtworkChoices.Styles.IndexOf(settings.ArtworkStyle);
+            type_comboBox.SelectedIndex = ArtworkChoices.Types.IndexOf(settings.ArtworkType);
+            nfsw_comboBox.SelectedIndex = ArtworkChoices.Nsfw.IndexOf(settings.ArtworkNsfw);
+            humor_comboBox.SelectedIndex = ArtworkChoices.Humor.IndexOf(settings.ArtworkHumor);
+            tags_textBox.Text = settings.Tags;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Nothing selected keeps the stored value instead of crashing.
-            Properties.Settings.Default.ChangeLanguage = language_toggle.IsChecked == true;
-            Properties.Settings.Default.TargetLanguage = cultures_comboBox.SelectedItem as string ?? Properties.Settings.Default.TargetLanguage;
-            // Item i reads "i seconds".
-            Properties.Settings.Default.Seconds = seconds_comboBox.SelectedIndex >= 0 ? seconds_comboBox.SelectedIndex : Properties.Settings.Default.Seconds;
-            Properties.Settings.Default.StreamMode = streaming_toggle.IsChecked == true;
-            Properties.Settings.Default.SelectedLogLevel = logLevel_comboBox.SelectedIndex.ToString();
-            Properties.Settings.Default.SteamGridDbApiKey = steamgriddb_api_key.Text.Trim('\r', '\n');
-            Properties.Settings.Default.SelectedSteamGridDB_Style = style_comboBox.SelectedIndex;
-            Properties.Settings.Default.SelectedSteamGridDB_Type = type_comboBox.SelectedIndex;
-            Properties.Settings.Default.SelectedSteamGridDB_nfsw = nfsw_comboBox.SelectedIndex;
-            Properties.Settings.Default.SelectedSteamGridDB_Humor = humor_comboBox.SelectedIndex;
-            Properties.Settings.Default.Tags = tags_textBox.Text;
-            Properties.Settings.Default.Save();
+            try
+            {
+                UserSettings.Update(Edited);
+            }
+            catch (Exception exception)
+            {
+                Infrastructure.ErrorReporter.Report(exception, "Saving your settings failed.");
+                return;
+            }
             GamesWindow.SetLogLevel();
             this.Close();
         }
+
+        /// <summary>The settings as edited in this window. Nothing selected keeps the stored value.</summary>
+        private AppSettings Edited(AppSettings settings) => settings with
+        {
+            ChangeLanguage = language_toggle.IsChecked == true,
+            TargetLanguage = cultures_comboBox.SelectedItem as string ?? settings.TargetLanguage,
+            Seconds = seconds_comboBox.SelectedIndex >= 0 ? seconds_comboBox.SelectedIndex : settings.Seconds,
+            StreamMode = streaming_toggle.IsChecked == true,
+            LogLevel = Enum.IsDefined((AppLogLevel)logLevel_comboBox.SelectedIndex) ? (AppLogLevel)logLevel_comboBox.SelectedIndex : settings.LogLevel,
+            SteamGridDbApiKey = steamgriddb_api_key.Text.Trim('\r', '\n'),
+            ArtworkStyle = ArtworkChoices.Styles.ValueAt(style_comboBox.SelectedIndex, settings.ArtworkStyle),
+            ArtworkType = ArtworkChoices.Types.ValueAt(type_comboBox.SelectedIndex, settings.ArtworkType),
+            ArtworkNsfw = ArtworkChoices.Nsfw.ValueAt(nfsw_comboBox.SelectedIndex, settings.ArtworkNsfw),
+            ArtworkHumor = ArtworkChoices.Humor.ValueAt(humor_comboBox.SelectedIndex, settings.ArtworkHumor),
+            Tags = tags_textBox.Text,
+        };
 
         private void Chip_Click(object sender, RoutedEventArgs e)
         {

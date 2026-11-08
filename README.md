@@ -15,7 +15,7 @@ Get UWPHook from the [latest release](https://github.com/BrianLima/UWPHook/relea
 
 The `SHA256SUMS.txt` file in each release lists the checksums of every download.
 
-Upgrading from 2.14 or older: install 2.15 as above, then export your games again. UWPHook updates its existing Steam shortcuts in place, so your playtime, artwork and app ids are kept. You can delete the old UWPHook folder afterwards (or uninstall the old version); your settings, backups and logs live in `%AppData%\Briano\UWPHook` and are not touched.
+Upgrading from 2.14 or older: install 2.15 as above, then export your games again. UWPHook updates its existing Steam shortcuts in place, so your playtime, artwork and app ids are kept. Your settings (language, stream mode, check interval, SteamGridDB key and artwork choices, tags, log level) are imported from 2.14 the first time 2.15 starts. From then on they live in `%AppData%\Briano\UWPHook\settings.json`, next to your backups and logs, and updates no longer reset them. The SteamGridDB key in that file is encrypted for your Windows user, so after moving to another PC or Windows account you enter it again. You can delete the old UWPHook folder afterwards (or uninstall the old version).
 
 Click on the 🔄 to load installed UWP Apps, we will find every UWP app and Xbox Game Pass game installed on your PC.
 

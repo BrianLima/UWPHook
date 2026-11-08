@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using UWPHook.Core.Launch;
 using UWPHook.Core.Steam;
-using UWPHook.Properties;
+using UWPHook.Infrastructure;
 using UWPHook.Core.Artwork.SteamGridDb;
 
 namespace UWPHook
@@ -337,7 +337,7 @@ namespace UWPHook
 
         private async Task<bool> ExportSelectedApps()
         {
-            string[] tags = Settings.Default.Tags.Split(',');
+            string[] tags = UserSettings.Current.Tags.Split(',');
             string steam_folder = SteamManager.GetSteamFolder();
 
             if (Directory.Exists(steam_folder))
@@ -351,7 +351,7 @@ namespace UWPHook
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
 
                 List<Task<bool>> gridImagesDownloadTasks = new List<Task<bool>>();
-                bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
+                bool downloadGridImages = UserSettings.Current.HasSteamGridDbApiKey;
                 //To make things faster, decide icons and download grid images before looping users
                 Log.Verbose("downloadGridImages: " + (downloadGridImages));
 
@@ -617,11 +617,17 @@ namespace UWPHook
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!Settings.Default.OfferedSteamGridDB)
+            if (!UserSettings.Current.OfferedSteamGridDb)
             {
-                Settings.Default.SteamGridDbApiKey = "";
-                Settings.Default.OfferedSteamGridDB = true;
-                Settings.Default.Save();
+                // Only offer: a key the user already entered is kept.
+                try
+                {
+                    UserSettings.Update(settings => settings with { OfferedSteamGridDb = true });
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, "Saving that SteamGridDB was offered failed");
+                }
 
                 var boxResult = MessageBox.Show("Do you want to automatically import grid images for imported games?", "UWPHook", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (boxResult == MessageBoxResult.Yes)

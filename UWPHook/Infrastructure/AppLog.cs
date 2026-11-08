@@ -2,7 +2,7 @@ using System.IO;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using UWPHook.Properties;
+using UWPHook.Core.Configuration;
 
 namespace UWPHook.Infrastructure
 {
@@ -29,18 +29,16 @@ namespace UWPHook.Infrastructure
             ApplySelectedLevel();
         }
 
-        /// <summary>Applies the level picked in Settings (0 = error, 1 = debug, 2 = trace).</summary>
+        /// <summary>Applies the level picked in Settings.</summary>
         public static void ApplySelectedLevel()
         {
-            int.TryParse(Settings.Default.SelectedLogLevel, out var logLevelIndex);
-
-            switch (logLevelIndex)
+            switch (UserSettings.Current.LogLevel)
             {
-                case 1:
+                case AppLogLevel.Debug:
                     Log.Information("Init log with DEBUG level.");
                     levelSwitch.MinimumLevel = LogEventLevel.Debug;
                     break;
-                case 2:
+                case AppLogLevel.Trace:
                     Log.Information("Init log with TRACE level.");
                     levelSwitch.MinimumLevel = LogEventLevel.Verbose;
                     break;
