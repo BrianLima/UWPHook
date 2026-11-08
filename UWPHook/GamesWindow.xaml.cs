@@ -223,32 +223,69 @@ namespace UWPHook
         }
 
         /// <summary>
-        /// Copies all temporary images to the given user
+        /// Copies the temporary images of each app to the given user, renaming them to the
+        /// appid that app's shortcut has in this user's shortcuts.vdf
         /// </summary>
         /// <param name="user">The user path to copy images to</param>
-        private void CopyTempGridImagesToSteamUser(string user)
+        /// <param name="gridIdsByKey">The grid id (unsigned appid) of each app's shortcut, by grid key</param>
+        private void CopyTempGridImagesToSteamUser(string user, IReadOnlyDictionary<string, uint> gridIdsByKey)
         {
-            string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
             string userGridDirectory = user + "\\config\\grid\\";
 
-            // No images were downloaded, maybe the key is invalid or no app had an image
-            if (!Directory.Exists(tmpGridDirectory))
+            foreach (var (gridKey, gridId) in gridIdsByKey)
             {
-                return;
+                string appGridDirectory = TempGridDirectoryFor(gridKey);
+
+                // No images were downloaded, maybe the key is invalid or the app had no image
+                if (!Directory.Exists(appGridDirectory))
+                {
+                    continue;
+                }
+
+                if (!Directory.Exists(userGridDirectory))
+                {
+                    Directory.CreateDirectory(userGridDirectory);
+                }
+
+                foreach (string image in Directory.GetFiles(appGridDirectory, GridIdPlaceholder + "*"))
+                {
+                    // e.g. "appid_hero.png" -> "3144859588_hero.png", keeping whatever extension was saved
+                    string destFile = userGridDirectory + gridId + Path.GetFileName(image).Substring(GridIdPlaceholder.Length);
+                    File.Copy(image, destFile, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Temporary grid images are named with this placeholder instead of the appid,
+        /// because the appid is only known per user, after merging into shortcuts.vdf
+        /// </summary>
+        private const string GridIdPlaceholder = "appid";
+
+        /// <summary>
+        /// A stable, file-name-safe key for an app's temporary grid images: its AUMID
+        /// </summary>
+        private static string GridKey(string aumid)
+        {
+            char[] invalid = Path.GetInvalidFileNameChars();
+            return new string(aumid.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+        }
+
+        private static string TempGridDirectoryFor(string gridKey) =>
+            Path.GetTempPath() + "UWPHook\\tmp_grid\\" + gridKey + "\\";
+
+        /// <summary>
+        /// The grid id (unsigned appid) of every shortcut UWPHook wrote, by grid key
+        /// </summary>
+        private static Dictionary<string, uint> GridIdsByKey(MergeResult merge)
+        {
+            var gridIds = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+            foreach (var merged in merge.Shortcuts.Where(merged => merged.Spec != null))
+            {
+                gridIds[GridKey(merged.Spec!.Aumid)] = unchecked((uint)merged.AppId);
             }
 
-            string[] images = Directory.GetFiles(tmpGridDirectory);
-
-            if (!Directory.Exists(userGridDirectory))
-            {
-                Directory.CreateDirectory(userGridDirectory);
-            }
-
-            foreach (string image in images)
-            {
-                string destFile = userGridDirectory + Path.GetFileName(image);
-                File.Copy(image, destFile, true);
-            }
+            return gridIds;
         }
 
         private void RemoveTempGridImages()
@@ -262,16 +299,17 @@ namespace UWPHook
 
         /// <summary>
         /// Task responsible for downloading grid images to a temporary location,
-        /// generates the steam ID for the game based in the receiving parameters,
+        /// in a folder per app named after <paramref name="gridKey"/>, with <see cref="GridIdPlaceholder"/>
+        /// in place of the appid (renamed when copied to each user),
         /// Throws TaskCanceledException if cannot communicate with SteamGridDB properly
         /// </summary>
         /// <param name="appName">The name of the app</param>
-        /// <param name="appTarget">The target path of the executable</param>
+        /// <param name="gridKey">The app's grid key, see <see cref="GridKey"/></param>
         /// <returns></returns>
-        private async Task DownloadTempGridImages(string appName, string appTarget)
+        private async Task DownloadTempGridImages(string appName, string gridKey)
         {
             SteamGridDbApi api = new SteamGridDbApi(Properties.Settings.Default.SteamGridDbApiKey);
-            string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+            string tmpGridDirectory = TempGridDirectoryFor(gridKey);
             GameResponse[] games = null;
 
             try
@@ -287,7 +325,7 @@ namespace UWPHook
             {
                 var game = games[0];
                 Log.Verbose("Detected Game: " + game.ToString());
-                uint gameId = SteamShortcutId.Compute(appTarget, appName);
+                string gameId = GridIdPlaceholder;
 
                 SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
@@ -374,9 +412,8 @@ namespace UWPHook
             {
                 var users = SteamManager.GetUsers(steam_folder);
                 var selected_apps = Apps.Entries.Where(app => app.Selected);
-                var processModule = Process.GetCurrentProcess().MainModule;
-                var exePath = processModule?.FileName;
-                var exeDir = Path.GetDirectoryName(exePath);
+                string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe");
+                var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
 
                 List<Task> gridImagesDownloadTasks = new List<Task>();
                 bool downloadGridImages = !String.IsNullOrEmpty(Properties.Settings.Default.SteamGridDbApiKey);
@@ -391,7 +428,7 @@ namespace UWPHook
                     {
                         Log.Verbose("Downloading grid images for app " + app.Name);
 
-                        gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, exePath));
+                        gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, GridKey(app.Aumid)));
                     }
                 }
 
@@ -420,6 +457,7 @@ namespace UWPHook
 
                         if (shortcuts != null)
                         {
+                            var wanted = new List<ShortcutSpec>();
                             foreach (var app in selected_apps)
                             {
                                 try
@@ -433,56 +471,28 @@ namespace UWPHook
 
                                     await Task.Run(() =>
                                     {
-                                        string tmpGridDirectory = Path.GetTempPath() + "UWPHook\\tmp_grid\\";
+                                        string tmpGridDirectory = TempGridDirectoryFor(GridKey(app.Aumid));
 
                                         SafellyCreateTmpGridDirectory(tmpGridDirectory);
 
-                                        string[] images = Directory.GetFiles(tmpGridDirectory);
-
-                                        uint gameId = SteamShortcutId.Compute(exePath, app.Name);
-                                        app.Icon = PersistAppIcon(app, tmpGridDirectory + gameId + "_logo.png");
+                                        // Any extension; a missing logo makes PersistAppIcon keep app.Icon
+                                        string logo = Directory.GetFiles(tmpGridDirectory, GridIdPlaceholder + "_logo.*").FirstOrDefault()
+                                            ?? tmpGridDirectory + GridIdPlaceholder + "_logo.png";
+                                        app.Icon = PersistAppIcon(app, logo);
                                     });
                                 }
 
-                                VDFEntry newApp = new VDFEntry()
-                                {
-                                    appid = SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(exePath, app.Name)),
-                                    AppName = app.Name,
-                                    Exe = exePath,
-                                    StartDir = exeDir,
-                                    LaunchOptions = app.Aumid + " " + app.Executable,
-                                    AllowDesktopConfig = 1,
-                                    AllowOverlay = 1,
-                                    Icon = app.Icon,
-                                    Index = shortcuts.Length,
-                                    IsHidden = 0,
-                                    OpenVR = 0,
-                                    ShortcutPath = "",
-                                    Tags = tags,
-                                    Devkit = 0,
-                                    DevkitGameID = "",
-                                    LastPlayTime = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                                };
-                                Boolean shortcutAlreadyExists = false;
-                                for (int i = 0; i < shortcuts.Length; i++)
-                                {
-                                    Log.Verbose(shortcuts[i].ToString());
-
-                                    if (shortcuts[i].AppName == app.Name && shortcuts[i].Exe == exePath)
-                                    {
-                                        shortcutAlreadyExists = true;
-                                        Log.Verbose(app.Name + " already added to Steam. Updating existing shortcut.");
-                                        shortcuts[i] = newApp;
-                                    }
-                                }
-
-                                if (!shortcutAlreadyExists)
-                                {
-                                    //Resize this array so it fits the new entries
-                                    Array.Resize(ref shortcuts, shortcuts.Length + 1);
-                                    shortcuts[shortcuts.Length - 1] = newApp;
-                                }
+                                wanted.Add(ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exePath, app.Icon, tags));
                             }
+
+                            // Update UWPHook's own shortcuts in place (keeping their appid), never touch anyone else's
+                            MergeResult merge = ShortcutMerger.Merge(shortcuts.Select(VdfShortcuts.ToExisting).ToList(), wanted);
+                            foreach (int duplicate in merge.UntouchedDuplicateIndexes)
+                            {
+                                Log.Warning("Leaving duplicate UWPHook shortcut untouched: " + shortcuts[duplicate].AppName + " (" + shortcuts[duplicate].LaunchOptions + ")");
+                            }
+
+                            shortcuts = VdfShortcuts.Apply(merge, shortcuts);
 
                             try
                             {
@@ -502,6 +512,8 @@ namespace UWPHook
                                 Log.Error("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.InnerException + ex.StackTrace);
                                 throw new Exception("Error: Program failed while trying to write your Steam shortcuts" + Environment.NewLine + ex.Message);
                             }
+
+                            gridIdsByUser[user] = GridIdsByKey(merge);
                         }
                     }
                     catch (Exception ex)
@@ -517,9 +529,9 @@ namespace UWPHook
 
                     await Task.Run(() =>
                     {
-                        foreach (var user in users)
+                        foreach (var (user, gridIdsByKey) in gridIdsByUser)
                         {
-                            CopyTempGridImagesToSteamUser(user);
+                            CopyTempGridImagesToSteamUser(user, gridIdsByKey);
                         }
 
                         RemoveTempGridImages();

@@ -25,3 +25,8 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] The Settings window no longer shows the "Change host resolution" toggle/combo.
 - [ ] With "Set system language when launching an app" on, launching a game switches the UI language and it is restored after the game closes.
 - [ ] No console window flashes while the app list loads.
+
+## Task 4
+- [ ] Export a game with UWPHook 2.14.3, upgrade to 2.15, and re-export it: Steam shows exactly one entry for the game (same `appid` in `shortcuts.vdf`), its SteamGridDB grid/hero/logo art is kept, and it launches when UWPHook is installed in a path with spaces (e.g. `C:\Program Files (x86)\...`).
+- [ ] In `shortcuts.vdf` after the export, the UWPHook entry has `Exe` and `StartDir` wrapped in double quotes, and shortcuts added by other tools (or by hand) are unchanged.
+- [ ] With a SteamGridDB key set, exporting a new game puts its images in `userdata/<id>/config/grid/` named after the entry's `appid` (`<id>.png`, `<id>p.png`, `<id>_hero.png`, `<id>_logo.png`).
