@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using UWPHook.Core.Launch;
 using UWPHook.Properties;
 
 namespace UWPHook
@@ -26,32 +27,27 @@ namespace UWPHook
         /// <summary>
         /// Launch a UWP App using a ApplicationActivationManager and sets a internal id to launched proccess id
         /// </summary>
-        /// <param name="aumid">The AUMID of the app to launch</param>
-        public static void LaunchUWPApp(string[] args)
+        /// <param name="request">The AUMID, executable and extra arguments Steam asked us to launch</param>
+        public static void LaunchUWPApp(LaunchRequest request)
         {
-            // We receive the args from Steam, 
-            // 0 is application location, 
-            // 1 is the aumid,
-            // 2 is the executable, the rest are extras
-            string aumid = args[1];
-            executablePath = args[2].Contains("/") ? args[2].Replace('/', '\\') : args[2];
-            Log.Verbose("Arguments => " + String.Join("/", args));
+            executablePath = request.Executable;
+            Log.Verbose("Launch request => " + request);
             var mgr = new ApplicationActivationManager();
             uint processId;
 
-            string extra_args = String.Join(" ", args.Skip(3)
-                                                 .Take(args.Length - 3)
-                                                 .Select(eachElement => eachElement.Clone()
-                                            ).ToArray());
-
             try
             {
-                mgr.ActivateApplication(aumid, extra_args, ActivateOptions.None, out processId);
+                mgr.ActivateApplication(request.Aumid, request.ExtraArguments, ActivateOptions.None, out processId);
                 runningProcessId = (int) processId;
                 Log.Verbose("Process ID => " + runningProcessId.ToString());
 
                 //Bring the launched app to the foreground, this fixes in-home streaming
                 BringProcess();
+            }
+            catch (Exception e) when (e is COMException || e is ArgumentException)
+            {
+                Log.Error($"Activating {request.Aumid} failed with HRESULT 0x{e.HResult:X8} ({e.GetType().Name}): {e.Message}");
+                throw new Exception("Error while trying to launch your app." + Environment.NewLine + e.Message, e);
             }
             catch (Exception e)
             {
