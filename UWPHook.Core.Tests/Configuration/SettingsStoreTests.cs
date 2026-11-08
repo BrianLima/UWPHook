@@ -215,6 +215,102 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(new[] { "settings.json" }, FilesInFolder());
     }
 
+    // R32: a file that exists but cannot be read (locked by another process, access denied) is not corrupt.
+    [Fact]
+    public void Load_AFileThatCannotBeRead_IsNotMovedAside_AndGivesTheDefaults()
+    {
+        Store().Save(Changed);
+        var before = File.ReadAllBytes(SettingsPath);
+        var reports = new List<(Exception Error, string? MovedTo)>();
+        var store = Store();
+        store.OnUnreadableFile = (error, movedTo) => reports.Add((error, movedTo));
+
+        AppSettings loaded;
+        using (new FileStream(SettingsPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            loaded = store.Load();
+
+        Assert.Equal(AppSettings.Defaults, loaded);
+        Assert.Equal(before, File.ReadAllBytes(SettingsPath));
+        Assert.False(File.Exists(SettingsPath + ".bad"));
+        Assert.True(store.Exists); // so the first-run import (only when the file is missing) does not overwrite it
+        var report = Assert.Single(reports);
+        Assert.Null(report.MovedTo);
+        Assert.IsAssignableFrom<IOException>(report.Error);
+    }
+
+    [Fact]
+    public void Load_NeverThrows_EvenWhenTheUnreadableFileHandlerThrows()
+    {
+        File.WriteAllText(SettingsPath, "{ broken");
+        var store = Store();
+        store.OnUnreadableFile = (_, _) => throw new InvalidOperationException("handler failed");
+
+        Assert.Equal(AppSettings.Defaults, store.Load());
+        Assert.True(File.Exists(SettingsPath + ".bad"));
+    }
+
+    [Fact]
+    public void Load_AKeyThatCannotBeUnprotected_IsReported()
+    {
+        Store().Save(Changed);
+        var reports = new List<Exception>();
+        var store = Store(new ForeignProtector());
+        store.OnUndecryptableKey = reports.Add;
+
+        store.Load();
+
+        Assert.IsType<FormatException>(Assert.Single(reports));
+    }
+
+    [Fact]
+    public void Load_NeverThrows_EvenWhenTheUndecryptableKeyHandlerThrows()
+    {
+        Store().Save(Changed);
+        var store = Store(new ForeignProtector());
+        store.OnUndecryptableKey = _ => throw new InvalidOperationException("handler failed");
+
+        Assert.Equal(Changed with { SteamGridDbApiKey = "" }, store.Load());
+    }
+
+    [Fact]
+    public void Save_AfterLoadingAKeyThatCannotBeUnprotected_KeepsTheStoredKey()
+    {
+        Store().Save(Changed);
+        var original = SavedJson()["steamGridDbApiKeyProtected"]!.GetValue<string>();
+        var store = Store(new ForeignProtector());
+
+        var loaded = store.Load();
+        store.Save(loaded with { Seconds = 7 });
+
+        Assert.Equal(original, SavedJson()["steamGridDbApiKeyProtected"]!.GetValue<string>());
+        Assert.Equal(7, SavedJson()["seconds"]!.GetValue<int>());
+        Assert.Equal(Key, Store().Load().SteamGridDbApiKey); // still readable where it was protected
+    }
+
+    [Fact]
+    public void Save_AfterLoadingAKeyThatCannotBeUnprotected_ANewKeyReplacesIt()
+    {
+        Store().Save(Changed);
+        var store = Store(new ForeignProtector());
+
+        store.Save(store.Load() with { SteamGridDbApiKey = "new-key" });
+
+        Assert.Equal("new-key", Store().Load().SteamGridDbApiKey);
+    }
+
+    // R32: Settings offers 0-9 seconds and a launch needs at least 1, so a hand-edited value cannot crash Settings.
+    [Theory]
+    [InlineData(-5, 1)]
+    [InlineData(0, 1)]
+    [InlineData(9, 9)]
+    [InlineData(500, 9)]
+    public void Load_Seconds_IsClampedToTheRangeSettingsOffers(int stored, int loaded)
+    {
+        File.WriteAllText(SettingsPath, $$"""{ "seconds": {{stored}} }""");
+
+        Assert.Equal(loaded, Store().Load().Seconds);
+    }
+
     /// <summary>Reversible, and the result never contains the plain text.</summary>
     private sealed class FakeProtector : ISecretProtector
     {
@@ -234,5 +330,13 @@ public sealed class SettingsStoreTests : IDisposable
         public string Protect(string plain) => throw new InvalidOperationException("cannot protect");
 
         public string Unprotect(string protectedText) => throw new InvalidOperationException("cannot unprotect");
+    }
+
+    /// <summary>Protects like <see cref="FakeProtector"/>, but cannot unprotect: another user's or machine's DPAPI.</summary>
+    private sealed class ForeignProtector : ISecretProtector
+    {
+        public string Protect(string plain) => new FakeProtector().Protect(plain);
+
+        public string Unprotect(string protectedText) => throw new FormatException("protected for someone else");
     }
 }

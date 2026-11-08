@@ -50,4 +50,16 @@ public class AppSettingsTests
         Assert.DoesNotContain("secret-key-123", text);
         Assert.Contains("Seconds", text);
     }
+
+    [Theory]
+    [InlineData(-3, 1)]
+    [InlineData(0, 1)]
+    [InlineData(1, 1)]
+    [InlineData(9, 9)]
+    [InlineData(10, 9)]
+    public void Seconds_IsClampedToOneToNine(int value, int expected)
+    {
+        Assert.Equal(expected, new AppSettings { Seconds = value }.Seconds);
+        Assert.Equal(expected, (AppSettings.Defaults with { Seconds = value }).Seconds);
+    }
 }

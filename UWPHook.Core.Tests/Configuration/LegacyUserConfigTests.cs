@@ -113,4 +113,11 @@ public class LegacyUserConfigTests
     [Fact]
     public void TryParse_AUserConfigWithoutUwpHookSettings_GivesTheDefaults() =>
         Assert.Equal(AppSettings.Defaults, LegacyUserConfig.TryParse("<configuration><userSettings /></configuration>"));
+
+    [Theory]
+    [InlineData("-2", 1)]
+    [InlineData("0", 1)]
+    [InlineData("99", 9)]
+    public void TryParse_Seconds_IsClampedToTheRangeSettingsOffers(string stored, int seconds) =>
+        Assert.Equal(seconds, Parse(UserConfig(Setting("Seconds", stored))).Seconds);
 }
