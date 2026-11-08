@@ -4,6 +4,7 @@ namespace UWPHook.Core.Scripting;
 public static class PowerShellScript
 {
     private const string OutString = " | Out-String";
+    private const string StopOnErrors = "$ErrorActionPreference = 'Stop'";
     private static readonly char[] TrailingNoise = [';', ' ', '\t', '\r', '\n'];
 
     /// <summary>
@@ -11,4 +12,10 @@ public static class PowerShellScript
     /// (for example <c>$aumidList;</c> becomes <c>$aumidList | Out-String</c>).
     /// </summary>
     public static string WithOutString(string script) => script.TrimEnd(TrailingNoise) + OutString;
+
+    /// <summary>
+    /// The script as it is run: cmdlet errors stop it (so they end in a non-zero exit code instead of only
+    /// a line on stderr), and its last statement is piped into <c>Out-String</c>.
+    /// </summary>
+    public static string Prepare(string script) => StopOnErrors + Environment.NewLine + WithOutString(script);
 }
