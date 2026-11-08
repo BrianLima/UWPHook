@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Game configVersion="1">
+  <Identity Name="Microsoft.Chelan" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" Version="1.3385.0.0" />
+  <ExecutableList>
+    <Executable Name="mcclauncher.exe" TargetDeviceFamily="PC" Id="Game" />
+    <Executable Name="MCC\Binaries\Win64\MCCWinStore-Win64-Shipping.exe" TargetDeviceFamily="PC" Id="GameNoAC" />
+  </ExecutableList>
+  <ShellVisuals DefaultDisplayName="Halo: The Master Chief Collection"
+                PublisherDisplayName="Xbox Game Studios"
+                Square150x150Logo="Logo.png"
+                Square44x44Logo="SmallLogo.png"
+                Description="Halo: The Master Chief Collection"
+                BackgroundColor="#000000" />
+</Game>

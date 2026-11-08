@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap uap10 rescap">
+  <Identity Name="Fabrikam.StarHarbor" Publisher="CN=Fabrikam" Version="1.0.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Star Harbor</DisplayName>
+    <PublisherDisplayName>Fabrikam</PublisherDisplayName>
+    <Logo>StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="Game" Executable="GameLaunchHelper.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Star Harbor"
+                          Description="Star Harbor"
+                          BackgroundColor="#000000"
+                          Square150x150Logo="GraphicsLogo.png"
+                          Square44x44Logo="SmallLogo.png" />
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
