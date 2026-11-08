@@ -304,6 +304,19 @@ The interfaces are fixed here so that later tasks agree. Each task gets the same
 - Tests: Task 10 ViewModel tests stay green.
 - *Manual (Win10 + Win11):* light/dark follow the system, and there are no missing-resource exceptions.
 
+### Task 13: Platform capability gating + zero PowerShell (API audit, 2026-11-08)
+Audit result: no API UWPHook uses is deprecated on Windows 11. `IApplicationActivationManager`, `PackageManager.FindPackagesForUser` and `AppListEntry` are all current. GetAUMID is already pure C# (Task 8b). PowerShell remains only for `Set-WinUILanguageOverride`, and Microsoft documents that cmdlet as needing a sign-out to take effect, so a per-launch language switch cannot work.
+- Core: add `PlatformCapabilities`, a record of feature flags computed from an `IOsVersion` seam, with unit tests for 1809, 1903, 2004 and 11. App code asks the capability, never the build number.
+- Package paths: when the OS is 18362 or later (`OperatingSystem.IsWindowsVersionAtLeast(10,0,18362)`), prefer `Package.EffectiveLocation` over `InstalledLocation`. It returns the mutable/ModifiableWindowsApps folder for moddable games. Do this in `PackageManagerCatalog` (exe resolution) and in `PackageProcessWatcher` (image-path fallback). Also add the XboxGames flat-install root to the fallback test cases.
+- `ComActivator`: create `ApplicationActivationManager` with `CoCreateInstance(..., CLSCTX_LOCAL_SERVER, ...)`, as the docs recommend for a process spawned only to launch an app.
+- Language override (decision pending, default = remove):
+  - Remove the "change language" setting and the per-launch override, along with `ScriptManager`, `ScriptManagerTests` and the PowerShell dependency.
+  - The 10b settings import drops the legacy keys.
+  - CHANGELOG: a "Removed" entry with the reason.
+  - This supersedes wave-2 item I1.
+- Gate any remaining OS-specific UI on `PlatformCapabilities` (hide, don't fail).
+- *Manual:* a moddable GDK game (in XboxGames) is tracked until exit, launch on Win10 1809 still works, and no `powershell.exe` is spawned at any point (Process Monitor).
+
 ---
 
 ## Phase 3 — Features (plan separately, in this order)
