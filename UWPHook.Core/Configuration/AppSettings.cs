@@ -17,8 +17,22 @@ public sealed record AppSettings
     /// <summary>The language for <see cref="ChangeLanguage"/>, e.g. "ja-JP"; empty means none chosen.</summary>
     public string TargetLanguage { get; init; } = "";
 
-    /// <summary>How often, in seconds, a launch checks whether the game still runs.</summary>
-    public int Seconds { get; init; } = 5;
+    /// <summary>The range Settings offers for <see cref="Seconds"/>; a launch needs at least 1.</summary>
+    public const int MinSeconds = 1;
+
+    public const int MaxSeconds = 9;
+
+    private readonly int seconds = 5;
+
+    /// <summary>
+    /// How often, in seconds, a launch checks whether the game still runs. Clamped to
+    /// <see cref="MinSeconds"/>..<see cref="MaxSeconds"/>, so a hand-edited value cannot break Settings.
+    /// </summary>
+    public int Seconds
+    {
+        get => seconds;
+        init => seconds = Math.Clamp(value, MinSeconds, MaxSeconds);
+    }
 
     /// <summary>Show a splash before the game starts, so Steam's stream catches up.</summary>
     public bool StreamMode { get; init; }

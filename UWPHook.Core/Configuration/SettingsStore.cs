@@ -7,7 +7,8 @@ namespace UWPHook.Core.Configuration;
 /// <summary>
 /// Reads and writes <see cref="AppSettings"/> as indented camelCase JSON. The SteamGridDB API key is
 /// written only protected (<c>steamGridDbApiKeyProtected</c>). Loading never throws: a missing file gives
-/// the defaults, and an unreadable one is moved aside (<c>settings.json.bad</c>) and gives the defaults too.
+/// the defaults, a corrupt one is moved aside (<c>settings.json.bad</c>) and gives the defaults too, and one
+/// that cannot be read right now is left alone and gives the defaults for this run.
 /// </summary>
 public sealed class SettingsStore(string path, ISecretProtector protector)
 {
@@ -21,23 +22,48 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false) },
     };
 
-    /// <summary>Called when the file could not be read, with where it was moved (null if moving it failed too).</summary>
+    /// <summary>
+    /// Called when the file could not be used, with where it was moved: a path for a corrupt file, null for
+    /// one that could not be read (locked, access denied), which is left untouched.
+    /// </summary>
     public Action<Exception, string?>? OnUnreadableFile { get; set; }
+
+    /// <summary>
+    /// Called when the stored API key cannot be decrypted (it was protected for another Windows user or machine).
+    /// The key loads as empty, and saving keeps the stored key until a new one is saved.
+    /// </summary>
+    public Action<Exception>? OnUndecryptableKey { get; set; }
 
     public bool Exists => File.Exists(path);
 
+    // The protected key from the last Load that could not be decrypted, written back by Save while the key is empty.
+    private string? undecryptableKey;
+
+    /// <summary>Never throws, also when a handler throws.</summary>
     public AppSettings Load()
     {
         if (!Exists) return AppSettings.Defaults;
 
+        string text;
         try
         {
-            return Parse(File.ReadAllText(path));
+            text = File.ReadAllText(path);
         }
-        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            var movedTo = MoveAside(); // not inside ?.Invoke(...): its arguments only run when there is a handler
-            OnUnreadableFile?.Invoke(e, movedTo);
+            // Not corrupt, just not readable now: keep it for the next run.
+            Notify(() => OnUnreadableFile?.Invoke(e, null));
+            return AppSettings.Defaults;
+        }
+
+        try
+        {
+            return Parse(text);
+        }
+        catch (Exception e) when (e is JsonException or InvalidOperationException)
+        {
+            var movedTo = MoveAside();
+            Notify(() => OnUnreadableFile?.Invoke(e, movedTo));
             return AppSettings.Defaults;
         }
     }
@@ -53,6 +79,7 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         {
             File.WriteAllText(temp, text);
             File.Move(temp, path, overwrite: true);
+            if (settings.HasSteamGridDbApiKey) undecryptableKey = null;
         }
         catch
         {
@@ -63,6 +90,7 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
 
     private AppSettings Parse(string text)
     {
+        undecryptableKey = null;
         var document = JsonNode.Parse(text)?.AsObject() ?? throw new JsonException("settings.json is null");
         var settings = document.Deserialize<AppSettings>(Json) ?? throw new JsonException("settings.json is null");
         return settings with { SteamGridDbApiKey = UnprotectedKey(document[ProtectedKeyProperty]) };
@@ -78,8 +106,10 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         {
             return protector.Unprotect(protectedKey);
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            undecryptableKey = protectedKey;
+            Notify(() => OnUndecryptableKey?.Invoke(e));
             return "";
         }
     }
@@ -87,8 +117,23 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
     private string Serialize(AppSettings settings)
     {
         var document = JsonSerializer.SerializeToNode(settings, Json)!.AsObject();
-        document[ProtectedKeyProperty] = settings.HasSteamGridDbApiKey ? protector.Protect(settings.SteamGridDbApiKey) : "";
+        document[ProtectedKeyProperty] = settings.HasSteamGridDbApiKey
+            ? protector.Protect(settings.SteamGridDbApiKey)
+            : undecryptableKey ?? "";
         return document.ToJsonString(Json);
+    }
+
+    // A failing handler must not make Load throw; the caller's handler is where logging happens.
+    private static void Notify(Action notify)
+    {
+        try
+        {
+            notify();
+        }
+        catch (Exception)
+        {
+            // Ignored on purpose.
+        }
     }
 
     private static void TryDelete(string file)
