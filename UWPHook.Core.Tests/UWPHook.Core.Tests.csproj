@@ -29,6 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Configuration\Fixtures\*.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
   </ItemGroup>
 
