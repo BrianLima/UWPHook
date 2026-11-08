@@ -8,13 +8,13 @@ public static class CatalogEntryBuilder
     /// and a usable executable; other entries are skipped. The name falls back from the entry's to the manifest
     /// application's, the package's display name and finally the package identity name. AUMIDs are unique (case-insensitive).
     /// </summary>
-    public static IEnumerable<XboxApp> Build(PackageSnapshot package, Func<string, bool> fileExists)
+    public static IEnumerable<XboxApp> Build(PackageSnapshot package)
     {
         IReadOnlyList<ManifestApplication> applications =
             package.ManifestXml is null ? [] : AppxManifest.ReadApplications(package.ManifestXml);
 
         return package.Entries
-            .Select(entry => TryBuild(package, entry, applications, fileExists))
+            .Select(entry => TryBuild(package, entry, applications))
             .OfType<XboxApp>()
             .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase);
     }
@@ -22,8 +22,7 @@ public static class CatalogEntryBuilder
     private static XboxApp? TryBuild(
         PackageSnapshot package,
         AppListEntrySnapshot entry,
-        IReadOnlyList<ManifestApplication> applications,
-        Func<string, bool> fileExists)
+        IReadOnlyList<ManifestApplication> applications)
     {
         var application = MatchingApplication(entry.Aumid, applications);
         if (application is null)
@@ -39,7 +38,6 @@ public static class CatalogEntryBuilder
             package.FamilyName,
             name,
             executable,
-            LogoPath.Resolve(package.InstallLocation, application.Square150x150Logo, fileExists),
             package.InstallLocation,
             package.InstalledDate)
         {

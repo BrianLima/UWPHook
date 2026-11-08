@@ -9,7 +9,7 @@ public class XboxAppTests
     public void XboxApp_HasValueEquality()
     {
         var installed = new DateTimeOffset(2026, 11, 8, 12, 0, 0, TimeSpan.Zero);
-        XboxApp Make() => new("Pfn_abc!App", "Pfn_abc", "Game", "Game.exe", null, @"C:\XboxGames\Game", installed);
+        XboxApp Make() => new("Pfn_abc!App", "Pfn_abc", "Game", "Game.exe", @"C:\XboxGames\Game", installed);
 
         Assert.Equal(Make(), Make());
     }
@@ -17,7 +17,7 @@ public class XboxAppTests
     [Fact]
     public void IconFolder_DefaultsToTheInstallLocation() =>
         Assert.Equal(@"C:\XboxGames\Game",
-            new XboxApp("Pfn_abc!App", "Pfn_abc", "Game", "Game.exe", null, @"C:\XboxGames\Game", DateTimeOffset.UnixEpoch).IconFolder);
+            new XboxApp("Pfn_abc!App", "Pfn_abc", "Game", "Game.exe", @"C:\XboxGames\Game", DateTimeOffset.UnixEpoch).IconFolder);
 
     [Fact]
     public async Task IAppCatalog_CanBeImplementedByAFake()

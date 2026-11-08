@@ -42,6 +42,10 @@ namespace UWPHook.Infrastructure
             return merge;
         }
 
+        /// <summary>How many shortcuts UWPHook created for this user, without writing anything.</summary>
+        public int CountUwpHookShortcuts() =>
+            File.Exists(ShortcutsPath) ? Load().Entries.Count(UwpHookShortcut.IsCreatedByUwpHook) : 0;
+
         /// <summary>Removes the shortcuts UWPHook created; nothing is written when there are none.</summary>
         /// <returns>How many shortcuts were removed.</returns>
         public int RemoveUwpHookShortcuts()
@@ -110,7 +114,12 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        /// <summary>Copies the current file to the backup folder as <c>&lt;user id&gt;_&lt;timestamp&gt;_shortcuts.vdf</c>.</summary>
+        private string UserId => Path.GetFileName(_userPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
+        /// <summary>
+        /// Copies the current file to the backup folder as <c>&lt;user id&gt;_&lt;timestamp&gt;_shortcuts.vdf</c>,
+        /// then keeps only this user's newest <see cref="ShortcutsBackup.KeepPerUser"/> backups.
+        /// </summary>
         private void Backup()
         {
             if (!File.Exists(ShortcutsPath))
@@ -120,10 +129,21 @@ namespace UWPHook.Infrastructure
             }
 
             Directory.CreateDirectory(_backupFolder);
-            string userId = Path.GetFileName(_userPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            string backup = Path.Combine(_backupFolder, $"{userId}_{DateTime.Now:yyyyMMddHHmmssfff}_shortcuts.vdf");
+            string backup = Path.Combine(_backupFolder, ShortcutsBackup.FileName(UserId, DateTime.Now));
             File.Copy(ShortcutsPath, backup);
             Log.Debug("Backup created: {Backup}", backup);
+
+            PruneBackups();
+        }
+
+        /// <summary>A backup that can't be deleted is only logged: it must not stop the write it protects.</summary>
+        private void PruneBackups()
+        {
+            IEnumerable<string> names = Directory.GetFiles(_backupFolder).Select(path => Path.GetFileName(path));
+            foreach (string old in ShortcutsBackup.ToPrune(names, UserId))
+            {
+                DeleteQuietly(Path.Combine(_backupFolder, old));
+            }
         }
     }
 }
