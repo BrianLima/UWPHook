@@ -51,7 +51,7 @@ public class ShortcutsBackupTests
     {
         var names = new[] { other, Name("123", 0) };
 
-        Assert.Empty(ShortcutsBackup.ToPrune(names, "123", keep: 0).Where(name => name == other));
+        Assert.DoesNotContain(other, ShortcutsBackup.ToPrune(names, "123", keep: 0));
     }
 
     [Fact]
