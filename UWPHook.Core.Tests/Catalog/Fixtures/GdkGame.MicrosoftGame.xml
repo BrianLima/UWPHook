@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Game configVersion="1">
+  <Identity Name="Fabrikam.StarHarbor" Publisher="CN=Fabrikam" Version="1.0.0.0" />
+  <ExecutableList>
+    <Executable Name="StarHarbor.exe" TargetDeviceFamily="PC" Id="Game" />
+  </ExecutableList>
+  <ShellVisuals DefaultDisplayName="Star Harbor"
+                PublisherDisplayName="Fabrikam"
+                Square150x150Logo="GraphicsLogo.png"
+                Square44x44Logo="SmallLogo.png"
+                Description="Star Harbor"
+                BackgroundColor="#000000" />
+</Game>

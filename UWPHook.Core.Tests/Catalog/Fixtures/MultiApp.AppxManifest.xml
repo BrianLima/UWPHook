@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+         IgnorableNamespaces="uap uap3">
+  <Identity Name="Contoso.Suite" Publisher="CN=Contoso" Version="2.0.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Contoso Suite</DisplayName>
+    <PublisherDisplayName>Contoso</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="Writer" Executable="Writer.exe" EntryPoint="Contoso.Writer.App">
+      <uap:VisualElements DisplayName="Contoso Writer"
+                          Description="Writer"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Writer150.png"
+                          Square44x44Logo="Assets\Writer44.png" />
+    </Application>
+    <Application Id="Sheets" Executable="Sheets.exe" EntryPoint="Contoso.Sheets.App">
+      <uap3:VisualElements DisplayName="Contoso Sheets"
+                           Description="Sheets"
+                           BackgroundColor="transparent"
+                           Square150x150Logo="Assets\Sheets150.png"
+                           Square44x44Logo="Assets\Sheets44.png" />
+    </Application>
+  </Applications>
+</Package>
