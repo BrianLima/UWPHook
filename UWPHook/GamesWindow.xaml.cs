@@ -201,7 +201,7 @@ namespace UWPHook
             }
         }
 
-        private static readonly HttpClient imageClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        private static readonly System.Net.Http.HttpClient imageClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         /// <summary>
         /// Downloads the image at the url and saves its bytes untouched (animated images stay animated).
