@@ -64,7 +64,7 @@ Special thanks to @FusRoDah061 for implementing the base feature!
   ```
   dotnet build UWPHook.slnx
   ```
-- Publish a single-file `UWPHook.exe` (use `win-arm64` for ARM devices):
+- Publish a self-contained, single-file `UWPHook.exe` (use `win-arm64` for ARM devices). The output folder holds `UWPHook.exe` plus the native runtime DLLs it loads from the same folder; nothing is extracted to `%TEMP%`:
   ```
   dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64
   ```
