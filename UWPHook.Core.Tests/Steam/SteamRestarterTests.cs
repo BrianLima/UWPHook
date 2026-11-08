@@ -112,13 +112,31 @@ public class SteamRestarterTests
     }
 
     [Fact]
-    public async Task Stop_WhenExecutablePathUnavailable_ReturnsStillRunning_WithoutAskingSteamToExit()
+    public async Task Stop_WhenExecutablePathUnavailable_ReturnsExecutableUnknown_WithoutAskingSteamToExit()
     {
         var steam = new FakeSteam(runningPolls: int.MaxValue, exePath: null);
 
         var outcome = await Drive(NewRestarter(steam).StopAsync(TestContext.Current.CancellationToken));
 
-        Assert.Equal(StopOutcome.StillRunning, outcome);
+        // Not StillRunning ("did not close in time"): Steam was never asked to close.
+        Assert.Equal(StopOutcome.ExecutableUnknown, outcome);
+        Assert.Equal(0, steam.ExitRequests);
+    }
+
+    [Fact]
+    public async Task WhileStopped_WhenSteamsPathIsUnknown_DoesNotWrite()
+    {
+        var steam = new FakeSteam(runningPolls: int.MaxValue, exePath: null);
+        var wrote = false;
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            wrote = true;
+            return Task.CompletedTask;
+        }, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.ExecutableUnknown, outcome);
+        Assert.False(wrote, "Steam is still running, so writing shortcuts.vdf could lose the export");
         Assert.Equal(0, steam.ExitRequests);
     }
 
