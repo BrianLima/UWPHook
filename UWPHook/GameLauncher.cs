@@ -5,7 +5,6 @@ using System.Windows.Media;
 using Serilog;
 using UWPHook.Core.Launch;
 using UWPHook.Infrastructure;
-using UWPHook.Properties;
 
 namespace UWPHook
 {
@@ -32,7 +31,7 @@ namespace UWPHook
 
             try
             {
-                if (Settings.Default.StreamMode) await ShowStreamSplashAsync();
+                if (UserSettings.Current.StreamMode) await ShowStreamSplashAsync();
 
                 languageToRestore = LanguageToRestore();
                 if (languageToRestore is not null) OverrideLanguage();
@@ -84,7 +83,7 @@ namespace UWPHook
         /// Settings → "Seconds" is how often to check whether the game is still running.
         /// At least one second, so a 0 does not turn the check into a busy loop.
         /// </summary>
-        private static TimeSpan PollInterval() => TimeSpan.FromSeconds(Math.Max(1, Settings.Default.Seconds));
+        private static TimeSpan PollInterval() => TimeSpan.FromSeconds(Math.Max(1, UserSettings.Current.Seconds));
 
         /// <summary>
         /// The splash is the only window a launch may open. It renders in software, set before any window
@@ -112,13 +111,13 @@ namespace UWPHook
         /// Read before overriding, so a restore happens even if the override script fails half-way.
         /// </summary>
         private static string? LanguageToRestore() =>
-            Settings.Default.ChangeLanguage && !string.IsNullOrEmpty(Settings.Default.TargetLanguage)
+            UserSettings.Current.ChangeLanguage && !string.IsNullOrEmpty(UserSettings.Current.TargetLanguage)
                 ? CultureInfo.CurrentCulture.ToString()
                 : null;
 
         /// <summary>Some games follow the Windows UI language, so overriding it can change the game's language.</summary>
         private static void OverrideLanguage() =>
-            ScriptManager.RunScript("Set-WinUILanguageOverride " + Settings.Default.TargetLanguage);
+            ScriptManager.RunScript("Set-WinUILanguageOverride " + UserSettings.Current.TargetLanguage);
 
         /// <summary>Never throws: a failed restore is logged and must not keep UWPHook (and Steam's "Playing") alive.</summary>
         private static void RestoreLanguage(string? language)

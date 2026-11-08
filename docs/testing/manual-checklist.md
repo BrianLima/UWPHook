@@ -88,3 +88,12 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] With Settings → language override on: the game starts in the target language, and the Windows UI language is back to what it was after the game exits; with the override script failing (e.g. an invalid language), UWPHook still exits when the game ends.
 - [ ] A shortcut for a game that is no longer installed shows an error box and UWPHook exits; a shortcut whose launch options have no AUMID shows "Invalid launch arguments" and exits.
 - [ ] Opening UWPHook normally (no arguments, Start menu) shows the games list; closing it exits the process.
+
+## Task 10b
+- [ ] Upgrade from 2.14.x: with 2.14 settings changed from the defaults (language override on with a target language, stream mode on, seconds = 3, a SteamGridDB key, style "No Logo", log level DEBUG, custom tags), install 2.15 and open Settings: every value is kept. `%AppData%\Briano\UWPHook\settings.json` now exists, and the first-run SteamGridDB offer does not appear again.
+- [ ] Fresh install (no 2.14 user.config under `%LocalAppData%\Briano`): Settings shows the defaults (5 seconds, tags `READY TO PLAY,XBOX`, log level ERROR); the SteamGridDB offer appears once.
+- [ ] Enter a SteamGridDB key on the first-run offer, restart UWPHook: the key is still there (it is no longer wiped on first run).
+- [ ] `settings.json` does not contain the SteamGridDB key in plain text (only `steamGridDbApiKeyProtected`); export still downloads artwork with that key.
+- [ ] Hand-corrupt `settings.json` (e.g. delete the closing `}`), start UWPHook: it starts with the defaults, the old file is now `settings.json.bad`, and `application.log` has the error. A second corruption keeps `settings.json.bad` and adds a timestamped `settings.json.bad-…`.
+- [ ] Copy `settings.json` to another Windows user (or PC) and start UWPHook there: the other settings are kept and the SteamGridDB key is empty, no crash.
+- [ ] Change settings, update UWPHook to a newer build (Velopack update): settings are kept.
