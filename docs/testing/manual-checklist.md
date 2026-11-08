@@ -69,3 +69,9 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] The win-x64 `Portable.zip`, extracted to a folder with spaces (e.g. `D:\My Games\UWPHook`), runs; exported shortcuts point at the path of the exe that is actually running (`...\current\UWPHook.exe` for Velopack's zip, or the exe's own path for a plain unzipped build) and launch.
 - [ ] The win-arm64 Setup.exe installs and runs on an ARM64 PC (or note it untested).
 - [ ] Acceptance (brief Step 3) on Windows 11 25H2 and Windows 10 22H2: list apps, export, launch from Steam, re-export (no duplicates), stream mode.
+
+## Task 10a
+- [ ] With a valid SteamGridDB key, a game whose name contains `&` or `:` (e.g. "Halo: The Master Chief Collection", "Ori & the Will of the Wisps" style names) gets grid, wide grid, hero and logo artwork after export.
+- [ ] With an invalid SteamGridDB key, export shows "Your SteamGridDB API key was rejected; artwork was skipped. Check it in Settings." once (not once per game), the shortcut is still added to Steam, and the key is still in Settings afterwards; `application.log` has the warning.
+- [ ] Changing the SteamGridDB key in Settings and exporting again (without restarting UWPHook) uses the new key.
+- [ ] Style "no_logo" in Settings returns no-logo grids (the stored value had a trailing space that is now trimmed).
