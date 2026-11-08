@@ -12,15 +12,22 @@ namespace UWPHook.Infrastructure
     /// Finds running processes of a package family: processes with that package identity, and
     /// unpackaged processes (GDK games) whose image lives under the package's install location.
     /// Processes it may not open (system, other users, elevated) are skipped silently.
-    /// Make one per game session: it caches the package's install location.
+    /// Make one per game session and use it from one thread at a time: it caches the package's
+    /// install location and reuses its buffers across polls.
     /// </summary>
     internal sealed class PackageProcessWatcher : IPackageProcessWatcher
     {
         private const uint ProcessQueryLimitedInformation = 0x1000;
         private const int ErrorSuccess = 0;
+        private const int ErrorInsufficientBuffer = 122;
         // PACKAGE_FAMILY_NAME_MAX_LENGTH is 64 + 1 + 13; leave room for the terminator.
         private const int FamilyNameCapacity = 128;
-        private const int ImagePathCapacity = 32768;
+        // Most image paths fit in MAX_PATH; grow (up to the longest NT path) only when one does not.
+        private const int InitialImagePathCapacity = 1024;
+        private const int MaxImagePathCapacity = 32768;
+
+        private readonly char[] familyNameBuffer = new char[FamilyNameCapacity];
+        private char[] imagePathBuffer = new char[InitialImagePathCapacity];
 
         private readonly Dictionary<string, IReadOnlyList<string>> installLocations = new(StringComparer.OrdinalIgnoreCase);
 
@@ -38,7 +45,7 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private static bool BelongsTo(int processId, string packageFamilyName, IReadOnlyList<string> locations)
+        private bool BelongsTo(int processId, string packageFamilyName, IReadOnlyList<string> locations)
         {
             using var handle = OpenProcess(ProcessQueryLimitedInformation, false, processId);
             if (handle.IsInvalid) return false; // access denied, or it has already exited
@@ -47,19 +54,26 @@ namespace UWPHook.Infrastructure
                 || (locations.Count > 0 && IsUnderAny(ImagePathOf(handle), locations));
         }
 
-        private static string? FamilyNameOf(SafeProcessHandle handle)
+        private string? FamilyNameOf(SafeProcessHandle handle)
         {
-            var buffer = new char[FamilyNameCapacity];
-            var length = (uint)buffer.Length;
-            if (GetPackageFamilyName(handle, ref length, buffer) != ErrorSuccess || length == 0) return null;
-            return new string(buffer, 0, (int)length - 1); // length counts the terminator
+            var length = (uint)familyNameBuffer.Length;
+            if (GetPackageFamilyName(handle, ref length, familyNameBuffer) != ErrorSuccess || length == 0) return null;
+            return new string(familyNameBuffer, 0, (int)length - 1); // length counts the terminator
         }
 
-        private static string? ImagePathOf(SafeProcessHandle handle)
+        private string? ImagePathOf(SafeProcessHandle handle)
         {
-            var buffer = new char[ImagePathCapacity];
-            var length = (uint)buffer.Length;
-            return QueryFullProcessImageName(handle, 0, buffer, ref length) ? new string(buffer, 0, (int)length) : null;
+            while (true)
+            {
+                var length = (uint)imagePathBuffer.Length;
+                if (QueryFullProcessImageName(handle, 0, imagePathBuffer, ref length))
+                    return new string(imagePathBuffer, 0, (int)length);
+
+                if (Marshal.GetLastPInvokeError() != ErrorInsufficientBuffer || imagePathBuffer.Length >= MaxImagePathCapacity)
+                    return null;
+
+                imagePathBuffer = new char[Math.Min(imagePathBuffer.Length * 4, MaxImagePathCapacity)];
+            }
         }
 
         private static bool IsUnderAny(string? imagePath, IReadOnlyList<string> locations) =>

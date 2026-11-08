@@ -11,4 +11,10 @@ public enum SessionOutcome
 
     /// <summary>The session was cancelled before the game ended.</summary>
     Cancelled,
+
+    /// <summary>
+    /// Looking for the package's processes failed <see cref="GameSession.MaxConsecutiveWatcherFailures"/> times in a row,
+    /// so the session gave up rather than keep Steam "Playing" forever.
+    /// </summary>
+    WatcherFailed,
 }

@@ -37,9 +37,11 @@ namespace UWPHook
                 languageToRestore = LanguageToRestore();
                 if (languageToRestore is not null) OverrideLanguage();
 
-                var outcome = await new GameSession(new ComActivator(), new PackageProcessWatcher(), TimeProvider.System)
-                    .RunAsync(request, PollInterval(), LauncherGrace);
-                Log.Information("Session for {Aumid} finished: {Outcome}", request.Aumid, outcome);
+                var session = new GameSession(new ComActivator(), new PackageProcessWatcher(), TimeProvider.System)
+                {
+                    OnWatcherError = e => Log.Warning(e, "Looking for processes of {FamilyName} failed", request.PackageFamilyName),
+                };
+                LogOutcome(request, await session.RunAsync(request, PollInterval(), LauncherGrace));
             }
             catch (Exception e)
             {
@@ -49,6 +51,25 @@ namespace UWPHook
             finally
             {
                 RestoreLanguage(languageToRestore);
+            }
+        }
+
+        private static void LogOutcome(LaunchRequest request, SessionOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case SessionOutcome.NeverStarted:
+                    // Warning, above the normal Information outcome: a game that never ran is worth noticing.
+                    Log.Warning("No process of {FamilyName} was seen after launching {Aumid}; the game may have failed to start",
+                        request.PackageFamilyName, request.Aumid);
+                    break;
+                case SessionOutcome.WatcherFailed:
+                    Log.Error("Gave up watching {Aumid} ({FamilyName}): looking for its processes failed {Count} times in a row",
+                        request.Aumid, request.PackageFamilyName, GameSession.MaxConsecutiveWatcherFailures);
+                    break;
+                default:
+                    Log.Information("Session for {Aumid} finished: {Outcome}", request.Aumid, outcome);
+                    break;
             }
         }
 

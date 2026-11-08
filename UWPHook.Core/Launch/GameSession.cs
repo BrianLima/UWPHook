@@ -8,6 +8,15 @@ namespace UWPHook.Core.Launch;
 /// </summary>
 public sealed class GameSession(IAppActivator activator, IPackageProcessWatcher watcher, TimeProvider time)
 {
+    /// <summary>After this many failed looks in a row the session ends with <see cref="SessionOutcome.WatcherFailed"/>.</summary>
+    public const int MaxConsecutiveWatcherFailures = 5;
+
+    /// <summary>
+    /// Told about each exception from the watcher. One failed look counts as "still alive", so a
+    /// transient error does not end a running game's session. Core has no logger: the app logs here.
+    /// </summary>
+    public Action<Exception> OnWatcherError { get; init; } = _ => { };
+
     /// <summary>Activates <paramref name="request"/> and waits until its package has had no process for <paramref name="grace"/>.</summary>
     /// <param name="poll">How often to look for the package's processes.</param>
     /// <param name="grace">How long the package may have no process before the session ends.</param>
@@ -32,20 +41,46 @@ public sealed class GameSession(IAppActivator activator, IPackageProcessWatcher 
     {
         var lastSeenAlive = time.GetTimestamp();
         var everSeenAlive = false;
+        var consecutiveFailures = 0;
 
         while (true)
         {
-            if (watcher.AnyAlive(packageFamilyName))
+            switch (Look(packageFamilyName))
             {
-                lastSeenAlive = time.GetTimestamp();
-                everSeenAlive = true;
-            }
-            else if (time.GetElapsedTime(lastSeenAlive) >= grace)
-            {
-                return everSeenAlive ? SessionOutcome.Ended : SessionOutcome.NeverStarted;
+                case Sighting.Alive:
+                    consecutiveFailures = 0;
+                    everSeenAlive = true;
+                    lastSeenAlive = time.GetTimestamp();
+                    break;
+
+                case Sighting.Failed:
+                    if (++consecutiveFailures >= MaxConsecutiveWatcherFailures) return SessionOutcome.WatcherFailed;
+                    lastSeenAlive = time.GetTimestamp(); // benefit of the doubt: don't end a game on a bad look
+                    break;
+
+                case Sighting.Gone:
+                    consecutiveFailures = 0;
+                    if (time.GetElapsedTime(lastSeenAlive) >= grace)
+                        return everSeenAlive ? SessionOutcome.Ended : SessionOutcome.NeverStarted;
+                    break;
             }
 
             await Task.Delay(poll, time, ct).ConfigureAwait(false);
         }
     }
+
+    private Sighting Look(string packageFamilyName)
+    {
+        try
+        {
+            return watcher.AnyAlive(packageFamilyName) ? Sighting.Alive : Sighting.Gone;
+        }
+        catch (Exception e)
+        {
+            OnWatcherError(e);
+            return Sighting.Failed;
+        }
+    }
+
+    private enum Sighting { Alive, Gone, Failed }
 }

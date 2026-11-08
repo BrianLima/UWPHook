@@ -20,16 +20,31 @@ namespace UWPHook
             TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
             AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
 
-            base.OnStartup(e);
-            AppLog.Configure();
-
+            // Decided before anything else can fail: a launch from Steam has no window to close, so it
+            // must shut down explicitly, also when startup itself throws.
             var args = Environment.GetCommandLineArgs();
-            if (LaunchRequest.TryParse(args, out var request))
-                RunGameSession(request!);
-            else if (HasLaunchArguments(args))
-                ExitAfter(() => GameLauncher.ReportInvalidArguments(args));
-            else
-                ShowGamesWindow();
+            var isLaunch = HasLaunchArguments(args);
+            if (isLaunch) ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            try
+            {
+                base.OnStartup(e);
+                AppLog.Configure();
+
+                if (LaunchRequest.TryParse(args, out var request))
+                    RunGameSession(request!);
+                else if (isLaunch)
+                    ExitAfter(() => GameLauncher.ReportInvalidArguments(args));
+                else
+                    ShowGamesWindow();
+            }
+            catch (Exception ex)
+            {
+                // No window was shown (or none ever will be in a launch), so nothing would ever end
+                // the process: report and exit.
+                ErrorReporter.Report(ex, UnexpectedError);
+                Shutdown();
+            }
         }
 
         /// <summary>
@@ -38,7 +53,6 @@ namespace UWPHook
         /// </summary>
         private async void RunGameSession(LaunchRequest request)
         {
-            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             try
             {
                 await GameLauncher.RunAsync(request);
@@ -58,7 +72,6 @@ namespace UWPHook
 
         private void ExitAfter(Action action)
         {
-            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             try
             {
                 action();
