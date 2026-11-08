@@ -36,8 +36,7 @@ public class ArtworkFileNamesTests
 {
     [Fact]
     public void NamesFor_ListsTheBaseNameWithEverySupportedExtension_PngFirst() =>
-        Assert.Equal(
-            ["appid_logo.png", "appid_logo.jpg", "appid_logo.jpeg", "appid_logo.webp"],
+        Assert.Equal(new[] { "appid_logo.png", "appid_logo.jpg", "appid_logo.jpeg", "appid_logo.webp" },
             ArtworkFile.NamesFor("appid_logo"));
 
     [Theory]
@@ -50,11 +49,11 @@ public class ArtworkFileNamesTests
 
     [Fact]
     public void SiblingNames_MatchesTheOwnExtensionCaseInsensitively() =>
-        Assert.Equal(["123.jpg", "123.jpeg", "123.webp"], ArtworkFile.SiblingNames("123.PNG"));
+        Assert.Equal(new[] { "123.jpg", "123.jpeg", "123.webp" }, ArtworkFile.SiblingNames("123.PNG"));
 
     [Fact]
     public void SiblingNames_OnlyStripsTheLastExtension() =>
-        Assert.Equal(["a.b.png", "a.b.jpeg", "a.b.webp"], ArtworkFile.SiblingNames("a.b.jpg"));
+        Assert.Equal(new[] { "a.b.png", "a.b.jpeg", "a.b.webp" }, ArtworkFile.SiblingNames("a.b.jpg"));
 
     [Fact]
     public void SiblingNames_NeverIncludeOtherArtTypes()
