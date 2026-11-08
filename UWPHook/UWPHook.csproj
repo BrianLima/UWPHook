@@ -33,7 +33,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\GetAUMIDScript.ps1" />
 		<EmbeddedResource Include="Resources\KnownApps.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</EmbeddedResource>

@@ -59,15 +59,5 @@ namespace UWPHook.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        public static byte[] GetAUMIDScript {
-            get {
-                object obj = ResourceManager.GetObject("GetAUMIDScript", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }
