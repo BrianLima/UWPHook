@@ -17,7 +17,8 @@ using System.Windows.Shapes;
 namespace UWPHook
 {
     /// <summary>
-    /// Interaction logic for FullScreenLauncher.xaml
+    /// Stream mode's splash: the only window a launch from Steam opens, shown while Steam's stream
+    /// catches up. <see cref="GameLauncher"/> switches WPF to software rendering before showing it.
     /// </summary>
     public partial class FullScreenLauncher : Window
     {
@@ -39,7 +40,8 @@ namespace UWPHook
 
         private void Chip2_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
+            // .NET does not open URLs through the shell unless asked to.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ") { UseShellExecute = true });
         }
 
         string GetLauncherText()

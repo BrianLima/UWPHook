@@ -54,8 +54,6 @@
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.Sinks.Console" />
 		<PackageReference Include="Serilog.Sinks.File" />
-		<!-- WMI process lookup in AppManager (it used to come in through the PowerShell SDK). -->
-		<PackageReference Include="System.Management" />
 		<!-- Installer and updates (per-user install under %LocalAppData%\UWPHook). -->
 		<PackageReference Include="Velopack" />
 	</ItemGroup>

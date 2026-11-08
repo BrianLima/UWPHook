@@ -69,3 +69,15 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] The win-x64 `Portable.zip`, extracted to a folder with spaces (e.g. `D:\My Games\UWPHook`), runs; exported shortcuts point at the path of the exe that is actually running (`...\current\UWPHook.exe` for Velopack's zip, or the exe's own path for a plain unzipped build) and launch.
 - [ ] The win-arm64 Setup.exe installs and runs on an ARM64 PC (or note it untested).
 - [ ] Acceptance (brief Step 3) on Windows 11 25H2 and Windows 10 22H2: list apps, export, launch from Steam, re-export (no duplicates), stream mode.
+
+## Task 11
+- [ ] Halo MCC (its launcher exits): Steam shows "Playing" until the game itself closes, then UWPHook exits within about 10 s plus the check interval; `application.log` has `Session for ... finished: Ended`.
+- [ ] Forza Horizon 5 is tracked for the whole session (Steam playtime matches how long you played).
+- [ ] A game launched from Steam opens no UWPHook window with stream mode off (nothing in the taskbar or Alt+Tab, `UWPHook.exe` still in Task Manager while the game runs).
+- [ ] Steam overlay (Shift+Tab) works in a game launched through UWPHook, with stream mode on and off.
+- [ ] Steam Remote Play / in-home streaming of a UWPHook game, with stream mode on (the splash shows for about 10 s, then the game streams) and off.
+- [ ] On an NVIDIA Advanced Optimus laptop: launching a game through UWPHook no longer blocks the switch to dGPU-only mode (#165), with stream mode on and off.
+- [ ] Steam launch options (e.g. `-windowed` added after the executable in the shortcut's launch options) reach the game.
+- [ ] With Settings → language override on: the game starts in the target language, and the Windows UI language is back to what it was after the game exits; with the override script failing (e.g. an invalid language), UWPHook still exits when the game ends.
+- [ ] A shortcut for a game that is no longer installed shows an error box and UWPHook exits; a shortcut whose launch options have no AUMID shows "Invalid launch arguments" and exits.
+- [ ] Opening UWPHook normally (no arguments, Start menu) shows the games list; closing it exits the process.

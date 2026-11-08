@@ -15,8 +15,8 @@ namespace UWPHook
             // On a normal launch (or when not installed by Velopack) it returns at once.
             VelopackApp.Build().Run();
 
-            // Same as the generated Main. App.xaml's StartupUri opens GamesWindow, which reads the
-            // launch request from Environment.GetCommandLineArgs(), so args need no forwarding.
+            // Same as the generated Main. App.OnStartup reads the launch request from
+            // Environment.GetCommandLineArgs(), so args need no forwarding.
             var app = new App();
             app.InitializeComponent();
             app.Run();

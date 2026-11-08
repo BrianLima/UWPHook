@@ -1,12 +1,14 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using UWPHook.Core.Launch;
 using UWPHook.Infrastructure;
 
 namespace UWPHook
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Starts UWPHook: the global error handlers, the log, then either a game session for Steam
+    /// (no window) or the games list.
     /// </summary>
     public partial class App : Application
     {
@@ -19,7 +21,60 @@ namespace UWPHook
             AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
 
             base.OnStartup(e);
+            AppLog.Configure();
+
+            var args = Environment.GetCommandLineArgs();
+            if (LaunchRequest.TryParse(args, out var request))
+                RunGameSession(request!);
+            else if (HasLaunchArguments(args))
+                ExitAfter(() => GameLauncher.ReportInvalidArguments(args));
+            else
+                ShowGamesWindow();
         }
+
+        /// <summary>
+        /// Started by Steam: no main window (it would hold the GPU and get in the way of streaming
+        /// and NVIDIA Advanced Optimus). UWPHook exits when the game's session ends.
+        /// </summary>
+        private async void RunGameSession(LaunchRequest request)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            try
+            {
+                await GameLauncher.RunAsync(request);
+            }
+            finally
+            {
+                Shutdown();
+            }
+        }
+
+        private void ShowGamesWindow()
+        {
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            MainWindow = new GamesWindow();
+            MainWindow.Show();
+        }
+
+        private void ExitAfter(Action action)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                Shutdown();
+            }
+        }
+
+        /// <summary>
+        /// Arguments other than Velopack's own (--veloapp-*) mean Steam meant to launch something.
+        /// Index 0 is UWPHook itself.
+        /// </summary>
+        private static bool HasLaunchArguments(string[] args) =>
+            args.Skip(1).Any(arg => !arg.StartsWith("--veloapp", StringComparison.OrdinalIgnoreCase));
 
         private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
