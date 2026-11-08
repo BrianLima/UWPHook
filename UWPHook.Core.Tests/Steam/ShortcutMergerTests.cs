@@ -42,6 +42,20 @@ public class ShortcutMergerTests
     }
 
     [Fact]
+    public void Merge_LegacyEntryWithoutAppId_GetsSteamDerivedId()
+    {
+        // Older shortcuts.vdf files may lack the appid key; the parser then reads 0.
+        var existing = new ExistingShortcut(0, "Old name", "C:\\x y\\UWPHook.exe", Aumid + " game.exe");
+
+        var result = ShortcutMerger.Merge([existing], [Wanted("Game")]);
+
+        var merged = Assert.Single(result.Shortcuts);
+        Assert.Equal(SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute("C:\\x y\\UWPHook.exe", "Old name")), merged.AppId);
+        Assert.Equal(0, merged.ExistingIndex);
+        Assert.NotNull(merged.Spec);
+    }
+
+    [Fact]
     public void Merge_UpdatesQuotedEntry_EvenIfUserRenamed()
     {
         var existing = new ExistingShortcut(-456, "My renamed game", "\"C:\\Other Dir\\uwphook.EXE\"", "Pfn_abcdefghijklm!App game.exe");
