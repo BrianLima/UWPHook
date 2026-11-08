@@ -83,6 +83,19 @@ jobs:
             Write-Output "::notice title=publish $rid::$($files -join ', ')"
           }
 
+      # Smoke-test the release packaging (release.yml only runs on tags) without uploading it.
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version 1.2.161
+
+      - name: Pack with Velopack (smoke)
+        shell: pwsh
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $files = .github/scripts/pack-release.ps1 -Version $version
+          Write-Output "::notice title=velopack pack::$($files -join ', ')"
+
       - uses: actions/upload-artifact@v4
         with:
           name: UWPHook-win-x64
