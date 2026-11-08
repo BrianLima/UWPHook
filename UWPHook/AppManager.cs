@@ -82,6 +82,12 @@ namespace UWPHook
                 // Check only at launch if started by a launcher
                 if (!isLauncherProcess)
                 {
+                    if (String.IsNullOrEmpty(executablePath))
+                    {
+                        Log.Debug("initial PID is not running anymore and the shortcut names no executable, stopping");
+                        return false;
+                    }
+
                     Log.Debug("initial PID is not running anymore, checking other possible process runing before stop");
                     bool secondCheck = false;
                     do
@@ -90,10 +96,9 @@ namespace UWPHook
                         var processes = GetProcess();
                         foreach (var process in processes)
                         {
-                            string executableFile = executablePath.Contains('\\') ? executablePath.Substring(executablePath.LastIndexOf('\\') + 1) : executablePath;
-                            Log.Verbose("Process " + process.Value.Path + " contains " + executablePath + " ? : " + process.Value.Path.Contains(executablePath).ToString());
-                            Log.Verbose("Process " + process.Key + " contains " + executableFile + " ? : " + process.Key.Contains(executableFile).ToString());
-                            if (process.Value.Path.Contains(executablePath) || process.Key.Contains(executableFile))
+                            bool isGame = ProcessMatch.IsGameProcess(process.Value.Path, process.Key, executablePath);
+                            Log.Verbose("Process " + process.Key + " (" + process.Value.Path + ") is " + executablePath + " ? : " + isGame);
+                            if (isGame)
                             {
                                 int pid = process.Value.Pid;
                                 Log.Verbose($"Launcher opened child process ({runningProcessId}->{pid}), using new process as target");
