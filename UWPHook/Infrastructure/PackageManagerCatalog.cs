@@ -2,7 +2,6 @@ using System.IO;
 using Serilog;
 using UWPHook.Core.Catalog;
 using Windows.ApplicationModel;
-using Windows.ApplicationModel.Core;
 using Windows.Management.Deployment;
 
 namespace UWPHook.Infrastructure
@@ -58,30 +57,16 @@ namespace UWPHook.Infrastructure
             if (entries.Count == 0)
                 return null;
 
-            string installLocation = package.InstalledPath;
-            string familyName = package.Id.FamilyName;
-            string? manifestXml = await ReadIfExists(Path.Combine(installLocation, "AppxManifest.xml"), ct);
+            // InstalledLocation, not InstalledPath: InstalledPath needs Windows 10 2004 and the app supports 1809.
+            string installLocation = package.InstalledLocation.Path;
             return new PackageSnapshot(
-                familyName,
+                package.Id.FamilyName,
                 DisplayNameOf(package),
                 installLocation,
                 package.InstalledDate,
-                EntrySnapshots(familyName, entries, manifestXml),
-                manifestXml,
+                entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
+                await ReadIfExists(Path.Combine(installLocation, "AppxManifest.xml"), ct),
                 await ReadIfExists(Path.Combine(installLocation, "MicrosoftGame.config"), ct));
-        }
-
-        // AppListEntry.AppUserModelId only exists from Windows 10 1903. On 1809 the AUMIDs come from the manifest's
-        // application ids instead, without entry names (CatalogEntryBuilder then falls back to the manifest names).
-        private static IReadOnlyList<AppListEntrySnapshot> EntrySnapshots(
-            string familyName, IReadOnlyList<AppListEntry> entries, string? manifestXml)
-        {
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 18362))
-                return entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList();
-
-            return AppxManifest.ReadApplications(manifestXml ?? "")
-                .Select(application => new AppListEntrySnapshot(familyName + "!" + application.Id, null))
-                .ToList();
         }
 
         // Resolving a package's display name can fail on its own; the entry and manifest names may still work.
