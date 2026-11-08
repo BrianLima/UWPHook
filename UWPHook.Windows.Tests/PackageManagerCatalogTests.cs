@@ -1,3 +1,4 @@
+using System.IO;
 using UWPHook.Core.Catalog;
 using UWPHook.Infrastructure;
 using Xunit;
