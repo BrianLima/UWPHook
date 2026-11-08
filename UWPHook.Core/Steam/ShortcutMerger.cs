@@ -21,7 +21,8 @@ public sealed record MergeResult(IReadOnlyList<MergedShortcut> Shortcuts)
 /// <summary>
 /// Merges the shortcuts UWPHook wants into the existing ones in place: an existing UWPHook
 /// entry for the same AUMID is updated and keeps its appid (so Steam keeps its art and playtime),
-/// every other entry is kept as it is, and the rest are appended with a freshly computed appid.
+/// every other entry is kept as it is, and the rest are appended with a freshly computed appid that no
+/// other entry has.
 /// </summary>
 public static class ShortcutMerger
 {
@@ -51,9 +52,13 @@ public static class ShortcutMerger
             merged.Add(new MergedShortcut(shortcut.AppId, null, index));
         }
 
-        merged.AddRange(pending.Values
-            .Where(spec => !matchedAumids.Contains(spec.Aumid))
-            .Select(spec => new MergedShortcut(NewAppId(spec), spec, null)));
+        var usedIds = existing.Select(KeptAppId).ToHashSet();
+        foreach (var spec in pending.Values.Where(spec => !matchedAumids.Contains(spec.Aumid)))
+        {
+            var appId = NewAppId(spec, usedIds);
+            usedIds.Add(appId);
+            merged.Add(new MergedShortcut(appId, spec, null));
+        }
 
         return new MergeResult(merged) { UntouchedDuplicateIndexes = duplicates };
     }
@@ -80,6 +85,24 @@ public static class ShortcutMerger
             ? shortcut.AppId
             : SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(shortcut.Exe, shortcut.AppName));
 
-    private static int NewAppId(ShortcutSpec spec) =>
-        SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(spec.Exe, spec.AppName));
+    /// <summary>
+    /// Steam's own id for the spec (CRC of Exe + AppName), unless an existing entry or another new one already
+    /// has it. Every UWPHook shortcut has the same Exe, so two apps with the same name would otherwise share an
+    /// id, and with it their art and playtime. Then the AUMID salts the name (plus a counter, should that collide
+    /// too), which keeps the id deterministic and keeps the high bit Steam sets on shortcut ids.
+    /// </summary>
+    private static int NewAppId(ShortcutSpec spec, IReadOnlySet<int> usedIds)
+    {
+        var appId = IdOf(spec.Exe, spec.AppName);
+        for (var attempt = 0; usedIds.Contains(appId); attempt++)
+        {
+            var salt = attempt == 0 ? spec.Aumid : $"{spec.Aumid}\0{attempt}";
+            appId = IdOf(spec.Exe, spec.AppName + "\0" + salt);
+        }
+
+        return appId;
+    }
+
+    private static int IdOf(string exe, string appName) =>
+        SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(exe, appName));
 }

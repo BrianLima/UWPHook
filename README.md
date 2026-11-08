@@ -56,12 +56,13 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 - **"Value does not fall within the expected range", or the game doesn't start from Steam**
   - Older versions wrote Steam shortcuts without quotes, which broke when UWPHook lived in a folder with spaces in its name (for example `C:\Program Files\...`). Since 2.15, shortcuts are quoted and old shortcuts are understood too. Open UWPHook and export your games again to refresh them.
 - **My exported games don't show up in Steam**
-  - Steam only reads its shortcuts when it starts. UWPHook restarts Steam for you after an export; if Steam doesn't close within 15 seconds, UWPHook leaves it running and asks you to restart Steam yourself.
+  - Steam only reads its shortcuts when it starts, and may write its own copy when it exits. So when Steam is running, UWPHook closes it, writes the shortcuts, and starts it again. If Steam doesn't close within 15 seconds, UWPHook writes nothing and asks you to close Steam and export again.
+  - UWPHook writes to the Steam install the Steam client last ran from (`HKCU\Software\Valve\Steam\SteamPath`), and falls back to the installer's path. If you moved Steam, start it once so it records the new folder.
 - **The app list is empty or says "Error trying to get installed apps"**
-  - UWPHook asks Windows PowerShell (`powershell.exe`, built into Windows) for your installed apps. Make sure it isn't blocked by antivirus or group policy, then check `application.log` (see below) for the error.
+  - UWPHook lists your apps through Windows' own package manager (the apps that have a Start menu entry). Check `application.log` (see below) for the error; a package that can't be read is skipped and logged there.
 - **I have shortcuts from other application that broke when i used UWPHook**
   - Since 2.15, exporting only adds or updates UWPHook's own shortcuts and leaves every other shortcut as it was.
-  - Before every change, UWPHook backs up your `shortcuts.vdf` to `%AppData%\Briano\UWPHook\backups`. Each file is named `{userid}_{yyyyMMddHHmmss}_shortcuts.vdf`. To restore one, close Steam, copy it over `<Steam folder>\userdata\{userid}\config\shortcuts.vdf`, and start Steam again.
+  - Before every change, UWPHook backs up your `shortcuts.vdf` to `%AppData%\Briano\UWPHook\backups`. Each file is named `{userid}_{yyyyMMddHHmmssfff}_shortcuts.vdf`, and the newest 20 of each Steam account are kept. To restore one, close Steam, copy it over `<Steam folder>\userdata\{userid}\config\shortcuts.vdf`, and start Steam again.
   - Uninstalling UWPHook does not delete this folder, so your backups, logs and settings stay where they are.
 - **My question isn't listed here!**
   - Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can:

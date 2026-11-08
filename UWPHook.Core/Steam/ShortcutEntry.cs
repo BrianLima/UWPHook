@@ -21,7 +21,7 @@ internal static class ShortcutEntry
 
     /// <summary>The fields the merge needs; a missing key reads as 0 or "".</summary>
     public static ExistingShortcut Read(KVObject entry) =>
-        new(ReadInt(entry, AppId), ReadString(entry, AppName), ReadString(entry, Exe), ReadString(entry, LaunchOptions));
+        new(ReadAppId(entry), ReadString(entry, AppName), ReadString(entry, Exe), ReadString(entry, LaunchOptions));
 
     /// <summary>
     /// A copy of <paramref name="entry"/> with the spec's fields and <paramref name="appId"/> written over
@@ -99,8 +99,23 @@ internal static class ShortcutEntry
     private static string ReadString(KVObject entry, string key) =>
         TryFind(entry, key, out var value) ? (string?)value ?? "" : "";
 
-    private static int ReadInt(KVObject entry, string key) =>
-        TryFind(entry, key, out var value) ? (int)value : 0;
+    /// <summary>
+    /// The appid, leniently: another tool may have written it as a string, and one odd entry must not block
+    /// the export for the whole user. Only UWPHook's own entries use their appid, so an unreadable one reads as 0.
+    /// </summary>
+    private static int ReadAppId(KVObject entry)
+    {
+        if (!TryFind(entry, AppId, out var value)) return 0;
+
+        try
+        {
+            return (int)value;
+        }
+        catch (Exception e) when (e is FormatException or InvalidCastException or OverflowException or NotSupportedException)
+        {
+            return 0;
+        }
+    }
 
     private static bool TryFind(KVObject entry, string key, [MaybeNullWhen(false)] out KVObject value)
     {

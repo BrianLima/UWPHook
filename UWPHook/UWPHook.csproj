@@ -34,14 +34,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\KnownApps.json">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</EmbeddedResource>
+		<!-- Read from the assembly (AppManager), so no copy ships next to the exe. -->
+		<EmbeddedResource Include="Resources\KnownApps.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Resource Include="Resources\WhiteTransparent.png" />
-		<Resource Include="Resources\BlackTransparent.png" />
 		<Resource Include="Resources\briano.png" />
 		<Resource Include="Resources\hook2.ico" />
 		<Resource Include="Resources\square.png" />

@@ -9,15 +9,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 A stabilization release: the app list loads again, existing shortcuts launch again, and exporting no longer hangs or crashes.
 
 ### Added
+- Settings → "Remove UWPHook shortcuts" removes only the shortcuts UWPHook created, from every Steam account, after backing up `shortcuts.vdf`. Shortcuts from Steam and other tools are kept.
 - A per-user installer (`UWPHook-win-x64-Setup.exe`), built with [Velopack](https://velopack.io). It installs to `%LocalAppData%\UWPHook` without asking for administrator rights. A portable zip is still available.
 - Builds for ARM64 PCs (`win-arm64`) alongside x64.
 - A global error handler. Unexpected errors are written to `application.log` and shown in a message box, and the app stays open instead of closing silently.
 
 ### Changed
 - UWPHook now runs on .NET 10 as a self-contained single-file app. No separate .NET runtime install is needed.
-- App discovery runs the built-in Windows PowerShell 5.1 in a separate process instead of a bundled PowerShell 7. The app no longer changes your PowerShell execution policy.
+- App discovery uses Windows' package manager directly instead of a bundled PowerShell 7 script, so it no longer depends on PowerShell or the Appx module. The app no longer changes your PowerShell execution policy. The remaining PowerShell use (the language option) runs the built-in Windows PowerShell 5.1, and a failing command there is now reported as an error instead of being ignored.
 - Steam shortcuts of installed copies point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, a path that stays the same across updates, so updating UWPHook doesn't break or duplicate your shortcuts.
-- Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded.
+- Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded. Artwork is downloaded for at most 4 games at a time.
+- When Steam is running, export (and "Remove UWPHook shortcuts") now closes Steam, writes the shortcuts, and starts it again, instead of writing first and restarting afterwards. If Steam doesn't close within 15 seconds, nothing is written and UWPHook asks you to close Steam.
+- Only the newest 20 backups of `shortcuts.vdf` per Steam account are kept.
 - The "Change resolution" option was removed. It did not work on desktop Windows (#124), and it will return in 3.0.
 - The NSIS installer was replaced by the Velopack installer.
 
@@ -40,6 +43,15 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
   - Settings now live in `%AppData%\Briano\UWPHook\settings.json`, imported once from 2.14.
   - The SteamGridDB key is encrypted for your Windows user.
   - A damaged settings file is set aside as `settings.json.bad`, and UWPHook starts with the defaults.
+- An invalid SteamGridDB API key is no longer wiped: export says once that the key was rejected, skips artwork, and the key stays in Settings.
+- Game names with `&`, `:` or other special characters find their SteamGridDB artwork.
+- **Export no longer reports success when nothing was exported.** It says when no app is selected, when Steam or a Steam account was not found, and when writing failed for some or all accounts.
+- **Export uses the Steam install the Steam client runs from**, so a Steam moved to another drive gets the shortcuts (the installer's registry path can be stale).
+- Two apps with the same name (for example two editions of a game) get different Steam app ids, so they no longer share or overwrite each other's artwork.
+- With several Steam accounts, every account gets the same icon file, instead of a copy with an ever longer name that could fail past the 4th account.
+- Only real Steam account folders (numeric ids) get shortcuts; Steam's `0` folder and other folders in `userdata` are skipped.
+- A game whose executable has a space in its name is tracked correctly.
+- A non-Steam shortcut from another tool with an unusual app id no longer blocks the export for that Steam account.
 
 <!-- 8b/9+ entries added at merge -->
 

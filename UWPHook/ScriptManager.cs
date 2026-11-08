@@ -31,14 +31,17 @@ namespace UWPHook
         /// <summary>
         /// Runs the script and returns what it writes to standard output, as text.
         /// </summary>
-        /// <exception cref="ScriptFailedException">The script exited with a non-zero exit code.</exception>
+        /// <exception cref="ScriptFailedException">
+        /// The script exited with a non-zero exit code. Scripts run with <c>$ErrorActionPreference = 'Stop'</c>,
+        /// so a failing cmdlet counts too.
+        /// </exception>
         /// <exception cref="TimeoutException">The script did not finish in time; its process was killed.</exception>
         public static string RunScript(string scriptText, TimeSpan timeout)
         {
             string scriptPath = Path.Combine(Path.GetTempPath(), $"UWPHook_{Guid.NewGuid()}.ps1");
             try
             {
-                File.WriteAllText(scriptPath, Utf8Output + Environment.NewLine + PowerShellScript.WithOutString(scriptText), Utf8WithBom);
+                File.WriteAllText(scriptPath, Utf8Output + Environment.NewLine + PowerShellScript.Prepare(scriptText), Utf8WithBom);
                 return Run(scriptPath, timeout);
             }
             finally

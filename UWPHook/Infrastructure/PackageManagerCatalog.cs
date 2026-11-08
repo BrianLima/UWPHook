@@ -38,7 +38,7 @@ namespace UWPHook.Infrastructure
                 if (snapshot is null)
                     return [];
 
-                var apps = CatalogEntryBuilder.Build(snapshot, File.Exists).ToList();
+                var apps = CatalogEntryBuilder.Build(snapshot).ToList();
                 if (apps.Count == 0)
                     LogNoAppsBuilt(snapshot);
 

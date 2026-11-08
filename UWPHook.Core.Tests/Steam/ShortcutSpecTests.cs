@@ -32,4 +32,17 @@ public class ShortcutSpecTests
         Assert.Equal("C:\\icons\\halo.png", spec.Icon);
         Assert.Equal(new[] { "Xbox", "UWP" }, spec.Tags);
     }
+
+    [Fact]
+    public void ForApp_QuotesAnExecutableWithSpaces_SoTheLauncherGetsItAsOneArgument()
+    {
+        var spec = ShortcutSpec.ForApp("Game", "Contoso.Game_8wekyb3d8bbwe!App", "Bin\\Some Game.exe", UwpHookExe, "", []);
+
+        Assert.Equal("Contoso.Game_8wekyb3d8bbwe!App \"Bin\\Some Game.exe\"", spec.LaunchOptions);
+        Assert.Equal("Contoso.Game_8wekyb3d8bbwe!App", spec.Aumid);
+    }
+
+    [Fact]
+    public void ForApp_LeavesAnExecutableWithoutSpacesUnquoted() =>
+        Assert.EndsWith(" halo.exe", Spec().LaunchOptions);
 }

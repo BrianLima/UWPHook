@@ -405,4 +405,41 @@ public class ShortcutsFileTests
         Assert.Equal("shortcuts", root.Key);
         Assert.Equal(new[] { "0" }, root.Keys);
     }
+
+    [Theory]
+    [InlineData("not-a-number")]
+    [InlineData("")]
+    public void Load_ReadsANonNumericStringAppIdAsZero_InsteadOfThrowing(string appId)
+    {
+        // Another tool wrote appid as a string. Only UWPHook's own entries use the appid, so 0 is safe.
+        var bytes = BinaryVdf.Document("shortcuts", root => root
+            .Object("0", entry => entry
+                .String("appid", appId)
+                .String("AppName", "Odd tool")
+                .String("Exe", "\"C:\\odd.exe\"")
+                .String("LaunchOptions", ""))
+            .Object("1", UwpHookEntry));
+
+        var file = Load(bytes);
+
+        Assert.Equal(0, file.Entries[0].AppId);
+        Assert.Equal("Odd tool", file.Entries[0].AppName);
+        Assert.Equal(-1111, file.Entries[1].AppId);
+    }
+
+    [Fact]
+    public void Apply_KeepsAnEntryWithAStringAppIdByteIdentical()
+    {
+        var bytes = BinaryVdf.Document("shortcuts", root => root
+            .Object("0", entry => entry
+                .String("appid", "not-a-number")
+                .String("AppName", "Odd tool")
+                .String("Exe", "\"C:\\odd.exe\""))
+            .Object("1", UwpHookEntry));
+        var file = Load(bytes);
+
+        file.Apply(ShortcutMerger.Merge(file.Entries, [Spec]));
+
+        Assert.Equal(BinaryVdf.Parse(bytes)["0"].Flatten(), BinaryVdf.Parse(Save(file))["0"].Flatten());
+    }
 }

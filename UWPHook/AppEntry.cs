@@ -126,16 +126,6 @@ namespace UWPHook
             return result;
         }
 
-        public string isKnownApp()
-        {
-            if(AppManager.IsKnownApp(_aumid, out string name))
-            {
-                return name;
-            }
-
-            return "Name not found, double click here to edit";
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

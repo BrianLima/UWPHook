@@ -1,25 +1,74 @@
 namespace UWPHook.Core.Steam;
 
 /// <summary>
-/// Restarts Steam so it picks up new shortcuts, giving up after <c>timeout</c>
+/// Stops and starts Steam around changes to its files, giving up after <c>timeout</c>
 /// instead of waiting forever for Steam to exit.
 /// </summary>
 public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeSpan timeout, TimeSpan poll)
 {
-    public async Task<RestartOutcome> RestartAsync(CancellationToken ct = default)
-    {
-        if (!steam.IsRunning()) return RestartOutcome.NotRunning;
+    /// <summary>The steam.exe that <see cref="StopAsync"/> stopped and <see cref="Start"/> has not started yet.</summary>
+    private string? _stoppedExePath;
 
-        // Without a path we could shut Steam down but never bring it back, so don't touch it.
+    /// <summary>
+    /// Asks a running Steam to exit and waits until it has. Steam is only stopped when it can be started
+    /// again, so without a path to steam.exe it is left running.
+    /// </summary>
+    public async Task<StopOutcome> StopAsync(CancellationToken ct = default)
+    {
+        if (!steam.IsRunning()) return StopOutcome.NotRunning;
+
         var exePath = steam.ExecutablePath();
-        if (exePath is null) return RestartOutcome.TimedOut;
+        if (exePath is null) return StopOutcome.ExecutableUnknown;
 
         steam.RequestExit();
-        if (!await ExitedInTimeAsync(ct).ConfigureAwait(false)) return RestartOutcome.TimedOut;
+        if (!await ExitedInTimeAsync(ct).ConfigureAwait(false)) return StopOutcome.StillRunning;
 
-        steam.Start(exePath);
-        return RestartOutcome.Restarted;
+        _stoppedExePath = exePath;
+        return StopOutcome.Stopped;
     }
+
+    /// <summary>Starts Steam again after <see cref="StopAsync"/> stopped it; otherwise does nothing.</summary>
+    /// <returns>True when Steam was started.</returns>
+    public bool Start()
+    {
+        if (_stoppedExePath is not { } exePath) return false;
+
+        _stoppedExePath = null;
+        steam.Start(exePath);
+        return true;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="write"/> while Steam is closed: stops a running Steam, writes, and starts it again,
+    /// also when the write throws. Steam may write its own copy of its files when it exits, so when it is still
+    /// running (<see cref="StopOutcome.StillRunning"/> or <see cref="StopOutcome.ExecutableUnknown"/>) the write
+    /// is skipped rather than risked.
+    /// </summary>
+    public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, CancellationToken ct = default)
+    {
+        var outcome = await StopAsync(ct).ConfigureAwait(false);
+        if (outcome is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown) return outcome;
+
+        try
+        {
+            await write().ConfigureAwait(false);
+        }
+        finally
+        {
+            Start();
+        }
+
+        return outcome;
+    }
+
+    /// <summary>Stops and starts Steam, for callers that changed nothing it could overwrite on exit.</summary>
+    public async Task<RestartOutcome> RestartAsync(CancellationToken ct = default) =>
+        await StopAsync(ct).ConfigureAwait(false) switch
+        {
+            StopOutcome.NotRunning => RestartOutcome.NotRunning,
+            StopOutcome.Stopped when Start() => RestartOutcome.Restarted,
+            _ => RestartOutcome.TimedOut,
+        };
 
     private async Task<bool> ExitedInTimeAsync(CancellationToken ct)
     {

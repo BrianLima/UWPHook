@@ -40,25 +40,20 @@ namespace UWPHook
         }
 
         /// <summary>
-        /// Task responsible for triggering the export, blocks the UI, and shows a message
-        /// once the task is finished, unlocking the UI
+        /// Exports the selected apps with the UI locked, then shows what really happened
+        /// (see <see cref="ExportSummary"/>): a success message only when every Steam account was written.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             grid.IsEnabled = false;
             progressBar.Visibility = Visibility.Visible;
 
-            string? msg = null;
+            ExportSummary? summary = null;
 
             try
             {
-                await ExportGames();
-
-                msg = "Your apps were successfully exported!" + await RestartSteamAsync(
-                    notRunning: " They will show up the next time you start Steam.",
-                    timedOut: " Please restart Steam to see your games.");
+                summary = await ExportGames();
+                Log.Information("Export finished: {Summary}", summary);
             }
             catch (Exception exception)
             {
@@ -70,32 +65,30 @@ namespace UWPHook
                 progressBar.Visibility = Visibility.Collapsed;
             }
 
-            if (msg != null)
+            if (summary != null)
             {
-                MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(summary.Message, "UWPHook", MessageBoxButton.OK, ImageFor(summary.Severity));
             }
         }
 
-        /// <summary>
-        /// Restarts Steam if it is running, so it rereads shortcuts.vdf instead of writing its own copy back
-        /// on exit, and describes the outcome as a sentence to append to a message.
-        /// </summary>
-        /// <param name="notRunning">The sentence for when Steam wasn't running</param>
-        /// <param name="timedOut">The sentence for when Steam didn't exit in time</param>
-        internal static async Task<string> RestartSteamAsync(string notRunning, string timedOut)
+        private static MessageBoxImage ImageFor(MessageSeverity severity) => severity switch
         {
-            var restarter = new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
-                timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
-            var outcome = await restarter.RestartAsync();
-            Log.Information("Steam restart outcome: {Outcome}", outcome);
+            MessageSeverity.Error => MessageBoxImage.Error,
+            MessageSeverity.Warning => MessageBoxImage.Warning,
+            _ => MessageBoxImage.Information,
+        };
 
-            return outcome switch
-            {
-                RestartOutcome.Restarted => " Steam has been restarted.",
-                RestartOutcome.NotRunning => notRunning,
-                _ => timedOut,
-            };
-        }
+        /// <summary>
+        /// Stops and starts the Steam that <see cref="SteamManager"/> found. Steam may write its own copy of
+        /// shortcuts.vdf when it exits, so shortcuts are written while it is closed (stop, write, start), never
+        /// before a restart.
+        /// </summary>
+        private static SteamRestarter NewSteamRestarter() =>
+            new SteamRestarter(new Infrastructure.WindowsSteamProcess(), TimeProvider.System,
+                timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
+
+        /// <summary>At most this many apps download SteamGridDB artwork at once (each one makes up to 8 requests).</summary>
+        private const int MaxConcurrentArtworkDownloads = 4;
 
         private static readonly System.Net.Http.HttpClient imageClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
@@ -319,8 +312,7 @@ namespace UWPHook
         /// Main Task to export the selected games to steam. The temporary grid images are removed
         /// afterwards even when the export fails.
         /// </summary>
-        /// <returns></returns>
-        private async Task<bool> ExportGames()
+        private async Task<ExportSummary> ExportGames()
         {
             try
             {
@@ -335,90 +327,69 @@ namespace UWPHook
         private static string BackupFolder =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "backups");
 
-        private async Task<bool> ExportSelectedApps()
+        private static string IconsFolder =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "icons");
+
+        /// <summary>
+        /// Checks there is something to do before touching Steam, prepares the artwork and icons once,
+        /// then writes every Steam account's shortcuts.vdf and grid images while Steam is closed.
+        /// </summary>
+        private async Task<ExportSummary> ExportSelectedApps()
         {
-            string[] tags = UserSettings.Current.Tags.Split(',');
-            string steam_folder = SteamManager.GetSteamFolder();
-
-            if (Directory.Exists(steam_folder))
+            // One entry per AUMID, so two downloads never share a temp grid folder
+            var selectedApps = Apps.Entries.Where(app => app.Selected)
+                .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (selectedApps.Count == 0)
             {
-                var users = SteamManager.GetUsers(steam_folder);
-                // One entry per AUMID, so two downloads never share a temp grid folder
-                var selected_apps = Apps.Entries.Where(app => app.Selected)
-                    .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-                string exePath = UWPHook.Core.Install.InstallLayout.StableExePath(Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe"));
+                return ExportSummary.NothingSelected();
+            }
+
+            string? steamFolder = SteamManager.GetSteamFolder();
+            if (steamFolder is null)
+            {
+                Log.Warning("Steam was not found in the registry (HKCU SteamPath, HKLM InstallPath); nothing was exported");
+                return ExportSummary.SteamNotFound();
+            }
+
+            string[] users = SteamManager.GetUsers(steamFolder);
+            if (users.Length == 0)
+            {
+                Log.Warning("No Steam account folder in {SteamFolder}\\userdata; nothing was exported", steamFolder);
+                return ExportSummary.ForUsers(written: 0, failed: 0, StopOutcome.NotRunning);
+            }
+
+            string[] tags = UserSettings.Current.Tags.Split(',');
+            string exePath = UWPHook.Core.Install.InstallLayout.StableExePath(Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find the path of UWPHook.exe"));
+
+            await DownloadArtwork(selectedApps);
+
+            // The same shortcuts go to every user, so each icon is persisted once, not once per user
+            List<ShortcutSpec> wanted = await Task.Run(() => selectedApps
+                .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exePath, PersistedIconFor(app), tags))
+                .ToList());
+
+            int written = 0;
+            int failed = 0;
+            var artworkFailedUsers = new List<string>();
+            StopOutcome steam = await NewSteamRestarter().WhileStoppedAsync(async () =>
+            {
                 var gridIdsByUser = new Dictionary<string, Dictionary<string, uint>>();
-
-                List<Task<bool>> gridImagesDownloadTasks = new List<Task<bool>>();
-                bool downloadGridImages = UserSettings.Current.HasSteamGridDbApiKey;
-                //To make things faster, decide icons and download grid images before looping users
-                Log.Verbose("downloadGridImages: " + (downloadGridImages));
-
-                foreach (var app in selected_apps)
-                {
-                    app.Icon = app.widestSquareIcon();
-
-                    if (downloadGridImages)
-                    {
-                        Log.Verbose("Downloading grid images for app " + app.Name);
-
-                        gridImagesDownloadTasks.Add(DownloadTempGridImages(app.Name, GridKey(app.Aumid)));
-                    }
-                }
-
-                bool[] keyRejected = await Task.WhenAll(gridImagesDownloadTasks);
-                if (keyRejected.Any(rejected => rejected))
-                {
-                    // Once per export; the key is kept so the user can fix it in Settings
-                    Log.Warning("SteamGridDB rejected the API key (HTTP 401); exporting without artwork");
-                    MessageBox.Show(Infrastructure.SteamGridDbService.InvalidKeyMessage, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-
-                // Export the selected apps and the downloaded images to each user
-                // in the steam folder by modifying it's VDF file
                 foreach (var user in users)
                 {
                     try
                     {
-                        var wanted = new List<ShortcutSpec>();
-                        foreach (var app in selected_apps)
-                        {
-                            try
-                            {
-                                app.Icon = PersistAppIcon(app);
-                                Log.Verbose("Defaulting to app.Icon for app " + app.Name);
-                            }
-                            catch (System.IO.IOException)
-                            {
-                                Log.Verbose("Using backup icon for app " + app.Name);
-
-                                await Task.Run(() =>
-                                {
-                                    string tmpGridDirectory = TempGridDirectoryFor(GridKey(app.Aumid));
-
-                                    SafellyCreateTmpGridDirectory(tmpGridDirectory);
-
-                                    // Any supported extension; a missing logo makes PersistAppIcon keep app.Icon
-                                    string[] logos = Core.Artwork.ArtworkFile.NamesFor(GridIdPlaceholder + "_logo")
-                                        .Select(name => tmpGridDirectory + name).ToArray();
-                                    string logo = logos.FirstOrDefault(File.Exists) ?? logos[0];
-                                    app.Icon = PersistAppIcon(app, logo);
-                                });
-                            }
-
-                            wanted.Add(ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exePath, app.Icon, tags));
-                        }
-
                         // Update UWPHook's own shortcuts in place (keeping their appid), never touch anyone else's.
                         // A shortcuts.vdf that can't be read throws here and is left as it is.
                         MergeResult merge = await Task.Run(() => new Infrastructure.SteamUserShortcuts(user, BackupFolder).Export(wanted));
                         gridIdsByUser[user] = GridIdsByKey(merge);
+                        written++;
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Error: Program failed exporting your games to {User}", user);
-                        MessageBox.Show("Error: Program failed exporting your games:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        // Counted in the summary, which points to the log; one box per user would bury it
+                        failed++;
+                        Log.Error(ex, "Exporting your games to {User} failed", user);
                     }
                 }
 
@@ -426,68 +397,145 @@ namespace UWPHook
                 {
                     foreach (var (user, gridIdsByKey) in gridIdsByUser)
                     {
-                        CopyTempGridImagesToSteamUser(user, gridIdsByKey);
+                        try
+                        {
+                            CopyTempGridImagesToSteamUser(user, gridIdsByKey);
+                        }
+                        catch (Exception ex)
+                        {
+                            // The shortcuts are already written: a note in the summary, not a failed export
+                            artworkFailedUsers.Add(Path.GetFileName(user));
+                            Log.Error(ex, "Could not copy the artwork to {User}", user);
+                        }
                     }
                 });
+            });
+
+            if (steam is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
+            {
+                Log.Warning("Steam is still running ({Outcome}); nothing was exported", steam);
+                return ExportSummary.SteamNotStopped(steam);
             }
 
-            return true;
+            return ExportSummary.ForUsers(written, failed, steam).WithArtworkFailures(artworkFailedUsers);
         }
 
         /// <summary>
-        /// Copies an apps icon to a intermediate location
-        /// Due to some apps changing the icon location when they update, which causes icons to be "lost"
+        /// Downloads each app's SteamGridDB artwork to its temp grid folder, a few apps at a time so a large
+        /// selection doesn't hit SteamGridDB with hundreds of requests at once. Does nothing without an API key.
         /// </summary>
-        /// <param name="app">App to copy the icon to</param>
-        /// <param name="forcedIcon">Overwrites the app.icon to be copied</param>
-        /// <returns>string, the path to the usable and persisted icon</returns>
-        private string PersistAppIcon(AppEntry app, string forcedIcon = "")
+        private async Task DownloadArtwork(IReadOnlyList<AppEntry> apps)
         {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string icons_path = path + @"\Briano\UWPHook\icons\";
-
-            // If we do not have an specific icon to copy, copy app.icon, if we do, copy the specified icon
-            string icon_to_copy = String.IsNullOrEmpty(forcedIcon) ? app.Icon : forcedIcon;
-
-            if (!Directory.Exists(icons_path))
+            bool downloadGridImages = UserSettings.Current.HasSteamGridDbApiKey;
+            Log.Verbose("downloadGridImages: " + (downloadGridImages));
+            if (!downloadGridImages)
             {
-                Directory.CreateDirectory(icons_path);
+                return;
             }
 
-            string dest_file = String.Join(String.Empty, icons_path, app.Aumid + Path.GetFileName(icon_to_copy));
+            using var throttle = new SemaphoreSlim(MaxConcurrentArtworkDownloads);
+            bool[] keyRejected = await Task.WhenAll(apps.Select(async app =>
+            {
+                await throttle.WaitAsync();
+                try
+                {
+                    Log.Verbose("Downloading grid images for app " + app.Name);
+                    return await DownloadTempGridImages(app.Name, GridKey(app.Aumid));
+                }
+                finally
+                {
+                    throttle.Release();
+                }
+            }));
+
+            if (keyRejected.Any(rejected => rejected))
+            {
+                // Once per export; the key is kept so the user can fix it in Settings
+                Log.Warning("SteamGridDB rejected the API key (HTTP 401); exporting without artwork");
+                MessageBox.Show(Infrastructure.SteamGridDbService.InvalidKeyMessage, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// The icon for an app's shortcut, copied to the icons folder because some apps move their files when
+        /// they update, which "loses" the icon. The app's widest square logo is used, else the SteamGridDB logo
+        /// downloaded for it; when neither can be copied, the app's own path (possibly empty) is kept.
+        /// </summary>
+        private static string PersistedIconFor(AppEntry app)
+        {
+            string source = app.widestSquareIcon();
+            return TryPersistIcon(app.Aumid, source)
+                ?? TryPersistIcon(app.Aumid, DownloadedLogo(app.Aumid))
+                ?? source;
+        }
+
+        /// <summary>The SteamGridDB logo downloaded for the app in this export, in any supported format.</summary>
+        private static string? DownloadedLogo(string aumid)
+        {
+            string tmpGridDirectory = TempGridDirectoryFor(GridKey(aumid));
+            return Core.Artwork.ArtworkFile.NamesFor(GridIdPlaceholder + "_logo")
+                .Select(name => tmpGridDirectory + name)
+                .FirstOrDefault(File.Exists);
+        }
+
+        /// <summary>
+        /// Copies <paramref name="source"/> to <c>icons\&lt;grid key&gt;&lt;ext&gt;</c>: one stable name per app,
+        /// overwritten on every export. Null when there is nothing to copy or the copy failed.
+        /// </summary>
+        private static string? TryPersistIcon(string aumid, string? source)
+        {
+            if (String.IsNullOrEmpty(source) || !File.Exists(source))
+            {
+                return null;
+            }
+
+            string destination = Path.Combine(IconsFolder, GridKey(aumid) + Path.GetExtension(source));
             try
             {
-                if (File.Exists(icon_to_copy))
-                {
-                    File.Copy(icon_to_copy, dest_file, true);
-                }
-                else
-                {
-                    dest_file = app.Icon;
-                }
+                Directory.CreateDirectory(IconsFolder);
+                File.Copy(source, destination, overwrite: true);
+                return destination;
             }
-            catch (System.IO.IOException e)
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                Log.Warning(e, "Could not copy icon " + app.Icon);
-                throw e;
+                Log.Warning(e, "Could not copy icon {Icon} to {Destination}", source, destination);
+                return null;
             }
-
-            return dest_file;
         }
 
         /// <summary>
         /// Removes the shortcuts UWPHook created from every Steam user, backing up each changed
         /// shortcuts.vdf first. Shortcuts created by Steam, other tools or by hand are kept.
+        /// Steam is only closed (and started again) when there is something to remove.
         /// </summary>
         public static async Task RemoveUwpHookShortcuts()
         {
             Log.Debug("Removing UWPHook's shortcuts from shortcuts.vdf");
-            string steam_folder = SteamManager.GetSteamFolder();
-
-            if (Directory.Exists(steam_folder))
+            string? steamFolder = SteamManager.GetSteamFolder();
+            if (steamFolder is null)
             {
-                int removed = 0;
-                foreach (var user in SteamManager.GetUsers(steam_folder))
+                MessageBox.Show("Steam was not found, so nothing was changed.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string[] users = SteamManager.GetUsers(steamFolder);
+            var (found, unreadable) = await Task.Run(() => CountUwpHookShortcuts(users));
+            if (found == 0)
+            {
+                string nothing = "No UWPHook shortcuts were found, so nothing was changed.";
+                if (unreadable > 0)
+                {
+                    nothing += $" The shortcuts of {unreadable} Steam account(s) could not be read; details are in application.log.";
+                }
+                MessageBox.Show(nothing, "UWPHook", MessageBoxButton.OK, unreadable > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+                return;
+            }
+
+            int removed = 0;
+            int failed = 0;
+            StopOutcome steam = await NewSteamRestarter().WhileStoppedAsync(async () =>
+            {
+                foreach (var user in users)
                 {
                     try
                     {
@@ -495,25 +543,58 @@ namespace UWPHook
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Error: Program failed while trying to remove UWPHook's shortcuts from {User}", user);
-                        MessageBox.Show("Error: Program failed while trying to remove UWPHook's shortcuts:" + Environment.NewLine + ex.Message + ex.StackTrace);
+                        failed++;
+                        Log.Error(ex, "Removing UWPHook's shortcuts from {User} failed", user);
                     }
                 }
+            });
 
-                if (removed == 0)
-                {
-                    MessageBox.Show("No UWPHook shortcuts were found, so nothing was changed.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-
-                // A running Steam would write the removed shortcuts back when it exits
-                string msg = removed + " UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept." + await RestartSteamAsync(
-                    notRunning: " The changes apply the next time you start Steam.",
-                    timedOut: " Please restart Steam now, or it may restore the removed shortcuts.");
-                MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (steam is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
+            {
+                string why = steam == StopOutcome.StillRunning
+                    ? "Steam did not close in time"
+                    : "Steam is running, but UWPHook could not find steam.exe to close and restart it";
+                MessageBox.Show(why + ", so nothing was removed. Close Steam, then try again.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            if (removed == 0)
+            {
+                MessageBox.Show($"Removing UWPHook's shortcuts failed for {failed} Steam account(s), so nothing was changed. Details are in application.log.", "UWPHook", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string msg = removed + " UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept.";
+            if (failed > 0)
+            {
+                msg += $" Removing failed for {failed} Steam account(s); details are in application.log.";
+            }
+            msg += steam == StopOutcome.Stopped
+                ? " Steam has been restarted."
+                : " The changes apply the next time you start Steam.";
+            MessageBox.Show(msg, "UWPHook", MessageBoxButton.OK, failed > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
         }
 
+        /// <summary>How many UWPHook shortcuts the users have, and how many users' files could not be read.</summary>
+        private static (int Found, int Unreadable) CountUwpHookShortcuts(IEnumerable<string> users)
+        {
+            int found = 0;
+            int unreadable = 0;
+            foreach (var user in users)
+            {
+                try
+                {
+                    found += new Infrastructure.SteamUserShortcuts(user, BackupFolder).CountUwpHookShortcuts();
+                }
+                catch (Exception ex)
+                {
+                    unreadable++;
+                    Log.Error(ex, "Could not read the shortcuts of {User}", user);
+                }
+            }
+
+            return (found, unreadable);
+        }
         /// <summary>
         /// Fires the Bwr_DoWork, to load the apps installed at the machine
         /// </summary>
@@ -576,8 +657,8 @@ namespace UWPHook
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message);
-                MessageBox.Show(ex.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Logs the whole exception and shows the box on the UI thread, not this worker's
+                Infrastructure.ErrorReporter.Report(ex, "Loading your installed apps failed.");
             }
         }
 

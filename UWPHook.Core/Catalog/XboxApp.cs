@@ -5,7 +5,6 @@ namespace UWPHook.Core.Catalog;
 /// <param name="PackageFamilyName">The package family the application belongs to.</param>
 /// <param name="DisplayName">The resolved, human-readable name.</param>
 /// <param name="Executable">The executable UWPHook watches, relative to <paramref name="InstallLocation"/>.</param>
-/// <param name="LogoPath">An absolute path to a logo image, when the package has one.</param>
 /// <param name="InstallLocation">The package's install folder.</param>
 /// <param name="InstalledDate">When the package was installed.</param>
 public sealed record XboxApp(
@@ -13,7 +12,6 @@ public sealed record XboxApp(
     string PackageFamilyName,
     string DisplayName,
     string Executable,
-    string? LogoPath,
     string InstallLocation,
     DateTimeOffset InstalledDate)
 {

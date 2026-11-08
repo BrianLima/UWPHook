@@ -18,13 +18,13 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] AUMID-only shortcut (no executable arg) launches, and UWPHook exits when the game's original process exits, without latching onto another process.
 
 ## Task 6
-- [ ] With PowerShell 7 installed and set as the default shell, the app list loads (discovery runs through `powershell.exe` 5.1 out-of-process).
+- [ ] With PowerShell 7 installed and set as the default shell, the app list loads (since Task 8b discovery uses the WinRT `PackageManager`, not PowerShell).
 - [ ] Forza Motorsport, or any app whose manifest name is an `ms-resource:` reference, appears in the list (PR #169).
 - [ ] Two different games whose names share a prefix (e.g. "Hollow Knight" and "Hollow Knight: Silksong") both appear (PR #182).
 - [ ] Changing settings and pressing Save doesn't crash, including with no language selected; the seconds value round-trips after reopening Settings.
 - [ ] The Settings window no longer shows the "Change host resolution" toggle/combo.
 - [ ] With "Set system language when launching an app" on, launching a game switches the UI language and it is restored after the game closes.
-- [ ] No console window flashes while the app list loads.
+- [ ] No console window flashes while the app list loads (the `PackageManager` catalog starts no process).
 
 ## Task 4
 - [ ] Export a game with UWPHook 2.14.3, upgrade to 2.15, and re-export it: Steam shows exactly one entry for the game (same `appid` in `shortcuts.vdf`), its SteamGridDB grid/hero/logo art is kept, and it launches when UWPHook is installed in a path with spaces (e.g. `C:\Program Files (x86)\...`).
@@ -97,3 +97,18 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Hand-corrupt `settings.json` (e.g. delete the closing `}`), start UWPHook: it starts with the defaults, the old file is now `settings.json.bad`, and `application.log` has the error. A second corruption keeps `settings.json.bad` and adds a timestamped `settings.json.bad-…`.
 - [ ] Copy `settings.json` to another Windows user (or PC) and start UWPHook there: the other settings are kept and the SteamGridDB key is empty, no crash.
 - [ ] Change settings, update UWPHook to a newer build (Velopack update): settings are kept.
+
+## Fix wave 1
+- [ ] I2: two apps with the same display name (e.g. two editions of a game, or rename one row to match another) exported together get two different `appid`s in `shortcuts.vdf`, and each shows its own SteamGridDB art in Steam.
+- [ ] I3: with 2+ Steam accounts in `userdata`, after an export every account's UWPHook entry has the same `icon` path, `%AppData%\Briano\UWPHook\icons\<AUMID with invalid characters as _>.<ext>`, and the icons folder has one file per app (no file names with the AUMID repeated).
+- [ ] I4: export with no app ticked says "Select at least one app to export." and Steam is not touched; with Steam uninstalled (or both registry keys removed) it says Steam was not found; with one account's `shortcuts.vdf` replaced by garbage and another account fine, it says "exported to 1 of 2 Steam accounts; 1 failed"; with every account's file broken, it shows an error and no success message.
+- [ ] I5: Steam moved to `D:\Steam` (HKCU `SteamPath` points there) while HKLM `InstallPath` still names `C:\Program Files (x86)\Steam`: export writes to `D:\Steam\userdata\<id>\config\shortcuts.vdf`, and the restarted Steam is the `D:\Steam\steam.exe` one.
+- [ ] M5: after more than 20 exports, `%AppData%\Briano\UWPHook\backups` holds the newest 20 backups per Steam account; other accounts' backups are untouched.
+- [ ] M6: a `userdata\0` folder (or a non-numeric folder) gets no `config\shortcuts.vdf` or grid art after an export.
+- [ ] M7: export with Steam running: Steam closes first, then the shortcuts are written, then Steam starts and shows the games (check `application.log` at DEBUG: "Requesting Steam shutdown" before "Shortcuts written", "Starting Steam" after). Same for Settings → "Remove UWPHook shortcuts": the removed entries stay gone after Steam restarts.
+- [ ] M7: with a modal dialog open in Steam (so it doesn't exit within 15 s), export says "Steam did not close in time, so nothing was exported. Close Steam, then export again." and `shortcuts.vdf` is unchanged (no new backup).
+- [ ] M10: with the language option on and an invalid target language (edit `targetLanguage` in `settings.json`), the game still launches and `application.log` has "Setting the Windows UI language to ... failed; launching anyway".
+- [ ] M12: a failure while loading the app list shows the error box in front of the UWPHook window.
+- [ ] M2: a game whose executable path has a space (e.g. a GDK game with `Some Game.exe`, or edit a shortcut's launch options to `<AUMID> "Bin\Some Game.exe"`) gets `LaunchOptions` `<AUMID> "…\Some Game.exe"` in `shortcuts.vdf`. Steam passes it to UWPHook as one argument: the game launches, Steam shows "Playing" for the whole session, and at DEBUG `application.log` names the full executable, not `Some`.
+- [ ] R33: with one account's `userdata\<id>\config\grid` made read-only (or a file there locked), export still says the apps were exported, adds "Artwork could not be copied for Steam account(s) <id>", and the other accounts get their art.
+- [ ] R33: when steam.exe can't be found while Steam runs (rename `HKCU\Software\Valve\Steam\SteamExe` and start Steam from a copied folder not named in the registry), export says UWPHook "could not find steam.exe to close and restart it", not "did not close in time", and Steam is left running.

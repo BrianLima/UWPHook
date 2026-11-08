@@ -20,8 +20,8 @@ public class CatalogEntryBuilderTests
 
     private static AppListEntrySnapshot Entry(string aumid, string? displayName) => new(aumid, displayName);
 
-    private static List<XboxApp> Build(PackageSnapshot package, Func<string, bool>? fileExists = null) =>
-        CatalogEntryBuilder.Build(package, fileExists ?? (_ => true)).ToList();
+    private static List<XboxApp> Build(PackageSnapshot package) =>
+        CatalogEntryBuilder.Build(package).ToList();
 
     [Fact]
     public void Build_MapsAClassicUwpApp()
@@ -33,7 +33,7 @@ public class CatalogEntryBuilderTests
 
         Assert.Equal(
             new XboxApp("Contoso.Game_8wekyb3d8bbwe!App", "Contoso.Game_8wekyb3d8bbwe", "Solitaire Deluxe", "App.exe",
-                Install + @"\Assets\Square150x150Logo.png", Install, Installed) { IconFolder = Install + @"\Assets" },
+                Install, Installed) { IconFolder = Install + @"\Assets" },
             app);
     }
 
@@ -108,7 +108,7 @@ public class CatalogEntryBuilderTests
 
         Assert.Equal(["Contoso.Suite_abc!Writer", "Contoso.Suite_abc!Sheets"], apps.Select(a => a.Aumid));
         Assert.Equal(["Writer.exe", "Sheets.exe"], apps.Select(a => a.Executable));
-        Assert.Equal([Install + @"\Assets\Writer150.png", Install + @"\Assets\Sheets150.png"], apps.Select(a => a.LogoPath));
+        Assert.Equal([Install + @"\Assets", Install + @"\Assets"], apps.Select(a => a.IconFolder));
     }
 
     [Fact]
@@ -143,21 +143,12 @@ public class CatalogEntryBuilderTests
     }
 
     [Fact]
-    public void Build_LeavesTheLogoNullWhenNoFileExists()
-    {
-        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe",
-            [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")]);
-
-        Assert.Null(Assert.Single(Build(package, _ => false)).LogoPath);
-    }
-
-    [Fact]
     public void Build_KeepsTheDeclaredLogoFolderAsIconFolderWhenNoLogoFileExists()
     {
         var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe",
             [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")]);
 
-        Assert.Equal(Install + @"\Assets", Assert.Single(Build(package, _ => false)).IconFolder);
+        Assert.Equal(Install + @"\Assets", Assert.Single(Build(package)).IconFolder);
     }
 
     [Fact]
@@ -166,7 +157,7 @@ public class CatalogEntryBuilderTests
         var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
             [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")], "GdkGame.MicrosoftGame.xml");
 
-        Assert.Equal(Install, Assert.Single(Build(package, _ => false)).IconFolder);
+        Assert.Equal(Install, Assert.Single(Build(package)).IconFolder);
     }
 
     [Theory]

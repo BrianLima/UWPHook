@@ -1,6 +1,7 @@
 using System.IO;
 using UWPHook.Core.Catalog;
 using UWPHook.Infrastructure;
+using Windows.Management.Deployment;
 using Xunit;
 
 namespace UWPHook.Windows.Tests;
@@ -12,8 +13,34 @@ public class PackageManagerCatalogTests
         new PackageManagerCatalog().GetInstalledAppsAsync(includeSystem: true, TestContext.Current.CancellationToken);
 
     [Fact]
-    public async Task GetInstalledAppsAsync_FindsAtLeastOneApp() =>
+    public async Task GetInstalledAppsAsync_FindsAtLeastOneApp()
+    {
+        // What is installed depends on the runner image, so a runner without any Start-menu app is skipped, not failed.
+        Assert.SkipUnless(await RunnerHasAppListEntries(),
+            "This machine has no installed package with Start-menu (app list) entries, so there is no app to find.");
+
         Assert.NotEmpty(await AllApps());
+    }
+
+    /// <summary>Asks PackageManager directly, so the check does not depend on the code under test.</summary>
+    private static async Task<bool> RunnerHasAppListEntries()
+    {
+        foreach (var package in new PackageManager().FindPackagesForUser(string.Empty))
+        {
+            if (package.IsFramework || package.IsResourcePackage || package.IsBundle) continue;
+
+            try
+            {
+                if ((await package.GetAppListEntriesAsync().AsTask()).Count > 0) return true;
+            }
+            catch (Exception)
+            {
+                // A package that can't be read doesn't count.
+            }
+        }
+
+        return false;
+    }
 
     [Fact]
     public async Task GetInstalledAppsAsync_ReturnsLaunchableAumids() =>

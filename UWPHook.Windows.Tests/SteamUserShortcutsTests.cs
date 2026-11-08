@@ -207,4 +207,41 @@ public sealed class SteamUserShortcutsTests : IDisposable
 
         Assert.False(File.Exists(ShortcutsPath));
     }
+
+    [Fact]
+    public void Export_KeepsOnlyTheNewestTwentyBackupsOfThisUser()
+    {
+        SeedShortcuts(Seed);
+        Directory.CreateDirectory(_backupFolder);
+        var start = new DateTime(2020, 1, 1);
+        for (var i = 0; i < 25; i++)
+        {
+            File.WriteAllBytes(Path.Combine(_backupFolder, ShortcutsBackup.FileName("12345", start.AddMinutes(i))), [1]);
+        }
+        var otherUsers = Path.Combine(_backupFolder, ShortcutsBackup.FileName("999", start));
+        File.WriteAllBytes(otherUsers, [2]);
+
+        Shortcuts().Export([Wanted]);
+
+        var mine = Backups().Where(path => Path.GetFileName(path).StartsWith("12345_", StringComparison.Ordinal)).ToList();
+        Assert.Equal(20, mine.Count);
+        Assert.Contains(mine, path => File.ReadAllBytes(path).SequenceEqual(Seed)); // the new backup is kept
+        Assert.DoesNotContain(mine, path => Path.GetFileName(path) == ShortcutsBackup.FileName("12345", start)); // the oldest went
+        Assert.True(File.Exists(otherUsers), "another user's backups are not pruned");
+    }
+
+    [Fact]
+    public void CountUwpHookShortcuts_CountsOnlyUwpHookEntries_WithoutWriting()
+    {
+        SeedShortcuts(Seed);
+
+        Assert.Equal(1, Shortcuts().CountUwpHookShortcuts());
+
+        Assert.Equal(Seed, File.ReadAllBytes(ShortcutsPath));
+        Assert.Empty(Backups());
+    }
+
+    [Fact]
+    public void CountUwpHookShortcuts_WithoutAShortcutsFile_IsZero() =>
+        Assert.Equal(0, Shortcuts().CountUwpHookShortcuts());
 }

@@ -115,9 +115,21 @@ namespace UWPHook
                 ? CultureInfo.CurrentCulture.ToString()
                 : null;
 
-        /// <summary>Some games follow the Windows UI language, so overriding it can change the game's language.</summary>
-        private static void OverrideLanguage() =>
-            ScriptManager.RunScript("Set-WinUILanguageOverride " + UserSettings.Current.TargetLanguage);
+        /// <summary>
+        /// Some games follow the Windows UI language, so overriding it can change the game's language.
+        /// Never throws: scripts stop on cmdlet errors, and a failed override must not keep the game from launching.
+        /// </summary>
+        private static void OverrideLanguage()
+        {
+            try
+            {
+                ScriptManager.RunScript("Set-WinUILanguageOverride " + UserSettings.Current.TargetLanguage);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Setting the Windows UI language to {Language} failed; launching anyway", UserSettings.Current.TargetLanguage);
+            }
+        }
 
         /// <summary>Never throws: a failed restore is logged and must not keep UWPHook (and Steam's "Playing") alive.</summary>
         private static void RestoreLanguage(string? language)

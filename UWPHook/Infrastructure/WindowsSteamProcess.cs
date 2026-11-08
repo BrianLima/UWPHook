@@ -25,7 +25,8 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        public string? ExecutablePath() => PathFromRegistry() ?? PathFromRunningProcess();
+        /// <summary>steam.exe of the install that export writes to (<see cref="SteamManager"/>), else the registry's SteamExe, else the running process.</summary>
+        public string? ExecutablePath() => SteamManager.GetSteamExecutable() ?? PathFromRegistry() ?? PathFromRunningProcess();
 
         public void RequestExit()
         {
@@ -36,10 +37,18 @@ namespace UWPHook.Infrastructure
             using var _ = Process.Start(new ProcessStartInfo(exePath, "-shutdown") { UseShellExecute = false });
         }
 
+        /// <summary>Never throws: the shortcuts are already written, so a Steam that won't start is only logged.</summary>
         public void Start(string exePath)
         {
             Log.Debug("Starting Steam");
-            using var _ = Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+            try
+            {
+                using var _ = Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Could not start Steam from {Path}", exePath);
+            }
         }
 
         /// <summary>HKCU\Software\Valve\Steam\SteamExe, which Steam writes with forward slashes.</summary>

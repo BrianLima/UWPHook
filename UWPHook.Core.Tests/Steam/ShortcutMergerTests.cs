@@ -146,4 +146,90 @@ public class ShortcutMergerTests
         Assert.Equal(2, result.Shortcuts.Count);
         Assert.Null(result.Shortcuts[0].Spec);
     }
+
+    private static int ComputedId(ShortcutSpec spec) =>
+        SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(spec.Exe, spec.AppName));
+
+    // The fallback when the plain id is taken: the AUMID salts the name, the high bit stays set.
+    private static int AumidSaltedId(ShortcutSpec spec) =>
+        SteamShortcutId.ToVdfAppId(SteamShortcutId.Compute(spec.Exe, spec.AppName + "\0" + spec.Aumid));
+
+    [Fact]
+    public void Merge_TwoNewAppsWithTheSameName_GetDistinctIds()
+    {
+        var first = Wanted("Halo", "First_abcdefghijklm!App");
+        var second = Wanted("Halo", "Second_abcdefghijklm!App");
+
+        var result = ShortcutMerger.Merge([], [first, second]);
+
+        Assert.Equal(2, result.Shortcuts.Count);
+        Assert.Equal(ComputedId(first), result.Shortcuts[0].AppId); // the first keeps Steam's own formula
+        Assert.Equal(AumidSaltedId(second), result.Shortcuts[1].AppId);
+        Assert.NotEqual(result.Shortcuts[0].AppId, result.Shortcuts[1].AppId);
+    }
+
+    [Fact]
+    public void Merge_NewAppCollidingWithAnExistingForeignEntrysAppId_GetsAnotherId()
+    {
+        var spec = Wanted("Game");
+        // A hand-made UWPHook.exe entry for another AUMID, whose appid is the one the new app would get.
+        var existing = Legacy(ComputedId(spec), "Game", "Other_abcdefghijklm!App");
+
+        var result = ShortcutMerger.Merge([existing], [spec]);
+
+        Assert.Equal(2, result.Shortcuts.Count);
+        Assert.Equal(ComputedId(spec), result.Shortcuts[0].AppId); // the existing entry keeps its appid
+        Assert.Null(result.Shortcuts[0].Spec);
+        Assert.Equal(AumidSaltedId(spec), result.Shortcuts[1].AppId);
+    }
+
+    [Fact]
+    public void Merge_NewAppCollidingWithALegacyEntryWithoutAppId_GetsAnotherId()
+    {
+        // No appid key: Steam derives the id from Exe + AppName, which is what the new app would get.
+        var spec = Wanted("Game");
+        var existing = new ExistingShortcut(0, "Game", spec.Exe, "Other_abcdefghijklm!App game.exe");
+
+        var result = ShortcutMerger.Merge([existing], [spec]);
+
+        Assert.NotEqual(ComputedId(spec), result.Shortcuts[1].AppId);
+    }
+
+    [Fact]
+    public void Merge_DisambiguatedIds_AreDeterministicAndHaveTheHighBitSet()
+    {
+        ShortcutSpec[] wanted = [Wanted("Halo", "A_abcdefghijklm!App"), Wanted("Halo", "B_abcdefghijklm!App"), Wanted("Halo", "C_abcdefghijklm!App")];
+
+        var first = ShortcutMerger.Merge([], wanted).Shortcuts.Select(s => s.AppId).ToList();
+        var second = ShortcutMerger.Merge([], wanted).Shortcuts.Select(s => s.AppId).ToList();
+
+        Assert.Equal(first, second);
+        Assert.Equal(3, first.Distinct().Count());
+        Assert.All(first, id => Assert.True(id < 0, "the high bit marks a non-Steam shortcut id"));
+    }
+
+    [Fact]
+    public void Merge_NeverChangesTheAppIdOfAnExistingEntry_EvenWhenTwoShareIt()
+    {
+        var existing = new ExistingShortcut[]
+        {
+            new(-42, "Foreign", "\"C:\\Games\\a.exe\"", ""),
+            Legacy(-42),
+        };
+
+        var result = ShortcutMerger.Merge(existing, [Wanted()]);
+
+        Assert.Equal(new[] { -42, -42 }, result.Shortcuts.Select(s => s.AppId));
+    }
+
+    [Fact]
+    public void Merge_DoesNotMatchBySameNameWithDifferentAumid_AndGivesTheNewEntryItsOwnId()
+    {
+        var spec = Wanted("Game");
+        var existing = Legacy(ComputedId(spec), "Game", "Other_xyz!App");
+
+        var result = ShortcutMerger.Merge([existing], [spec]);
+
+        Assert.NotEqual(result.Shortcuts[0].AppId, result.Shortcuts[1].AppId);
+    }
 }
