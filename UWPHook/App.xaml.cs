@@ -29,14 +29,15 @@ namespace UWPHook
             try
             {
                 base.OnStartup(e);
-                AppLog.Configure();
+                var services = new AppServices(); // the composition root, built once
+                AppLog.Configure(() => services.Settings.Current.LogLevel);
 
                 if (LaunchRequest.TryParse(args, out var request))
-                    RunGameSession(request!);
+                    RunGameSession(request!, services.Settings);
                 else if (isLaunch)
                     ExitAfter(() => GameLauncher.ReportInvalidArguments(args));
                 else
-                    ShowGamesWindow();
+                    ShowGamesWindow(services);
             }
             catch (Exception ex)
             {
@@ -51,11 +52,11 @@ namespace UWPHook
         /// Started by Steam: no main window (it would hold the GPU and get in the way of streaming
         /// and NVIDIA Advanced Optimus). UWPHook exits when the game's session ends.
         /// </summary>
-        private async void RunGameSession(LaunchRequest request)
+        private async void RunGameSession(LaunchRequest request, Core.Configuration.ISettingsService settings)
         {
             try
             {
-                await GameLauncher.RunAsync(request);
+                await GameLauncher.RunAsync(request, settings);
             }
             finally
             {
@@ -63,10 +64,10 @@ namespace UWPHook
             }
         }
 
-        private void ShowGamesWindow()
+        private void ShowGamesWindow(AppServices services)
         {
             ShutdownMode = ShutdownMode.OnMainWindowClose;
-            MainWindow = new GamesWindow();
+            MainWindow = services.GamesWindow(Dispatcher);
             MainWindow.Show();
         }
 

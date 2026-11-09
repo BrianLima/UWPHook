@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageVersion Include="MaterialDesignColors" Version="3.1.0" />
     <PackageVersion Include="MaterialDesignThemes" Version="5.1.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
@@ -13,7 +14,7 @@
     <PackageVersion Include="ValveKeyValue" Version="0.80.0.542" />
     <PackageVersion Include="Velopack" Version="1.2.161" />
   </ItemGroup>
-  <!-- Test-only packages (UWPHook.Core.Tests). -->
+  <!-- Test-only packages (the test projects). -->
   <ItemGroup>
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.0.0" />

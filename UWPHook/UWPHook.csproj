@@ -31,6 +31,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
+		<ProjectReference Include="..\UWPHook.Presentation\UWPHook.Presentation.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

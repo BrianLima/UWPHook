@@ -9,7 +9,7 @@ namespace UWPHook.Core.Configuration;
 /// starting from the defaults (10b minor 3).
 /// </summary>
 /// <param name="importLegacy">2.14's settings, or null when there are none.</param>
-public sealed class SettingsService(SettingsStore store, Func<AppSettings?> importLegacy, ILog log)
+public sealed class SettingsService(SettingsStore store, Func<AppSettings?> importLegacy, ILog log) : ISettingsService
 {
     private readonly Lock gate = new();
     private AppSettings? current;

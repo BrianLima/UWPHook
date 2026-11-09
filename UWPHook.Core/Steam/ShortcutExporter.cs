@@ -12,7 +12,7 @@ public sealed class ShortcutExporter(
     SteamRestarter restarter,
     ShortcutsBackupFolder backups,
     IArtworkInstaller artwork,
-    ILog log)
+    ILog log) : IShortcutExporter
 {
     /// <summary>What really happened; see <see cref="ExportSummary"/>. The artwork is cleaned up whatever the outcome.</summary>
     public async Task<ExportSummary> ExportAsync(ExportRequest request, CancellationToken ct = default)
@@ -39,7 +39,7 @@ public sealed class ShortcutExporter(
             return ExportSummary.SteamNotFound();
         }
 
-        var users = steam.Users(installFolder);
+        var users = request.Accounts.ApplyLogged(steam.Users(installFolder), log);
         if (users.Count == 0)
         {
             log.Warning("No Steam account folder in {SteamFolder}\\userdata; nothing was exported", installFolder);
@@ -48,10 +48,12 @@ public sealed class ShortcutExporter(
 
         await artwork.PrepareAsync(apps, ct).ConfigureAwait(false);
 
-        // The same shortcuts go to every account, so each icon is persisted once, not once per account
+        // The same shortcuts go to every account, so each icon is persisted once, not once per account.
+        // UWPHook.exe is only looked for now that nothing can stop the export (10c-1 minor 1).
         var tags = request.Tags;
+        var exe = request.FindUwpHookExe();
         var wanted = apps
-            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, request.UwpHookExePath, artwork.IconFor(app), tags))
+            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exe, artwork.IconFor(app), tags))
             .ToList();
 
         var folders = users.Select(user => user.FolderIn(installFolder)).ToList();

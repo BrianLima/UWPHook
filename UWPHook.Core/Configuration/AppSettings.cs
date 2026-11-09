@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using UWPHook.Core.Artwork.SteamGridDb;
+using UWPHook.Core.Steam;
 
 namespace UWPHook.Core.Configuration;
 
@@ -57,6 +58,9 @@ public sealed record AppSettings
 
     public AppLogLevel LogLevel { get; init; } = AppLogLevel.Error;
 
+    /// <summary>The Steam accounts export and remove work on (#76), as a list of account ids; empty means all.</summary>
+    public SteamAccountChoice ExportSteamAccounts { get; init; } = SteamAccountChoice.All;
+
     [JsonIgnore]
     public bool HasSteamGridDbApiKey => SteamGridDbApiKey.Length > 0;
 
@@ -68,7 +72,8 @@ public sealed record AppSettings
         builder.Append($"ChangeLanguage = {ChangeLanguage}, TargetLanguage = {TargetLanguage}, Seconds = {Seconds}, ")
             .Append($"StreamMode = {StreamMode}, SteamGridDbApiKey = {(HasSteamGridDbApiKey ? "(set)" : "(empty)")}, ")
             .Append($"ArtworkStyle = {ArtworkStyle}, ArtworkType = {ArtworkType}, ArtworkNsfw = {ArtworkNsfw}, ArtworkHumor = {ArtworkHumor}, ")
-            .Append($"OfferedSteamGridDb = {OfferedSteamGridDb}, Tags = {Tags}, LogLevel = {LogLevel}");
+            .Append($"OfferedSteamGridDb = {OfferedSteamGridDb}, Tags = {Tags}, LogLevel = {LogLevel}, ")
+            .Append($"ExportSteamAccounts = {ExportSteamAccounts}");
         return true;
     }
 }

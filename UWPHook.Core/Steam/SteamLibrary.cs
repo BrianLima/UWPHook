@@ -7,8 +7,8 @@ namespace UWPHook.Core.Steam;
 /// else the installer's HKLM <c>InstallPath</c> from whichever registry view has an existing folder (I5).
 /// The accounts are the numeric <c>userdata</c> folders (M6), named from <c>config\loginusers.vdf</c> when it has them.
 /// </summary>
-/// <param name="folderExists">Whether a registry candidate folder exists (Windows paths; injectable for tests).</param>
-/// <param name="fileExists">Whether steam.exe exists (injectable for tests).</param>
+/// <param name="folderExists">Whether a folder exists: a registry candidate, or <c>userdata</c> (injectable for tests).</param>
+/// <param name="fileExists">Whether a file exists: steam.exe, or <c>loginusers.vdf</c> (injectable for tests).</param>
 public sealed class SteamLibrary(
     ISteamRegistry registry,
     ILog log,
@@ -28,7 +28,7 @@ public sealed class SteamLibrary(
     public IReadOnlyList<SteamUser> Users(string installFolder)
     {
         var userdata = Path.Combine(installFolder, "userdata");
-        if (!Directory.Exists(userdata)) return [];
+        if (!_folderExists(userdata)) return [];
 
         var named = NamedUsers(installFolder);
         return [.. Directory.GetDirectories(userdata)
@@ -41,7 +41,7 @@ public sealed class SteamLibrary(
     private IReadOnlyDictionary<string, SteamUser> NamedUsers(string installFolder)
     {
         var path = Path.Combine(installFolder, "config", "loginusers.vdf");
-        if (!File.Exists(path)) return new Dictionary<string, SteamUser>();
+        if (!_fileExists(path)) return new Dictionary<string, SteamUser>();
 
         try
         {

@@ -7,15 +7,19 @@ namespace UWPHook.Core.Steam;
 /// changed shortcuts.vdf first, and keeps everyone else's. Steam is only closed (and started again) when there
 /// is something to remove, and the files are only written while it is closed.
 /// </summary>
-public sealed class ShortcutRemover(ISteamLocator steam, SteamRestarter restarter, ShortcutsBackupFolder backups, ILog log)
+public sealed class ShortcutRemover(ISteamLocator steam, SteamRestarter restarter, ShortcutsBackupFolder backups, ILog log) : IShortcutRemover
 {
-    public async Task<RemoveSummary> RemoveAsync(CancellationToken ct = default)
+    /// <summary>Removes them from every account.</summary>
+    public Task<RemoveSummary> RemoveAsync(CancellationToken ct = default) => RemoveAsync(SteamAccountChoice.All, ct);
+
+    /// <summary>Removes them from the chosen accounts (#76).</summary>
+    public async Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default)
     {
         log.Debug("Removing UWPHook's shortcuts from shortcuts.vdf");
         var installFolder = steam.InstallFolder();
         if (installFolder is null) return RemoveSummary.SteamNotFound();
 
-        var shortcuts = steam.Users(installFolder)
+        var shortcuts = accounts.ApplyLogged(steam.Users(installFolder), log)
             .Select(user => new SteamUserShortcuts(user.FolderIn(installFolder), backups, log))
             .ToList();
         var (found, unreadable) = Count(shortcuts);

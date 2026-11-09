@@ -187,4 +187,61 @@ public sealed class SteamLibraryTests : IDisposable
     [Fact]
     public void FolderIn_IsTheAccountsUserdataFolder() =>
         Assert.Equal(Path.Combine(_steam, "userdata", "22202"), SteamUser.Unnamed("22202").FolderIn(_steam));
+
+    // 10c-1 minor 4: every existence check goes through the same injected seams.
+    [Fact]
+    public void Users_AskTheInjectedFolderCheck_ForTheUserdataFolder()
+    {
+        AccountFolders("22202");
+
+        Assert.Empty(Library(new FakeSteamRegistry(null), folderExists: _ => false).Users(_steam));
+    }
+
+    [Fact]
+    public void Users_AskTheInjectedFileCheck_ForLoginUsers()
+    {
+        AccountFolders("22202");
+        LoginUsersFixture();
+
+        var users = Library(new FakeSteamRegistry(null), folderExists: Directory.Exists, fileExists: _ => false).Users(_steam);
+
+        Assert.Equal(SteamUser.Unnamed("22202"), Assert.Single(users));
+    }
+
+    // 10c-1 minor 5: one odd field costs only that field, not every account's names.
+    [Fact]
+    public void Users_ANestedObjectInsteadOfAName_IsNoName_AndTheRestOfTheFileIsKept()
+    {
+        AccountFolders("22202", "39734272");
+        LoginUsers("""
+            "users"
+            {
+                "76561197960287930"
+                {
+                    "AccountName"   "gaben"
+                    "PersonaName"
+                    {
+                        "odd"   "1"
+                    }
+                    "MostRecent"    "1"
+                }
+                "76561198000000000"
+                {
+                    "AccountName"   "second_account"
+                    "PersonaName"   "Second"
+                }
+            }
+            """);
+
+        var users = Library().Users(_steam);
+
+        Assert.Equal(
+            new[]
+            {
+                new SteamUser("22202", null, "gaben", MostRecent: true),
+                new SteamUser("39734272", "Second", "second_account", MostRecent: false),
+            },
+            users);
+        Assert.Empty(_log.Entries);
+    }
 }

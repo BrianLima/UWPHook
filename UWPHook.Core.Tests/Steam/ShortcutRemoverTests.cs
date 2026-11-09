@@ -161,4 +161,46 @@ public sealed class ShortcutRemoverTests : IDisposable
         Assert.Equal(RemoveSummary.ForUsers(removed: 1, failed: 1, StopOutcome.NotRunning), summary);
         Assert.Equal(ForeignOnly, File.ReadAllBytes(ShortcutsOf(Alice)));
     }
+
+    // #76: only the accounts chosen in Settings.
+    [Fact]
+    public async Task Remove_FromTheChosenAccounts_KeepsTheOthersShortcuts()
+    {
+        Seed(Alice, Mixed);
+        Seed(Bob, Mixed);
+
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob)
+            .RemoveAsync(new SteamAccountChoice(["222"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, summary.Removed);
+        Assert.Equal(Mixed, File.ReadAllBytes(ShortcutsOf(Alice)));
+        Assert.Equal("Heroic Game", Assert.Single(BinaryVdf.Parse(File.ReadAllBytes(ShortcutsOf(Bob))).Children)["AppName"].Value);
+    }
+
+    [Fact]
+    public async Task Remove_NothingInTheChosenAccounts_LeavesSteamAlone()
+    {
+        Seed(Alice, Mixed);
+        Seed(Bob, ForeignOnly);
+        var steam = new FakeSteamProcess(running: true);
+
+        var summary = await Remover(steam, Alice, Bob).RemoveAsync(new SteamAccountChoice(["222"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(RemoveStatus.NothingFound, summary.Status);
+        Assert.Equal(0, steam.ExitRequests);
+    }
+
+    // R38 / review minor 2
+    [Fact]
+    public async Task Remove_FromChosenAccountsThatAreGone_UsesEveryAccount_AndLogsAWarning()
+    {
+        Seed(Alice, Mixed);
+        Seed(Bob, Mixed);
+
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob)
+            .RemoveAsync(new SteamAccountChoice(["999"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, summary.Removed);
+        Assert.Contains(_log.At(LogLevel.Warning), entry => entry.Template.Contains("no longer exist"));
+    }
 }

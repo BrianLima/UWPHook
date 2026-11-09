@@ -40,7 +40,10 @@ public static class LoginUsers
         StringOf(entry, "AccountName"),
         StringOf(entry, "MostRecent") == "1");
 
-    /// <summary>Keys are matched case-insensitively: older Steam builds wrote "mostrecent".</summary>
+    /// <summary>
+    /// Keys are matched case-insensitively: older Steam builds wrote "mostrecent". A field that isn't text
+    /// (a nested object, whose cast reads "[Collection]") reads as missing, so it costs only that field, not the whole file (10c-1 minor 5).
+    /// </summary>
     private static string? StringOf(KVObject entry, string key) =>
-        KeyValueLookup.TryFind(entry, key, out var value) ? (string?)value : null;
+        KeyValueLookup.TryFind(entry, key, out var value) && value.ValueType != KVValueType.Collection ? (string?)value : null;
 }

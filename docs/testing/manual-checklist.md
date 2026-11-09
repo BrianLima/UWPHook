@@ -124,3 +124,27 @@ Export and "Remove UWPHook shortcuts" now run through the Core `ShortcutExporter
 - [ ] M3: Tags `" A , ,B"` gives the Steam collections `A` and `B` only; an empty Tags box adds no collection.
 - [ ] An invalid SteamGridDB key during export shows the "key was rejected" box once, then the export continues.
 - [ ] Settings: delete `settings.json` and put a `settings.json.bad` next to it: the next start uses the defaults (2.14's settings are not imported again) and writes a new `settings.json`.
+
+## Task 10c-2
+The windows now run on ViewModels (`UWPHook.Presentation`) built once by the composition root (`Infrastructure/AppServices`); re-check that each behaves as before.
+- [ ] Games list: it loads on start ("Loading your installed apps", list locked, progress bar), then shows "Installed Apps" sorted by name; the reload button loads it again.
+- [ ] "Show system apps" is ticked by default (the list matches 2.14's, system apps included); unticking it reloads without them, ticking it brings them back.
+- [ ] The filter box narrows the list by name or AUMID as you type, ignoring case; clearing it shows every app. "Select all" / "Select none" tick or clear only the apps the filter shows.
+- [ ] Columns are as before (Selected, Name, Executable, Aumid, Icon, IconPath); Executable and Aumid are read-only, and a renamed Name is the name exported.
+- [ ] Export: the list is locked while it runs, the same messages as 10c-1 show with the same icons (information / warning / error), and a failure shows "Exporting your games failed." with the details.
+- [ ] Each exported app still gets its widest square logo as its Steam icon (now picked after the pre-checks), or the SteamGridDB logo when it has none.
+- [ ] An invalid SteamGridDB key during export shows the "key was rejected" box once (now through the dialog service, from the export's worker thread), then the export continues.
+- [ ] First start (delete `offeredSteamGridDb` from `settings.json`): the SteamGridDB question shows once; Yes opens Settings, No doesn't; it is not asked again.
+- [ ] Settings shows every stored value (seconds, streaming, tags, log level, key, artwork choices); the seconds combo offers 1 to 9 seconds (no "0 seconds"). Save stores them, applies the log level, and closes.
+- [ ] Settings save failure: make `settings.json` read-only (or lock it), change a value and Save: "Saving your settings failed." shows, the window stays open with your edits.
+- [ ] R37: Settings no longer shows the language options (the "Set system language" toggle and the language combo); saving keeps whatever `changeLanguage`/`targetLanguage` `settings.json` had.
+- [ ] Steam user picker (#76) with one Steam account: it is listed as `PersonaName (AccountName)` (or its id without names), ticked, marked "(most recent)".
+- [ ] Steam user picker with 2+ accounts: all ticked by default; untick one and Save: export and "Remove UWPHook shortcuts" only touch the ticked accounts (check each `userdata\<id>\config\shortcuts.vdf`). Untick all and Save: "Choose at least one Steam account..." shows and nothing is saved.
+- [ ] An account removed after being chosen (choose only account B, then delete `userdata\<B>`): Settings ticks the remaining accounts, and export writes to all of them.
+- [ ] "Remove UWPHook shortcuts": the warning question shows first; No does nothing; Yes removes and shows the same messages as before; the button is disabled while it runs.
+- [ ] The links (Check for updates, Reddit, GitHub, PayPal, Twitter) and the key button (info box, then the SteamGridDB API page) open as before.
+- [ ] A launch from Steam (stream mode, poll seconds) behaves as before; the settings are read through the composition root.
+- [ ] Fix round 1 (R38): sort the games list by a column, then type in the filter box: the sort and the columns stay, and a Name edit in progress is not lost; clearing the filter brings back every app, still sorted.
+- [ ] The list is ordered by the friendly name from `KnownApps.json` (2.14 sorted by the package's name, then renamed), e.g. a known app sits under its friendly name.
+- [ ] Choose only account B in Settings, then delete `userdata\<B>`: export and Remove use every account, and `application.log` has the Warning "The Steam accounts chosen in Settings (…) no longer exist; using every account".
+- [ ] The Remove question says it removes UWPHook's shortcuts from the Steam accounts saved in Settings.
