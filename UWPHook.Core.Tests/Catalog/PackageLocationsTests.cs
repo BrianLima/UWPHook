@@ -69,4 +69,26 @@ public class PackageLocationsTests
     [Fact]
     public void WithoutAnEffectiveLocation_OnlyTheInstalledFolderCounts() =>
         Assert.False(new PackageLocations(WindowsApps).Contains(XboxGames + @"\Game.exe"));
+
+    [Fact]
+    public void Of_ReadsTheEffectiveLocation()
+    {
+        var errors = new List<Exception>();
+
+        Assert.Equal(Moddable, PackageLocations.Of(WindowsApps, () => XboxGames, errors.Add));
+        Assert.Empty(errors);
+    }
+
+    // Windows 10 1903-1909: EffectiveLocation is a StorageFolder, which throws when the mutable folder is gone.
+    [Fact]
+    public void Of_FallsBackToTheInstalledLocation_WhenTheEffectiveOneCannotBeRead()
+    {
+        var errors = new List<Exception>();
+        var failure = new IOException("The device is not ready.");
+
+        var locations = PackageLocations.Of(WindowsApps, () => throw failure, errors.Add);
+
+        Assert.Equal(new PackageLocations(WindowsApps), locations);
+        Assert.Same(failure, Assert.Single(errors));
+    }
 }

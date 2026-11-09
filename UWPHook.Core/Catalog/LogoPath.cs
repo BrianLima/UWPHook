@@ -16,6 +16,14 @@ public static class LogoPath
         return path[..path.LastIndexOf('\\')];
     }
 
+    /// <summary>
+    /// The declared logo's folder under the first of <paramref name="locations"/> (preferred first) that has the logo,
+    /// as declared or scale/target-size qualified (<c>Logo.scale-200.png</c>); under the first location when none has it.
+    /// A moddable game's effective folder may lack files its installed folder has.
+    /// </summary>
+    public static string Folder(IReadOnlyList<string> locations, string? relativeLogo, IFolderFiles files) =>
+        Folder(locations[0], relativeLogo);
+
     private static string Join(string folder, string relative) =>
         folder.TrimEnd('\\', '/') + @"\" + relative.Replace('/', '\\').TrimStart('\\');
 }

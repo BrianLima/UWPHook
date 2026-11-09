@@ -8,7 +8,8 @@ public static class CatalogEntryBuilder
     /// and a usable executable; other entries are skipped. The name falls back from the entry's to the manifest
     /// application's, the package's display name and finally the package identity name. AUMIDs are unique (case-insensitive).
     /// </summary>
-    public static IEnumerable<XboxApp> Build(PackageSnapshot package)
+    /// <param name="files">Where to look for the declared logo among the package's folders; without it, the first folder is used.</param>
+    public static IEnumerable<XboxApp> Build(PackageSnapshot package, IFolderFiles? files = null)
     {
         IReadOnlyList<ManifestApplication> applications =
             package.ManifestXml is null ? [] : AppxManifest.ReadApplications(package.ManifestXml);

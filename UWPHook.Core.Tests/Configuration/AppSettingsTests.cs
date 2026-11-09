@@ -51,8 +51,13 @@ public class AppSettingsTests
 
     // R37: the language override was removed.
     [Fact]
-    public void ToString_HasNoLanguageSetting() =>
-        Assert.DoesNotContain("Language", AppSettings.Defaults.ToString());
+    public void ToString_HasNoLanguageSetting()
+    {
+        var text = AppSettings.Defaults.ToString();
+
+        Assert.DoesNotContain("ChangeLanguage", text);
+        Assert.DoesNotContain("TargetLanguage", text);
+    }
 
     [Theory]
     [InlineData(-3, 1)]

@@ -82,14 +82,19 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(AppSettings.Defaults with { Seconds = 7, StreamMode = true }, Store().Load());
     }
 
+    // The upgrade path: a file with the removed keys is loaded and saved again; the keys go, the rest stays.
     [Fact]
-    public void Save_DoesNotWriteTheRemovedLanguageKeys()
+    public void LoadThenSave_AFileWithTheRemovedLanguageKeys_DropsThemAndKeepsTheRest()
     {
-        Store().Save(Changed);
+        File.WriteAllText(SettingsPath, "{ \"changeLanguage\": true, \"targetLanguage\": \"ja-JP\", \"seconds\": 7, \"tags\": \"XBOX\" }");
+
+        Store().Save(Store().Load());
 
         var json = SavedJson();
         Assert.False(json.ContainsKey("changeLanguage"));
         Assert.False(json.ContainsKey("targetLanguage"));
+        Assert.Equal(7, json["seconds"]!.GetValue<int>());
+        Assert.Equal("XBOX", json["tags"]!.GetValue<string>());
     }
 
     [Fact]

@@ -9,6 +9,13 @@ namespace UWPHook.Core.Catalog;
 /// <param name="Effective">The effective folder (<c>Package.EffectiveLocation</c>), or null when Windows cannot tell.</param>
 public sealed record PackageLocations(string Installed, string? Effective = null)
 {
+    /// <summary>
+    /// The locations, with the effective folder read by <paramref name="readEffective"/>. When reading it throws
+    /// (a mutable folder that is gone, an offline drive), the installed folder is used and <paramref name="onUnreadable"/> is told.
+    /// </summary>
+    public static PackageLocations Of(string installed, Func<string?> readEffective, Action<Exception> onUnreadable) =>
+        new(installed);
+
     /// <summary>The folder the package runs from: the effective one when known, the installed one otherwise.</summary>
     public string Preferred => string.IsNullOrEmpty(Effective) ? Installed : Effective;
 

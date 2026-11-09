@@ -9,6 +9,7 @@ namespace UWPHook.Core.Catalog;
 /// <param name="Entries">The package's Start-menu entries.</param>
 /// <param name="ManifestXml">The text of <c>AppxManifest.xml</c>, or null when it could not be read.</param>
 /// <param name="MicrosoftGameConfigXml">The text of <c>MicrosoftGame.config</c>, or null when the package has none.</param>
+/// <param name="Locations">Every folder of the package, <paramref name="InstallLocation"/> first; null means that one only.</param>
 public sealed record PackageSnapshot(
     string FamilyName,
     string PackageName,
@@ -17,4 +18,9 @@ public sealed record PackageSnapshot(
     DateTimeOffset InstalledDate,
     IReadOnlyList<AppListEntrySnapshot> Entries,
     string? ManifestXml,
-    string? MicrosoftGameConfigXml);
+    string? MicrosoftGameConfigXml,
+    IReadOnlyList<string>? Locations = null)
+{
+    /// <summary>The folders to look for the package's files in, <see cref="InstallLocation"/> first.</summary>
+    public IReadOnlyList<string> Folders => Locations is { Count: > 0 } ? Locations : [InstallLocation];
+}

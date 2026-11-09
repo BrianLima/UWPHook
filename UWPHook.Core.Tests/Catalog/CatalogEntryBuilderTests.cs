@@ -171,4 +171,28 @@ public class CatalogEntryBuilderTests
 
         Assert.Empty(Build(package));
     }
+
+    // A moddable game: the logo is only in the installed folder, not in the effective one it runs from.
+    [Fact]
+    public void Build_TakesTheLogoFolderFromTheInstalledFolder_WhenTheEffectiveOneLacksTheLogo()
+    {
+        const string windowsApps = @"C:\Program Files\WindowsApps\Contoso.Game_1.0.0.0_x64__8wekyb3d8bbwe";
+        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe", [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")])
+            with { Locations = [Install, windowsApps] };
+        var files = new OnlyIn(windowsApps + @"\Assets", LogoFileName);
+
+        var app = Assert.Single(CatalogEntryBuilder.Build(package, files));
+
+        Assert.Equal(windowsApps + @"\Assets", app.IconFolder);
+        Assert.Equal(Install, app.InstallLocation);
+    }
+
+    // UwpApp.AppxManifest.xml declares Square150x150Logo="Assets\Square150x150Logo.png".
+    private const string LogoFileName = "Square150x150Logo.scale-200.png";
+
+    private sealed class OnlyIn(string folder, string name) : IFolderFiles
+    {
+        public IReadOnlyCollection<string> NamesIn(string candidate) =>
+            string.Equals(candidate, folder, StringComparison.OrdinalIgnoreCase) ? [name] : [];
+    }
 }
