@@ -1,6 +1,4 @@
-﻿using MaterialDesignColors;
-using MaterialDesignThemes.Wpf;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,24 +16,15 @@ namespace UWPHook
 {
     /// <summary>
     /// Stream mode's splash: the only window a launch from Steam opens, shown while Steam's stream
-    /// catches up. <see cref="GameLauncher"/> switches WPF to software rendering before showing it.
+    /// catches up. It is always dark (ThemeMode="Dark" in its XAML), whatever the system theme.
+    /// <see cref="GameLauncher"/> switches WPF to software rendering before showing it.
     /// </summary>
     public partial class FullScreenLauncher : Window
     {
-        public PaletteHelper pallet;
         public FullScreenLauncher()
         {
             InitializeComponent();
             textLaunch.Text = GetLauncherText();
-            pallet = new PaletteHelper();
-
-            BaseTheme darkTheme = BaseTheme.Dark;
-
-            var theme = Theme.Create(darkTheme,
-            SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.DeepPurple],
-            SwatchHelper.Lookup[(MaterialDesignColor)SecondaryColor.Lime]);
-
-            pallet.SetTheme(theme);
         }
 
         private void Chip2_Click(object sender, RoutedEventArgs e)

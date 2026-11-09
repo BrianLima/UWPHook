@@ -47,8 +47,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MaterialDesignColors" />
-		<PackageReference Include="MaterialDesignThemes" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.Sinks.Console" />

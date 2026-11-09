@@ -61,8 +61,18 @@ public sealed class XamlLoadTests
 
     // The stream splash goes full screen over the game: dark whatever the system theme is.
     [Fact]
-    public void Splash_IsDark() =>
-        Assert.Equal(ThemeMode.Dark, UiThread.Run(() => new FullScreenLauncher().ThemeMode));
+    public void Splash_IsDark()
+    {
+        var (mode, background) = UiThread.Run(() =>
+        {
+            var splash = new FullScreenLauncher();
+            LayOut(splash);
+            return (splash.ThemeMode, (splash.Background as SolidColorBrush)?.Color);
+        });
+
+        Assert.Equal(ThemeMode.Dark, mode);
+        Assert.Equal(Color.FromRgb(0x20, 0x20, 0x20), background); // Fluent's dark ApplicationBackgroundColor
+    }
 
     [Theory]
     [InlineData("settingsButton", "\uE713")]
