@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Diagnostics;
@@ -9,12 +10,14 @@ namespace UWPHook.Presentation.Settings;
 /// The Settings window: the stored settings to edit (<see cref="Form"/>), the Steam accounts to export to
 /// (<see cref="Accounts"/>), Save, "Remove UWPHook shortcuts" and the links.
 /// </summary>
-public sealed class SettingsViewModel // RED stub: no INPC yet
+/// <remarks>An <see cref="ObservableObject"/>: WPF leaks a window bound to a source without change notification.</remarks>
+public sealed class SettingsViewModel : ObservableObject
 {
     public const string ChooseAnAccount = "Choose at least one Steam account to export your games to.";
 
     public const string RemoveWarning =
-        "This action will remove every shortcut UWPHook added to Steam. Non-Steam games added by Steam or other tools are kept, and shortcuts.vdf is backed up first."
+        "This removes the shortcuts UWPHook added to Steam, from the Steam accounts saved in Settings (ticks you have not saved yet don't count). "
+        + "Non-Steam games added by Steam or other tools are kept, and shortcuts.vdf is backed up first."
         + "\r\nAre you sure you want to continue?";
 
     private const string ApiKeyPage = "https://www.steamgriddb.com/profile/preferences/api";

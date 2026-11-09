@@ -39,7 +39,7 @@ public sealed class ShortcutExporter(
             return ExportSummary.SteamNotFound();
         }
 
-        var users = request.Accounts.Apply(steam.Users(installFolder));
+        var users = request.Accounts.ApplyLogged(steam.Users(installFolder), log);
         if (users.Count == 0)
         {
             log.Warning("No Steam account folder in {SteamFolder}\\userdata; nothing was exported", installFolder);

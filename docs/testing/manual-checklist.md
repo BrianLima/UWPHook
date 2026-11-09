@@ -144,3 +144,7 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] "Remove UWPHook shortcuts": the warning question shows first; No does nothing; Yes removes and shows the same messages as before; the button is disabled while it runs.
 - [ ] The links (Check for updates, Reddit, GitHub, PayPal, Twitter) and the key button (info box, then the SteamGridDB API page) open as before.
 - [ ] A launch from Steam (stream mode, poll seconds) behaves as before; the settings are read through the composition root.
+- [ ] Fix round 1 (R38): sort the games list by a column, then type in the filter box: the sort and the columns stay, and a Name edit in progress is not lost; clearing the filter brings back every app, still sorted.
+- [ ] The list is ordered by the friendly name from `KnownApps.json` (2.14 sorted by the package's name, then renamed), e.g. a known app sits under its friendly name.
+- [ ] Choose only account B in Settings, then delete `userdata\<B>`: export and Remove use every account, and `application.log` has the Warning "The Steam accounts chosen in Settings (…) no longer exist; using every account".
+- [ ] The Remove question says it removes UWPHook's shortcuts from the Steam accounts saved in Settings.
