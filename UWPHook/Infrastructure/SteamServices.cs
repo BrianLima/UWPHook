@@ -22,7 +22,7 @@ namespace UWPHook.Infrastructure
         public static ShortcutExporter Exporter(Action onKeyRejected)
         {
             var steam = NewSteamLibrary();
-            var artwork = new SteamGridArtwork(SteamGridDbService.Shared, TempGridFolder, IconsFolder, onKeyRejected);
+            var artwork = new SteamGridArtwork(SteamGridDbService.Shared, TempGridFolder, IconsFolder, onKeyRejected, SerilogLog.Instance);
             return new ShortcutExporter(steam, NewSteamRestarter(steam), NewBackupFolder(), artwork, SerilogLog.Instance);
         }
 

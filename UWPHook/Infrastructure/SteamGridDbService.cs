@@ -20,10 +20,11 @@ namespace UWPHook.Infrastructure
 
         private readonly Func<AppSettings> _settings;
 
-        public SteamGridDbService(Func<AppSettings> settings)
+        /// <param name="inner">Sends the requests; the network by default (tests pass a fake).</param>
+        public SteamGridDbService(Func<AppSettings> settings, HttpMessageHandler? inner = null)
         {
             _settings = settings;
-            var http = new HttpClient(new BearerKeyHandler(() => _settings().SteamGridDbApiKey) { InnerHandler = new SocketsHttpHandler() })
+            var http = new HttpClient(new BearerKeyHandler(() => _settings().SteamGridDbApiKey) { InnerHandler = inner ?? new SocketsHttpHandler() })
             {
                 BaseAddress = BaseAddress,
                 Timeout = TimeSpan.FromSeconds(30),

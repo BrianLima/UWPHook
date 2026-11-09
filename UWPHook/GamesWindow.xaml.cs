@@ -75,7 +75,7 @@ namespace UWPHook
             }
         }
 
-        private static ExportApp ToExportApp(AppEntry app) => new ExportApp(app.Name, app.Aumid, app.Executable, app.widestSquareIcon());
+        private static ExportApp ToExportApp(AppEntry app) => new ExportApp(app.Name, app.Aumid, app.Executable, app.IconPath);
 
         /// <summary>The UWPHook.exe path that survives updates (the stable launcher path).</summary>
         private static string StableExePath() =>
