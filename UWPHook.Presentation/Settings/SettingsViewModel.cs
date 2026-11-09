@@ -69,6 +69,8 @@ public sealed class SettingsViewModel
         await Task.CompletedTask; // RED stub
     }
 
+    private void RequestClose() => CloseRequested?.Invoke(this, EventArgs.Empty); // RED stub: not called yet
+
     private void GetApiKey()
     {
         _ = (settings, remover, dialogs, host, log); // RED stub
