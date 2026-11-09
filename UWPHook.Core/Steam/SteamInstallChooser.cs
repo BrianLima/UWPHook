@@ -14,7 +14,13 @@ public static class SteamInstallChooser
     /// <param name="dirExists">Whether a folder exists.</param>
     /// <returns>The first of the two (normalised to backslashes) whose folder exists, or null.</returns>
     public static string? Choose(string? hkcuPath, string? hklmPath, Func<string, bool> dirExists) =>
-        new[] { hkcuPath, hklmPath }
+        Choose([hkcuPath, hklmPath], dirExists);
+
+    /// <param name="candidates">The registry's paths, most trusted first (HKCU SteamPath, then each HKLM view).</param>
+    /// <param name="dirExists">Whether a folder exists.</param>
+    /// <returns>The first candidate (normalised to backslashes) whose folder exists, or null.</returns>
+    public static string? Choose(IEnumerable<string?> candidates, Func<string, bool> dirExists) =>
+        candidates
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(path => Normalise(path!))
             .FirstOrDefault(dirExists);
