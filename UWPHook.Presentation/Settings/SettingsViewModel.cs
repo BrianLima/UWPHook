@@ -39,7 +39,7 @@ public sealed class SettingsViewModel
         Accounts = SteamAccountList.Load(steam, settings.Current.ExportSteamAccounts, log);
         SaveCommand = new RelayCommand(Save);
         RemoveShortcutsCommand = new AsyncRelayCommand(RemoveShortcutsAsync);
-        OpenLinkCommand = new RelayCommand<string>(_ => { }); // RED stub
+        OpenLinkCommand = new RelayCommand<string>(url => host.OpenUrl(url!));
         GetApiKeyCommand = new RelayCommand(GetApiKey);
     }
 
@@ -60,19 +60,47 @@ public sealed class SettingsViewModel
     /// <summary>Saves and closes; when saving fails the error is shown and the window stays open with the edits.</summary>
     private void Save()
     {
-        // RED stub
+        if (Accounts.NoneChosen)
+        {
+            dialogs.Show(MessageSeverity.Warning, ChooseAnAccount);
+            return;
+        }
+
+        try
+        {
+            settings.Update(current => Accounts.ApplyTo(Form.ApplyTo(current)));
+        }
+        catch (Exception e)
+        {
+            dialogs.ReportError(e, "Saving your settings failed.");
+            return;
+        }
+
+        host.ApplyLogLevel(settings.Current.LogLevel);
+        CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>From the saved accounts, off the UI thread; the command is disabled while it runs.</summary>
     private async Task RemoveShortcutsAsync()
     {
-        await Task.CompletedTask; // RED stub
-    }
+        if (!dialogs.Confirm(RemoveWarning, ConfirmTone.Warning)) return;
 
-    private void RequestClose() => CloseRequested?.Invoke(this, EventArgs.Empty); // RED stub: not called yet
+        try
+        {
+            var accounts = settings.Current.ExportSteamAccounts;
+            var summary = await Task.Run(() => remover.RemoveAsync(accounts));
+            log.Information("Remove finished: {Summary}", summary);
+            dialogs.Show(summary.Severity, summary.Message);
+        }
+        catch (Exception e)
+        {
+            dialogs.ReportError(e, "Removing UWPHook's shortcuts failed.");
+        }
+    }
 
     private void GetApiKey()
     {
-        _ = (settings, remover, dialogs, host, log); // RED stub
+        dialogs.Show(MessageSeverity.Information, ApiKeyHelp, "Attention!");
+        host.OpenUrl(ApiKeyPage);
     }
 }

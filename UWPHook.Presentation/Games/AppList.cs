@@ -11,7 +11,7 @@ public sealed class AppList : ObservableObject
     public ObservableCollection<AppRow> All { get; } = [];
 
     /// <summary>The apps whose name or AUMID contains <see cref="Filter"/>, ignoring case; all of them when it is empty.</summary>
-    public IReadOnlyList<AppRow> Visible => [.. All]; // RED stub
+    public IReadOnlyList<AppRow> Visible => filter.Length == 0 ? [.. All] : [.. All.Where(row => row.Matches(filter))];
 
     public string Filter
     {
@@ -34,6 +34,6 @@ public sealed class AppList : ObservableObject
     /// <summary>Ticks or clears the apps the filter shows; hidden ones keep their state.</summary>
     public void SelectVisible(bool selected)
     {
-        // RED stub
+        foreach (var row in Visible) row.Selected = selected;
     }
 }

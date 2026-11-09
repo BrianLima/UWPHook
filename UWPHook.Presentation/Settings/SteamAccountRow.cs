@@ -22,7 +22,13 @@ public sealed class SteamAccountRow(SteamUser user, bool isChosen) : ObservableO
     }
 
     /// <summary>"PersonaName (AccountName)", whichever of the two it has, or the account id when it has neither.</summary>
-    public static string LabelFor(SteamUser user) => user.AccountId; // RED stub
+    public static string LabelFor(SteamUser user) => (Named(user.PersonaName), Named(user.AccountName)) switch
+    {
+        ({ } persona, { } account) => $"{persona} ({account})",
+        ({ } persona, null) => persona,
+        (null, { } account) => account,
+        _ => user.AccountId,
+    };
 
     private static string? Named(string? name) => string.IsNullOrWhiteSpace(name) ? null : name;
 }

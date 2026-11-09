@@ -1,6 +1,10 @@
 using System.IO;
+using System.Net;
 using UWPHook.Core.Configuration;
+using UWPHook.Core.Diagnostics;
 using UWPHook.Core.Steam;
+using UWPHook.Core.Tests.Artwork.SteamGridDb;
+using UWPHook.Core.Tests.Diagnostics;
 using UWPHook.Infrastructure;
 using Xunit;
 
@@ -12,7 +16,11 @@ public sealed class SteamGridArtworkTests : IDisposable
     private const string Aumid = "Microsoft.Halo_8wekyb3d8bbwe!App";
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "UWPHook.Windows.Tests", Guid.NewGuid().ToString("N"));
+    private readonly RecordingLog _log = new();
     private int _keyRejections;
+
+    /// <summary>The icon the app's logo folder offers; tests set it instead of drawing real images.</summary>
+    private readonly Dictionary<string, string> _iconsInFolders = new();
 
     public void Dispose()
     {
@@ -28,8 +36,12 @@ public sealed class SteamGridArtworkTests : IDisposable
     private string GridFolder => Path.Combine(UserFolder, "config", "grid");
     private string TempGridOf(string aumid) => Path.Combine(TempRoot, aumid);
 
-    private SteamGridArtwork Artwork() =>
-        new(new SteamGridDbService(() => AppSettings.Defaults), TempRoot, IconsFolder, () => _keyRejections++);
+    private SteamGridArtwork Artwork(SteamGridDbService? sgdb = null) =>
+        new(sgdb ?? new SteamGridDbService(() => AppSettings.Defaults), TempRoot, IconsFolder, () => _keyRejections++, _log,
+            folder => _iconsInFolders.GetValueOrDefault(folder, ""));
+
+    private static SteamGridDbService WithKey(HttpMessageHandler handler) =>
+        new(() => AppSettings.Defaults with { SteamGridDbApiKey = "key" }, handler);
 
     private static void WriteFile(string path, string content)
     {
@@ -37,7 +49,13 @@ public sealed class SteamGridArtworkTests : IDisposable
         File.WriteAllText(path, content);
     }
 
-    private static ExportApp App(string icon = "") => new("Halo", Aumid, "halo.exe", icon);
+    private string LogoFolder => Path.Combine(_root, "app", "Assets");
+
+    private ExportApp App(string? icon = null)
+    {
+        if (icon is not null) _iconsInFolders[LogoFolder] = icon;
+        return new("Halo", Aumid, "halo.exe", LogoFolder);
+    }
 
     [Fact]
     public void InstallFor_CopiesEachImage_NamedAfterTheAppsIdForThisAccount()
@@ -75,9 +93,9 @@ public sealed class SteamGridArtworkTests : IDisposable
     }
 
     [Fact]
-    public void IconFor_CopiesTheAppsIcon_ToOneStableNamePerApp()
+    public void IconFor_CopiesTheIconPickedInTheAppsLogoFolder_ToOneStableNamePerApp()
     {
-        var source = Path.Combine(_root, "app", "logo.png");
+        var source = Path.Combine(LogoFolder, "logo.png");
         WriteFile(source, "icon");
 
         var icon = Artwork().IconFor(App(source));
@@ -126,5 +144,35 @@ public sealed class SteamGridArtworkTests : IDisposable
 
         Assert.False(Directory.Exists(TempRoot));
         Assert.Equal(0, _keyRejections);
+    }
+
+    // 10a: a failed search is a Warning; a search that finds nothing is only Information.
+    [Fact]
+    public async Task PrepareAsync_WhenTheSearchFails_LogsAWarning()
+    {
+        await Artwork(WithKey(FakeHandler.Status(HttpStatusCode.InternalServerError))).PrepareAsync([App()], TestContext.Current.CancellationToken);
+
+        Assert.Contains(_log.At(LogLevel.Warning), entry => entry.Template.StartsWith("Searching SteamGridDB"));
+        Assert.Equal(0, _keyRejections);
+    }
+
+    [Fact]
+    public async Task PrepareAsync_WhenNoGameIsFound_LogsItAsInformation()
+    {
+        await Artwork(WithKey(FakeHandler.Json("{\"success\":true,\"data\":[]}"))).PrepareAsync([App()], TestContext.Current.CancellationToken);
+
+        Assert.Empty(_log.At(LogLevel.Warning));
+        Assert.Single(_log.At(LogLevel.Information));
+    }
+
+    [Fact]
+    public async Task PrepareAsync_WhenTheKeyIsRejected_TellsItOnce()
+    {
+        var apps = new[] { App(), new ExportApp("Forza", "Microsoft.Forza_8wekyb3d8bbwe!App", "forza.exe", "") };
+
+        await Artwork(WithKey(FakeHandler.Status(HttpStatusCode.Unauthorized))).PrepareAsync(apps, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, _keyRejections);
+        Assert.Single(_log.At(LogLevel.Warning));
     }
 }

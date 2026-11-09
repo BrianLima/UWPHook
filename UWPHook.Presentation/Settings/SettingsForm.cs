@@ -23,7 +23,18 @@ public sealed class SettingsForm : ObservableObject
     private int humorIndex;
     private string tags = "";
 
-    public static SettingsForm From(AppSettings settings) => new(); // RED stub
+    public static SettingsForm From(AppSettings settings) => new()
+    {
+        SecondsIndex = settings.Seconds - AppSettings.MinSeconds,
+        StreamMode = settings.StreamMode,
+        LogLevelIndex = (int)settings.LogLevel,
+        SteamGridDbApiKey = settings.SteamGridDbApiKey,
+        StyleIndex = ArtworkChoices.Styles.IndexOf(settings.ArtworkStyle),
+        TypeIndex = ArtworkChoices.Types.IndexOf(settings.ArtworkType),
+        NsfwIndex = ArtworkChoices.Nsfw.IndexOf(settings.ArtworkNsfw),
+        HumorIndex = ArtworkChoices.Humor.IndexOf(settings.ArtworkHumor),
+        Tags = settings.Tags,
+    };
 
     public int SecondsIndex { get => secondsIndex; set => SetProperty(ref secondsIndex, value); }
 
@@ -45,5 +56,16 @@ public sealed class SettingsForm : ObservableObject
     public string Tags { get => tags; set => SetProperty(ref tags, value ?? ""); }
 
     /// <summary>The stored settings with this form's edits.</summary>
-    public AppSettings ApplyTo(AppSettings settings) => settings; // RED stub
+    public AppSettings ApplyTo(AppSettings settings) => settings with
+    {
+        Seconds = SecondsIndex >= 0 ? SecondsIndex + AppSettings.MinSeconds : settings.Seconds,
+        StreamMode = StreamMode,
+        LogLevel = Enum.IsDefined((AppLogLevel)LogLevelIndex) ? (AppLogLevel)LogLevelIndex : settings.LogLevel,
+        SteamGridDbApiKey = SteamGridDbApiKey.Trim('\r', '\n'),
+        ArtworkStyle = ArtworkChoices.Styles.ValueAt(StyleIndex, settings.ArtworkStyle),
+        ArtworkType = ArtworkChoices.Types.ValueAt(TypeIndex, settings.ArtworkType),
+        ArtworkNsfw = ArtworkChoices.Nsfw.ValueAt(NsfwIndex, settings.ArtworkNsfw),
+        ArtworkHumor = ArtworkChoices.Humor.ValueAt(HumorIndex, settings.ArtworkHumor),
+        Tags = Tags,
+    };
 }

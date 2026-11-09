@@ -19,7 +19,7 @@ public sealed class ShortcutRemover(ISteamLocator steam, SteamRestarter restarte
         var installFolder = steam.InstallFolder();
         if (installFolder is null) return RemoveSummary.SteamNotFound();
 
-        var shortcuts = steam.Users(installFolder)
+        var shortcuts = accounts.Apply(steam.Users(installFolder))
             .Select(user => new SteamUserShortcuts(user.FolderIn(installFolder), backups, log))
             .ToList();
         var (found, unreadable) = Count(shortcuts);

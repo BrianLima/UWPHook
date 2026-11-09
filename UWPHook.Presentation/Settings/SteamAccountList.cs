@@ -19,7 +19,16 @@ public sealed class SteamAccountList
     /// <summary>The accounts of the Steam install; none when Steam was not found or can't be read (logged).</summary>
     public static SteamAccountList Load(ISteamLocator steam, SteamAccountChoice stored, ILog log)
     {
-        return new SteamAccountList([], stored); // RED stub
+        try
+        {
+            var folder = steam.InstallFolder();
+            return new SteamAccountList(folder is null ? [] : steam.Users(folder), stored);
+        }
+        catch (Exception e)
+        {
+            log.Warning(e, "Could not list the Steam accounts; Settings shows none");
+            return new SteamAccountList([], stored);
+        }
     }
 
     public IReadOnlyList<SteamAccountRow> Rows { get; }
@@ -30,5 +39,10 @@ public sealed class SteamAccountList
     public bool NoneChosen => HasAccounts && !Rows.Any(row => row.IsChosen);
 
     /// <summary>The settings with the ticked accounts; without any listed account the stored choice is kept.</summary>
-    public AppSettings ApplyTo(AppSettings settings) => settings; // RED stub
+    public AppSettings ApplyTo(AppSettings settings) => HasAccounts
+        ? settings with
+        {
+            ExportSteamAccounts = SteamAccountChoice.Of(Rows.Where(row => row.IsChosen).Select(row => row.User), [.. Rows.Select(row => row.User)]),
+        }
+        : settings;
 }

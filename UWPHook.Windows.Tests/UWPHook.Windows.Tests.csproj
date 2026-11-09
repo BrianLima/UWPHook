@@ -27,6 +27,8 @@
   <ItemGroup>
     <!-- The hand-written binary VDF builder/reader, shared with the Core tests so seeds don't depend on the code under test. -->
     <Compile Include="..\UWPHook.Core.Tests\Steam\BinaryVdf.cs" Link="Steam\BinaryVdf.cs" />
+    <Compile Include="..\UWPHook.Core.Tests\Diagnostics\RecordingLog.cs" Link="Diagnostics\RecordingLog.cs" />
+    <Compile Include="..\UWPHook.Core.Tests\Artwork\SteamGridDb\FakeHandler.cs" Link="Artwork\FakeHandler.cs" />
   </ItemGroup>
 
   <ItemGroup>

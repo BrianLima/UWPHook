@@ -79,12 +79,36 @@ public sealed class GamesViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
-        await Task.CompletedTask; // RED stub
+        IsBusy = true;
+        Status = LoadingStatus;
+        Apps.Replace([]);
+        try
+        {
+            var includeSystem = IncludeSystemApps;
+            var apps = await Task.Run(() => catalog.GetInstalledAppsAsync(includeSystem, CancellationToken.None));
+            Apps.Replace(apps.OrderBy(app => app.DisplayName, StringComparer.CurrentCultureIgnoreCase).Select(app => new AppRow(app)));
+        }
+        catch (Exception e)
+        {
+            dialogs.ReportError(e, "Loading your installed apps failed.");
+        }
+        finally
+        {
+            IsBusy = false;
+            Status = LoadedStatus;
+        }
     }
 
     private async Task ExportAsync()
     {
-        await Task.CompletedTask; // RED stub
+        var current = settings.Current;
+        var request = new ExportRequest([.. Apps.Selected.Select(row => row.ToExportApp())], current.Tags, uwpHookExe)
+        {
+            Accounts = current.ExportSteamAccounts,
+        };
+
+        if (await ExportedAsync(request) is { } summary)
+            dialogs.Show(summary.Severity, summary.Message);
     }
 
     /// <summary>Off the UI thread (icons, downloads, file writes). Null when the export threw.</summary>
@@ -114,7 +138,17 @@ public sealed class GamesViewModel : ObservableObject
     /// </summary>
     public bool OfferSteamGridDbOnce()
     {
-        _ = (catalog, exporter, uwpHookExe, dialogs, log, settings);
-        return false; // RED stub
+        if (settings.Current.OfferedSteamGridDb) return false;
+
+        try
+        {
+            settings.Update(current => current with { OfferedSteamGridDb = true });
+        }
+        catch (Exception e)
+        {
+            log.Error(e, "Saving that SteamGridDB was offered failed");
+        }
+
+        return dialogs.Confirm(SteamGridDbOffer, ConfirmTone.Question);
     }
 }
