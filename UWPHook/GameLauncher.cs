@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using Serilog;
+using UWPHook.Core.Configuration;
 using UWPHook.Core.Launch;
 using UWPHook.Infrastructure;
 
@@ -25,22 +26,23 @@ namespace UWPHook
         private static readonly TimeSpan StreamSplashDuration = TimeSpan.FromSeconds(10);
 
         /// <summary>Runs the whole session. Never throws: errors are logged and shown in a message box.</summary>
-        public static async Task RunAsync(LaunchRequest request)
+        public static async Task RunAsync(LaunchRequest request, ISettingsService settingsService)
         {
             var languageToRestore = (string?)null;
 
             try
             {
-                if (UserSettings.Current.StreamMode) await ShowStreamSplashAsync();
+                var settings = settingsService.Current;
+                if (settings.StreamMode) await ShowStreamSplashAsync();
 
-                languageToRestore = LanguageToRestore();
-                if (languageToRestore is not null) OverrideLanguage();
+                languageToRestore = LanguageToRestore(settings);
+                if (languageToRestore is not null) OverrideLanguage(settings);
 
                 var session = new GameSession(new ComActivator(), new PackageProcessWatcher(), TimeProvider.System)
                 {
                     OnWatcherError = e => Log.Warning(e, "Looking for processes of {FamilyName} failed", request.PackageFamilyName),
                 };
-                LogOutcome(request, await session.RunAsync(request, PollInterval(), LauncherGrace));
+                LogOutcome(request, await session.RunAsync(request, PollInterval(settings), LauncherGrace));
             }
             catch (Exception e)
             {
@@ -83,7 +85,7 @@ namespace UWPHook
         /// Settings → "Seconds" is how often to check whether the game is still running.
         /// At least one second, so a 0 does not turn the check into a busy loop.
         /// </summary>
-        private static TimeSpan PollInterval() => TimeSpan.FromSeconds(Math.Max(1, UserSettings.Current.Seconds));
+        private static TimeSpan PollInterval(AppSettings settings) => TimeSpan.FromSeconds(Math.Max(1, settings.Seconds));
 
         /// <summary>
         /// The splash is the only window a launch may open. It renders in software, set before any window
@@ -110,8 +112,8 @@ namespace UWPHook
         /// The language to put back after the game, or null when the language override is off.
         /// Read before overriding, so a restore happens even if the override script fails half-way.
         /// </summary>
-        private static string? LanguageToRestore() =>
-            UserSettings.Current.ChangeLanguage && !string.IsNullOrEmpty(UserSettings.Current.TargetLanguage)
+        private static string? LanguageToRestore(AppSettings settings) =>
+            settings.ChangeLanguage && !string.IsNullOrEmpty(settings.TargetLanguage)
                 ? CultureInfo.CurrentCulture.ToString()
                 : null;
 
@@ -119,15 +121,15 @@ namespace UWPHook
         /// Some games follow the Windows UI language, so overriding it can change the game's language.
         /// Never throws: scripts stop on cmdlet errors, and a failed override must not keep the game from launching.
         /// </summary>
-        private static void OverrideLanguage()
+        private static void OverrideLanguage(AppSettings settings)
         {
             try
             {
-                ScriptManager.RunScript("Set-WinUILanguageOverride " + UserSettings.Current.TargetLanguage);
+                ScriptManager.RunScript("Set-WinUILanguageOverride " + settings.TargetLanguage);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Setting the Windows UI language to {Language} failed; launching anyway", UserSettings.Current.TargetLanguage);
+                Log.Error(e, "Setting the Windows UI language to {Language} failed; launching anyway", settings.TargetLanguage);
             }
         }
 

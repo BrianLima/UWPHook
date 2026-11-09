@@ -14,7 +14,8 @@ namespace UWPHook.Infrastructure
     {
         private static readonly LoggingLevelSwitch levelSwitch = new LoggingLevelSwitch();
 
-        public static void Configure()
+        /// <param name="level">The level chosen in Settings; read once the log exists, so loading the settings is logged too.</param>
+        public static void Configure(Func<AppLogLevel> level)
         {
             string loggerFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "application.log");
 
@@ -26,13 +27,13 @@ namespace UWPHook.Infrastructure
 
             // Switch to Info first so the chosen level is announced in the log, then to the chosen level.
             levelSwitch.MinimumLevel = LogEventLevel.Information;
-            ApplySelectedLevel();
+            ApplyLevel(level());
         }
 
         /// <summary>Applies the level picked in Settings.</summary>
-        public static void ApplySelectedLevel()
+        public static void ApplyLevel(AppLogLevel level)
         {
-            switch (UserSettings.Current.LogLevel)
+            switch (level)
             {
                 case AppLogLevel.Debug:
                     Log.Information("Init log with DEBUG level.");

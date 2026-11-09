@@ -55,7 +55,7 @@ namespace UWPHook.Infrastructure
             if (search.Status == SgdbStatus.Failed)
             {
                 // 10a: a failed search is worth a Warning, unlike a search that simply found nothing
-                log.Information("Searching SteamGridDB for {App} failed ({Result}); it gets no artwork", app.Name, search); // RED stub: the old level
+                log.Warning("Searching SteamGridDB for {App} failed ({Result}); it gets no artwork", app.Name, search);
                 return false;
             }
             if (!search.IsOk || search.Value.Count == 0)

@@ -12,9 +12,6 @@ namespace UWPHook.Infrastructure
     {
         private static readonly Uri BaseAddress = new Uri("https://www.steamgriddb.com/api/v2/");
 
-        /// <summary>The app's one service, over <see cref="UserSettings"/>, until Task 10c-2's composition root owns it.</summary>
-        public static SteamGridDbService Shared { get; } = new SteamGridDbService(() => UserSettings.Current);
-
         public const string InvalidKeyMessage =
             "Your SteamGridDB API key was rejected; artwork was skipped. Check it in Settings.";
 

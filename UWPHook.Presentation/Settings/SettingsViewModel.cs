@@ -50,6 +50,9 @@ public sealed class SettingsViewModel
 
     public SettingsForm Form { get; }
 
+    /// <summary>The seconds combo box's items; see <see cref="SettingsForm.SecondsChoices"/>.</summary>
+    public IReadOnlyList<string> SecondsChoices => SettingsForm.SecondsChoices;
+
     public SteamAccountList Accounts { get; }
 
     public IRelayCommand SaveCommand { get; }

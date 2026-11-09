@@ -12,7 +12,7 @@ namespace UWPHook.Infrastructure
         /// </summary>
         public static string WidestIn(string? folder)
         {
-            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder) || folder.Length > 0) return ""; // RED stub
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return "";
 
             string result = "";
             int widest = 0;
