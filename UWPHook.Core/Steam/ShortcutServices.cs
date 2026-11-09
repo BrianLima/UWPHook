@@ -1,0 +1,13 @@
+namespace UWPHook.Core.Steam;
+
+/// <summary>Exports apps to Steam; see <see cref="ShortcutExporter"/>.</summary>
+public interface IShortcutExporter
+{
+    Task<ExportSummary> ExportAsync(ExportRequest request, CancellationToken ct = default);
+}
+
+/// <summary>Removes UWPHook's shortcuts from Steam; see <see cref="ShortcutRemover"/>.</summary>
+public interface IShortcutRemover
+{
+    Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default);
+}

@@ -12,7 +12,7 @@ public sealed class ShortcutExporter(
     SteamRestarter restarter,
     ShortcutsBackupFolder backups,
     IArtworkInstaller artwork,
-    ILog log)
+    ILog log) : IShortcutExporter
 {
     /// <summary>What really happened; see <see cref="ExportSummary"/>. The artwork is cleaned up whatever the outcome.</summary>
     public async Task<ExportSummary> ExportAsync(ExportRequest request, CancellationToken ct = default)
@@ -29,6 +29,7 @@ public sealed class ShortcutExporter(
 
     private async Task<ExportSummary> ExportUniqueAppsAsync(ExportRequest request, CancellationToken ct)
     {
+        var exe = request.FindUwpHookExe(); // RED stub: asked before the pre-checks
         var apps = request.UniqueApps;
         if (apps.Count == 0) return ExportSummary.NothingSelected();
 
@@ -51,7 +52,7 @@ public sealed class ShortcutExporter(
         // The same shortcuts go to every account, so each icon is persisted once, not once per account
         var tags = request.Tags;
         var wanted = apps
-            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, request.UwpHookExePath, artwork.IconFor(app), tags))
+            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exe, artwork.IconFor(app), tags))
             .ToList();
 
         var folders = users.Select(user => user.FolderIn(installFolder)).ToList();

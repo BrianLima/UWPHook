@@ -62,4 +62,13 @@ public class AppSettingsTests
         Assert.Equal(expected, new AppSettings { Seconds = value }.Seconds);
         Assert.Equal(expected, (AppSettings.Defaults with { Seconds = value }).Seconds);
     }
+
+    [Fact]
+    public void Defaults_ExportToEverySteamAccount() => Assert.True(AppSettings.Defaults.ExportSteamAccounts.IsAll);
+
+    [Fact]
+    public void Equality_ComparesTheChosenSteamAccountsByTheirIds() =>
+        Assert.Equal(
+            AppSettings.Defaults with { ExportSteamAccounts = new UWPHook.Core.Steam.SteamAccountChoice(["1"]) },
+            AppSettings.Defaults with { ExportSteamAccounts = new UWPHook.Core.Steam.SteamAccountChoice(["1"]) });
 }

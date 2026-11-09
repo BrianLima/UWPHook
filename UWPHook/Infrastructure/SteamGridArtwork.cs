@@ -78,7 +78,7 @@ namespace UWPHook.Infrastructure
         /// the app's own path (possibly empty) is kept.
         /// </summary>
         public string IconFor(ExportApp app) =>
-            TryPersistIcon(app.Aumid, app.Icon) ?? TryPersistIcon(app.Aumid, DownloadedLogo(app.Aumid)) ?? app.Icon;
+            TryPersistIcon(app.Aumid, app.IconFolder) ?? TryPersistIcon(app.Aumid, DownloadedLogo(app.Aumid)) ?? app.IconFolder;
 
         public void InstallFor(string userFolder, IReadOnlyDictionary<string, uint> gridIdsByAumid)
         {

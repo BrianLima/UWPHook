@@ -35,6 +35,20 @@ jobs:
         shell: bash
         run: bash .github/scripts/summarize-trx.sh "Test summary" TestResults
 
+      # The ViewModels (no WPF), so they run here on Linux too.
+      - name: Presentation tests
+        if: always()
+        run: >-
+          dotnet test UWPHook.Presentation.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory PresentationTestResults
+
+      - name: Summarize presentation tests
+        if: always()
+        shell: bash
+        run: bash .github/scripts/summarize-trx.sh "Presentation test summary" PresentationTestResults
+
   app:
     runs-on: windows-latest
     steps:

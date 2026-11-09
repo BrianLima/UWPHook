@@ -35,6 +35,7 @@ public sealed class SettingsStoreTests : IDisposable
         OfferedSteamGridDb = true,
         Tags = "XBOX,GAME PASS",
         LogLevel = AppLogLevel.Trace,
+        ExportSteamAccounts = new UWPHook.Core.Steam.SteamAccountChoice(["111", "222"]),
     };
 
     private JsonObject SavedJson() => JsonNode.Parse(File.ReadAllText(SettingsPath))!.AsObject();
@@ -47,6 +48,31 @@ public sealed class SettingsStoreTests : IDisposable
         Store().Save(Changed);
 
         Assert.Equal(Changed, Store().Load());
+    }
+
+    // #76: the chosen Steam accounts are stored as a list of ids.
+    [Fact]
+    public void Save_WritesTheChosenSteamAccounts_AsAListOfIds()
+    {
+        Store().Save(Changed);
+
+        Assert.Equal("[\"111\",\"222\"]", SavedJson()["exportSteamAccounts"]!.ToJsonString());
+    }
+
+    [Fact]
+    public void Load_WithoutChosenSteamAccounts_UsesEveryAccount()
+    {
+        File.WriteAllText(SettingsPath, "{ \"seconds\": 7 }");
+
+        Assert.True(Store().Load().ExportSteamAccounts.IsAll);
+    }
+
+    [Fact]
+    public void Load_TheChosenSteamAccounts()
+    {
+        File.WriteAllText(SettingsPath, "{ \"exportSteamAccounts\": [\"222\", \"111\"] }");
+
+        Assert.Equal(new[] { "111", "222" }, Store().Load().ExportSteamAccounts.AccountIds);
     }
 
     [Fact]

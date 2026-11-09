@@ -122,6 +122,44 @@ public sealed class ShortcutExporterTests : IDisposable
         }
     }
 
+    // #76: only the accounts chosen in Settings.
+    [Fact]
+    public async Task Export_WritesOnlyToTheChosenAccounts()
+    {
+        var request = Request(Halo) with { Accounts = new SteamAccountChoice(["222"]) };
+
+        var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        AssertOutcome(ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning), summary);
+        Assert.False(File.Exists(ShortcutsOf(Alice)));
+        Assert.Equal("Halo", Assert.Single(Written(Bob).Children)["AppName"].Value);
+    }
+
+    [Fact]
+    public async Task Export_ToAChosenAccountThatIsGone_WritesToEveryAccount()
+    {
+        var request = Request(Halo) with { Accounts = new SteamAccountChoice(["999"]) };
+
+        var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, summary.UsersWritten);
+    }
+
+    // 10c-1 minor 1: nothing that can throw (finding UWPHook.exe) runs before the pre-checks.
+    [Fact]
+    public async Task PreChecks_RunBeforeUwpHookExeIsLookedFor()
+    {
+        var request = new ExportRequest([Halo], "", () => throw new InvalidOperationException("Cannot find the path of UWPHook.exe"));
+
+        var notFound = await Exporter(NotRunning(), install: null, Alice).ExportAsync(request, TestContext.Current.CancellationToken);
+        var noUsers = await Exporter(NotRunning()).ExportAsync(request, TestContext.Current.CancellationToken);
+        var nothing = await Exporter(NotRunning(), Alice).ExportAsync(request with { Apps = [] }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            new[] { ExportStatus.SteamNotFound, ExportStatus.NoSteamUsers, ExportStatus.NothingSelected },
+            new[] { notFound.Status, noUsers.Status, nothing.Status });
+    }
+
     [Fact]
     public async Task Export_PreparesTheArtworkOnce_ForEachApp_BeforeWriting()
     {
