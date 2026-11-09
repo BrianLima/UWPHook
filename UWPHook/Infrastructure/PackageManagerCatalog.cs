@@ -38,7 +38,7 @@ namespace UWPHook.Infrastructure
                 if (snapshot is null)
                     return [];
 
-                var apps = CatalogEntryBuilder.Build(snapshot).ToList();
+                var apps = CatalogEntryBuilder.Build(snapshot, DiskFolderFiles.Instance).ToList();
                 if (apps.Count == 0)
                     LogNoAppsBuilt(snapshot);
 
@@ -69,7 +69,7 @@ namespace UWPHook.Infrastructure
         /// <returns>The package's snapshot, or null when it has no Start-menu entries.</returns>
         /// <remarks>
         /// A moddable game runs from its effective folder (e.g. <c>C:\XboxGames\&lt;Game&gt;\Content</c>), so that is
-        /// its install location; its manifests are read from there, or from the installed folder when they are not there.
+        /// its install location; its manifests and logo are read from there, or from the installed folder when they are not there.
         /// </remarks>
         private async Task<PackageSnapshot?> SnapshotOf(Package package, CancellationToken ct)
         {
@@ -86,7 +86,8 @@ namespace UWPHook.Infrastructure
                 package.InstalledDate,
                 entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
                 await ReadFirstExisting(folders, "AppxManifest.xml", ct),
-                await ReadFirstExisting(folders, "MicrosoftGame.config", ct));
+                await ReadFirstExisting(folders, "MicrosoftGame.config", ct),
+                folders.All);
         }
 
         // Resolving a package's display name can fail on its own; the entry and manifest names may still work.

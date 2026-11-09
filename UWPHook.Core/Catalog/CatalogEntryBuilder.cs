@@ -11,11 +11,12 @@ public static class CatalogEntryBuilder
     /// <param name="files">Where to look for the declared logo among the package's folders; without it, the first folder is used.</param>
     public static IEnumerable<XboxApp> Build(PackageSnapshot package, IFolderFiles? files = null)
     {
+        var logoFiles = files ?? NoFiles.Instance;
         IReadOnlyList<ManifestApplication> applications =
             package.ManifestXml is null ? [] : AppxManifest.ReadApplications(package.ManifestXml);
 
         return package.Entries
-            .Select(entry => TryBuild(package, entry, applications))
+            .Select(entry => TryBuild(package, entry, applications, logoFiles))
             .OfType<XboxApp>()
             .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase);
     }
@@ -23,7 +24,8 @@ public static class CatalogEntryBuilder
     private static XboxApp? TryBuild(
         PackageSnapshot package,
         AppListEntrySnapshot entry,
-        IReadOnlyList<ManifestApplication> applications)
+        IReadOnlyList<ManifestApplication> applications,
+        IFolderFiles files)
     {
         var application = MatchingApplication(entry.Aumid, applications);
         if (application is null)
@@ -42,7 +44,7 @@ public static class CatalogEntryBuilder
             package.InstallLocation,
             package.InstalledDate)
         {
-            IconFolder = LogoPath.Folder(package.InstallLocation, application.Square150x150Logo),
+            IconFolder = LogoPath.Folder(package.Folders, application.Square150x150Logo, files),
         };
     }
 
@@ -58,4 +60,11 @@ public static class CatalogEntryBuilder
 
     private static string? FirstResolvedName(params string?[] names) =>
         names.FirstOrDefault(name => !DisplayName.IsUnresolved(name));
+
+    private sealed class NoFiles : IFolderFiles
+    {
+        public static readonly NoFiles Instance = new();
+
+        public IReadOnlyCollection<string> NamesIn(string folder) => [];
+    }
 }
