@@ -23,8 +23,8 @@ internal static class UiThread
         {
             try
             {
-                // pack://application:,,,/ URIs resolve against the entry assembly, which is the test host here.
-                Application.ResourceAssembly = typeof(App).Assembly;
+                // Application.ResourceAssembly stays the test host (WPF only lets a process without an entry
+                // assembly change it), so the XAML must name its own resources relative to itself.
                 new App().InitializeComponent();
                 started.SetResult(System.Windows.Threading.Dispatcher.CurrentDispatcher);
             }
