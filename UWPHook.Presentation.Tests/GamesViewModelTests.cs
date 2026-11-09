@@ -138,7 +138,7 @@ public sealed class GamesViewModelTests
     [Theory]
     [InlineData("HALO", new[] { "Halo" })]
     [InlineData("windowscalc", new[] { "Calculator" })]
-    [InlineData("o", new[] { "forza Horizon", "Halo" })]
+    [InlineData("h", new[] { "forza Horizon", "Halo" })]
     [InlineData("", new[] { "Calculator", "forza Horizon", "Halo" })]
     public async Task Filter_MatchesTheNameOrTheAumid_IgnoringCase(string filter, string[] expected)
     {
@@ -165,7 +165,7 @@ public sealed class GamesViewModelTests
     public async Task SelectAll_SelectsTheVisibleApps()
     {
         var games = await Loaded();
-        games.Apps.Filter = "o";
+        games.Apps.Filter = "h";
 
         games.SelectAllCommand.Execute(null);
 

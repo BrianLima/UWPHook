@@ -45,5 +45,5 @@ public static class LoginUsers
     /// (a nested object, whose cast reads "[Collection]") reads as missing, so it costs only that field, not the whole file (10c-1 minor 5).
     /// </summary>
     private static string? StringOf(KVObject entry, string key) =>
-        KeyValueLookup.TryFind(entry, key, out var value) && value.ValueType == KVValueType.String ? (string?)value : null;
+        KeyValueLookup.TryFind(entry, key, out var value) && value.ValueType != KVValueType.Collection ? (string?)value : null;
 }
