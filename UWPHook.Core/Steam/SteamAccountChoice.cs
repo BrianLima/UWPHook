@@ -28,6 +28,9 @@ public sealed class SteamAccountChoice : IEquatable<SteamAccountChoice>
         return chosen.Count == 0 ? users : chosen;
     }
 
+    /// <summary>True when ids were chosen but none of them is among <paramref name="users"/>, so every user is used.</summary>
+    public bool IsStaleFor(IReadOnlyList<SteamUser> users) => false; // RED stub
+
     /// <summary>The choice for the ticked users: every user ticked is <see cref="All"/>.</summary>
     public static SteamAccountChoice Of(IEnumerable<SteamUser> ticked, IReadOnlyList<SteamUser> users)
     {

@@ -143,6 +143,19 @@ public sealed class ShortcutExporterTests : IDisposable
         var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, summary.UsersWritten);
+        // R38 / review minor 2: the switch to every account shows up in application.log
+        var warning = Assert.Single(_log.At(LogLevel.Warning));
+        Assert.Contains("no longer exist", warning.Template);
+    }
+
+    [Fact]
+    public async Task Export_ToChosenAccountsThatExist_LogsNoWarning()
+    {
+        var request = Request(Halo) with { Accounts = new SteamAccountChoice(["222"]) };
+
+        await Exporter(NotRunning(), Alice, Bob).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Empty(_log.At(LogLevel.Warning));
     }
 
     // 10c-1 minor 1: nothing that can throw (finding UWPHook.exe) runs before the pre-checks.

@@ -189,4 +189,18 @@ public sealed class ShortcutRemoverTests : IDisposable
         Assert.Equal(RemoveStatus.NothingFound, summary.Status);
         Assert.Equal(0, steam.ExitRequests);
     }
+
+    // R38 / review minor 2
+    [Fact]
+    public async Task Remove_FromChosenAccountsThatAreGone_UsesEveryAccount_AndLogsAWarning()
+    {
+        Seed(Alice, Mixed);
+        Seed(Bob, Mixed);
+
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob)
+            .RemoveAsync(new SteamAccountChoice(["999"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, summary.Removed);
+        Assert.Contains(_log.At(LogLevel.Warning), entry => entry.Template.Contains("no longer exist"));
+    }
 }

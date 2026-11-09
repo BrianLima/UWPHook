@@ -149,16 +149,37 @@ public sealed class GamesViewModelTests
         Assert.Equal(expected, Names(games.Apps.Visible));
     }
 
+    // R38 / review I1: the grid is bound to Visible, so it must stay the same collection (2.14 kept the sort,
+    // the columns and an edit in progress while filtering).
     [Fact]
-    public async Task Filter_ChangingIt_RaisesVisibleChanged()
+    public async Task Filter_KeepsTheSameVisibleCollection_AndUpdatesItInPlace()
+    {
+        var games = await Loaded();
+        var visible = games.Apps.Visible;
+        var halo = Assert.Single(visible, row => row.Name == "Halo");
+
+        games.Apps.Filter = "h";
+        var narrowed = Names(games.Apps.Visible).ToList();
+        games.Apps.Filter = "";
+
+        Assert.Same(visible, games.Apps.Visible);
+        Assert.Equal(new[] { "forza Horizon", "Halo" }, narrowed);
+        Assert.Equal(new[] { "Calculator", "forza Horizon", "Halo" }, Names(visible));
+        Assert.Same(halo, Assert.Single(visible, row => row.Name == "Halo"));
+    }
+
+    [Fact]
+    public async Task Filter_ChangingIt_NeverReplacesVisible()
     {
         var games = await Loaded();
         var changed = new List<string?>();
         games.Apps.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
         games.Apps.Filter = "halo";
+        await games.LoadCommand.ExecuteAsync(null);
 
-        Assert.Contains(nameof(AppList.Visible), changed);
+        Assert.DoesNotContain(nameof(AppList.Visible), changed);
+        Assert.Equal(new[] { "Halo" }, Names(games.Apps.Visible));
     }
 
     [Fact]

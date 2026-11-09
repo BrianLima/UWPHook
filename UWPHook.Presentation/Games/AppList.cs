@@ -11,7 +11,7 @@ public sealed class AppList : ObservableObject
     public ObservableCollection<AppRow> All { get; } = [];
 
     /// <summary>The apps whose name or AUMID contains <see cref="Filter"/>, ignoring case; all of them when it is empty.</summary>
-    public IReadOnlyList<AppRow> Visible => filter.Length == 0 ? [.. All] : [.. All.Where(row => row.Matches(filter))];
+    public ObservableCollection<AppRow> Visible => new(All.Where(row => filter.Length == 0 || row.Matches(filter))); // RED stub: a new collection each time
 
     public string Filter
     {

@@ -9,7 +9,7 @@ namespace UWPHook.Presentation.Settings;
 /// The Settings window: the stored settings to edit (<see cref="Form"/>), the Steam accounts to export to
 /// (<see cref="Accounts"/>), Save, "Remove UWPHook shortcuts" and the links.
 /// </summary>
-public sealed class SettingsViewModel
+public sealed class SettingsViewModel // RED stub: no INPC yet
 {
     public const string ChooseAnAccount = "Choose at least one Steam account to export your games to.";
 

@@ -43,6 +43,20 @@ public sealed class SettingsViewModelTests
         return viewModel;
     }
 
+    // R38 / review minor 5: a binding source without INPC that holds its window leaks it (WPF PropertyDescriptor binding).
+    [Fact]
+    public void IsABindingSourceWithChangeNotification() =>
+        Assert.IsAssignableFrom<System.ComponentModel.INotifyPropertyChanged>(ViewModel());
+
+    // R38 / review minor 4: the question says what Remove really touches.
+    [Fact]
+    public void RemoveWarning_NamesTheSavedAccounts_AndOnlyUwpHooksShortcuts()
+    {
+        Assert.Contains("Steam accounts saved in Settings", SettingsViewModel.RemoveWarning);
+        Assert.Contains("shortcuts UWPHook added", SettingsViewModel.RemoveWarning);
+        Assert.DoesNotContain("every shortcut", SettingsViewModel.RemoveWarning);
+    }
+
     [Fact]
     public void Title_HasTheVersion() => Assert.Equal("UWPHook version 2.15.0.0", ViewModel().Title);
 
