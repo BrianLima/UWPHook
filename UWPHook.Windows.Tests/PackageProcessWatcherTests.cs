@@ -11,17 +11,19 @@ public class PackageProcessWatcherTests
     private const string SettingsFamily = "windows.immersivecontrolpanel_cw5n1h2txyewy";
     private const string SettingsAumid = SettingsFamily + "!microsoft.windows.immersivecontrolpanel";
 
+    private static PackageProcessWatcher Watcher() => new(new WindowsPackageLocations(WindowsOsVersion.Capabilities));
+
     [Fact]
     public void AnyAlive_UnknownFamily_IsFalse()
     {
         // Enumerating every process also opens System, csrss, etc., which deny access: that must not throw.
-        Assert.False(new PackageProcessWatcher().AnyAlive("Bogus.Package_0000000000000"));
+        Assert.False(Watcher().AnyAlive("Bogus.Package_0000000000000"));
     }
 
     [Fact]
     public void AnyAlive_RepeatedWhileAccessDeniedProcessesExist_DoesNotThrow()
     {
-        var watcher = new PackageProcessWatcher();
+        var watcher = Watcher();
 
         for (var i = 0; i < 3; i++)
         {
@@ -46,7 +48,7 @@ public class PackageProcessWatcherTests
 
         try
         {
-            var watcher = new PackageProcessWatcher();
+            var watcher = Watcher();
             var alive = false;
             for (var i = 0; i < 30 && !alive; i++)
             {

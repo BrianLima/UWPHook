@@ -25,7 +25,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- The Windows integration tests drive internal types such as ScriptManager. -->
+		<!-- The Windows integration tests drive internal types such as ComActivator. -->
 		<InternalsVisibleTo Include="UWPHook.Windows.Tests" />
 	</ItemGroup>
 

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Integration tests of real Windows behaviour (Windows PowerShell, Appx, ...).
+  <!-- Integration tests of real Windows behaviour (COM activation, Appx, DPAPI, ...).
        They only run on Windows: CI runs them in the windows "app" job. -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>

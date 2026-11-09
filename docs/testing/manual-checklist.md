@@ -148,3 +148,9 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] The list is ordered by the friendly name from `KnownApps.json` (2.14 sorted by the package's name, then renamed), e.g. a known app sits under its friendly name.
 - [ ] Choose only account B in Settings, then delete `userdata\<B>`: export and Remove use every account, and `application.log` has the Warning "The Steam accounts chosen in Settings (…) no longer exist; using every account".
 - [ ] The Remove question says it removes UWPHook's shortcuts from the Steam accounts saved in Settings.
+
+## Task 13
+- [ ] No `powershell.exe` (or `pwsh.exe`) is spawned while listing apps, exporting, or launching a game from Steam (Process Monitor filter "Process Name is powershell.exe", or Task Manager).
+- [ ] A moddable GDK game installed under `XboxGames` (e.g. `C:\XboxGames\<Game>\Content`) is listed with that folder as its install location, launches from Steam, and Steam shows "Playing" until the game exits.
+- [ ] On Windows 10 1809 (build 17763), if available: the app list loads and a game launches and is tracked until it exits.
+- [ ] An old `settings.json` that still has `"changeLanguage": true, "targetLanguage": "ja-JP"` loads with every other setting kept, the Windows display language is not touched at launch, and the next Save drops the two keys.

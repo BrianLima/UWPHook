@@ -10,7 +10,7 @@ namespace UWPHook.Infrastructure
     /// Lists the current user's installed apps through the WinRT <see cref="PackageManager"/>.
     /// This class only reads Windows; deciding what becomes an app is <see cref="CatalogEntryBuilder"/>'s job.
     /// </summary>
-    internal sealed class PackageManagerCatalog : IAppCatalog
+    internal sealed class PackageManagerCatalog(WindowsPackageLocations locations) : IAppCatalog
     {
         public async Task<IReadOnlyList<XboxApp>> GetInstalledAppsAsync(bool includeSystem, CancellationToken ct)
         {
@@ -27,7 +27,7 @@ namespace UWPHook.Infrastructure
         }
 
         /// <summary>One broken package must not break the whole list, so its errors are logged and it is skipped.</summary>
-        private static async Task<IReadOnlyList<XboxApp>> AppsOf(Package package, bool includeSystem, CancellationToken ct)
+        private async Task<IReadOnlyList<XboxApp>> AppsOf(Package package, bool includeSystem, CancellationToken ct)
         {
             try
             {
@@ -67,23 +67,26 @@ namespace UWPHook.Infrastructure
             && (includeSystem || package.SignatureKind != PackageSignatureKind.System);
 
         /// <returns>The package's snapshot, or null when it has no Start-menu entries.</returns>
-        private static async Task<PackageSnapshot?> SnapshotOf(Package package, CancellationToken ct)
+        /// <remarks>
+        /// A moddable game runs from its effective folder (e.g. <c>C:\XboxGames\&lt;Game&gt;\Content</c>), so that is
+        /// its install location; its manifests are read from there, or from the installed folder when they are not there.
+        /// </remarks>
+        private async Task<PackageSnapshot?> SnapshotOf(Package package, CancellationToken ct)
         {
             var entries = await package.GetAppListEntriesAsync().AsTask(ct);
             if (entries.Count == 0)
                 return null;
 
-            // InstalledLocation, not InstalledPath: InstalledPath needs Windows 10 2004 and the app supports 1809.
-            string installLocation = package.InstalledLocation.Path;
+            var folders = locations.Of(package);
             return new PackageSnapshot(
                 package.Id.FamilyName,
                 package.Id.Name,
                 DisplayNameOf(package),
-                installLocation,
+                folders.Preferred,
                 package.InstalledDate,
                 entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
-                await ReadIfExists(Path.Combine(installLocation, "AppxManifest.xml"), ct),
-                await ReadIfExists(Path.Combine(installLocation, "MicrosoftGame.config"), ct));
+                await ReadFirstExisting(folders, "AppxManifest.xml", ct),
+                await ReadFirstExisting(folders, "MicrosoftGame.config", ct));
         }
 
         // Resolving a package's display name can fail on its own; the entry and manifest names may still work.
@@ -100,8 +103,11 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private static async Task<string?> ReadIfExists(string path, CancellationToken ct) =>
-            File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : null;
+        private static async Task<string?> ReadFirstExisting(PackageLocations folders, string fileName, CancellationToken ct)
+        {
+            var path = folders.All.Select(folder => Path.Combine(folder, fileName)).FirstOrDefault(File.Exists);
+            return path is null ? null : await File.ReadAllTextAsync(path, ct);
+        }
 
         private static string FullNameOf(Package package)
         {

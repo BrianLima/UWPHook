@@ -16,5 +16,15 @@ public sealed record PlatformCapabilities
     [SupportedOSPlatformGuard("windows10.0.19041")]
     public bool PackagePathProperties { get; init; }
 
-    public static PlatformCapabilities Of(IOsVersion os) => new();
+    private const int Windows10_1903 = 18362;
+    private const int Windows10_2004 = 19041;
+
+    public static PlatformCapabilities Of(IOsVersion os) => new()
+    {
+        EffectivePackageLocation = IsAtLeastWindows10(os, Windows10_1903),
+        PackagePathProperties = IsAtLeastWindows10(os, Windows10_2004),
+    };
+
+    private static bool IsAtLeastWindows10(IOsVersion os, int build) =>
+        new Version(os.Major, os.Minor, os.Build) >= new Version(10, 0, build);
 }

@@ -16,13 +16,19 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 
 ### Changed
 - UWPHook now runs on .NET 10 as a self-contained single-file app. No separate .NET runtime install is needed.
-- App discovery uses Windows' package manager directly instead of a bundled PowerShell 7 script, so it no longer depends on PowerShell or the Appx module. The app no longer changes your PowerShell execution policy. The remaining PowerShell use (the language option) runs the built-in Windows PowerShell 5.1, and a failing command there is now reported as an error instead of being ignored.
+- App discovery uses Windows' package manager directly instead of a bundled PowerShell 7 script, so it no longer depends on PowerShell or the Appx module. The app no longer changes your PowerShell execution policy, and it no longer runs PowerShell at all.
 - Steam shortcuts of installed copies point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, a path that stays the same across updates, so updating UWPHook doesn't break or duplicate your shortcuts.
 - Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded. Artwork is downloaded for at most 4 games at a time.
 - When Steam is running, export (and "Remove UWPHook shortcuts") now closes Steam, writes the shortcuts, and starts it again, instead of writing first and restarting afterwards. If Steam doesn't close within 15 seconds, nothing is written and UWPHook asks you to close Steam.
 - Only the newest 20 backups of `shortcuts.vdf` per Steam account are kept.
 - The "Change resolution" option was removed. It did not work on desktop Windows (#124), and it will return in 3.0.
 - The NSIS installer was replaced by the Velopack installer.
+
+- Moddable Xbox games installed to an `XboxGames` folder are found, and their playtime tracked, from the folder they run from (Windows 10 1903 and later).
+- Games are started with Windows' activation manager running out of process, as Microsoft recommends for an app started only to launch another.
+
+### Removed
+- The per-game language option. Windows only applies a display-language change after you sign out, so it never worked when launching a game. If a previous version left your Windows display language changed, set it back in Settings > Time & language > Language & region.
 
 ### Fixed
 - **The app list is empty, or shows "Error trying to get installed apps"** (the Appx module could not load in the bundled PowerShell 7): #141 #149 #155 #164 #171 #178 #181 (also #132).

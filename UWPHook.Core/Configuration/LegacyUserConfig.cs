@@ -7,7 +7,8 @@ namespace UWPHook.Core.Configuration;
 /// <summary>
 /// Reads 2.14's settings from its .NET <c>user.config</c>
 /// (<c>configuration/userSettings/UWPHook.Properties.Settings/setting[@name]/value</c>).
-/// A missing or invalid setting keeps its default.
+/// A missing or invalid setting keeps its default. 2.14's language override (<c>ChangeLanguage</c>,
+/// <c>TargetLanguage</c>) is not read: the feature was removed.
 /// </summary>
 public static class LegacyUserConfig
 {
@@ -21,8 +22,6 @@ public static class LegacyUserConfig
         var defaults = AppSettings.Defaults;
         return new AppSettings
         {
-            ChangeLanguage = values.Bool("ChangeLanguage") ?? defaults.ChangeLanguage,
-            TargetLanguage = values.Text("TargetLanguage") ?? defaults.TargetLanguage,
             Seconds = values.Int("Seconds") ?? defaults.Seconds,
             StreamMode = values.Bool("StreamMode") ?? defaults.StreamMode,
             SteamGridDbApiKey = values.Text("SteamGridDbApiKey") ?? defaults.SteamGridDbApiKey,

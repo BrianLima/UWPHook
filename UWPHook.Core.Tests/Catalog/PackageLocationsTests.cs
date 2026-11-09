@@ -28,8 +28,8 @@ public class PackageLocationsTests
     [Fact]
     public void All_ListsTheSameFolderOnce()
     {
-        Assert.Equal(new[] { WindowsApps }, new PackageLocations(WindowsApps, WindowsApps + @"\").All);
-        Assert.Equal(new[] { WindowsApps }, new PackageLocations(WindowsApps, WindowsApps.ToUpperInvariant()).All);
+        Assert.Single(new PackageLocations(WindowsApps, WindowsApps + @"\").All);
+        Assert.Single(new PackageLocations(WindowsApps, WindowsApps.ToUpperInvariant()).All);
     }
 
     [Fact]

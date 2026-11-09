@@ -23,8 +23,6 @@ public sealed class SettingsStoreTests : IDisposable
 
     private static readonly AppSettings Changed = new()
     {
-        ChangeLanguage = true,
-        TargetLanguage = "ja-JP",
         Seconds = 3,
         StreamMode = true,
         SteamGridDbApiKey = Key,

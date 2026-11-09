@@ -7,7 +7,7 @@ public static class MicrosoftGameConfig
     /// Reads <c>Game/ExecutableList/Executable/@Name</c>.
     /// <para>
     /// With one executable listed it returns that one. With several it returns the <b>second</b> (index 1),
-    /// matching the 2.14 PowerShell script: Halo MCC lists <c>mcclauncher.exe</c> (anti-cheat launcher) first and
+    /// matching the app discovery script of 2.14: Halo MCC lists <c>mcclauncher.exe</c> (anti-cheat launcher) first and
     /// <c>MCC\Binaries\Win64\MCCWinStore-Win64-Shipping.exe</c> (the game process) second.
     /// </para>
     /// Returns false, with <paramref name="exe"/> empty, for malformed XML or when no usable executable is listed.

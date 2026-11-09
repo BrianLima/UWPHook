@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using Serilog;
+using UWPHook.Core.Catalog;
 using UWPHook.Core.Launch;
 using Windows.Management.Deployment;
 
@@ -10,12 +10,13 @@ namespace UWPHook.Infrastructure
 {
     /// <summary>
     /// Finds running processes of a package family: processes with that package identity, and
-    /// unpackaged processes (GDK games) whose image lives under the package's install location.
+    /// unpackaged processes (GDK games) whose image lives under one of the package's folders: the installed one or,
+    /// for a moddable game, the effective one it runs from (e.g. <c>C:\XboxGames\&lt;Game&gt;\Content</c>).
     /// Processes it may not open (system, other users, elevated) are skipped silently.
     /// Make one per game session and use it from one thread at a time: it caches the package's
     /// install location and reuses its buffers across polls.
     /// </summary>
-    internal sealed class PackageProcessWatcher : IPackageProcessWatcher
+    internal sealed class PackageProcessWatcher(WindowsPackageLocations packageLocations) : IPackageProcessWatcher
     {
         private const uint ProcessQueryLimitedInformation = 0x1000;
         private const int ErrorSuccess = 0;
@@ -29,7 +30,7 @@ namespace UWPHook.Infrastructure
         private readonly char[] familyNameBuffer = new char[FamilyNameCapacity];
         private char[] imagePathBuffer = new char[InitialImagePathCapacity];
 
-        private readonly Dictionary<string, IReadOnlyList<string>> installLocations = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IReadOnlyList<PackageLocations>> installLocations = new(StringComparer.OrdinalIgnoreCase);
 
         public bool AnyAlive(string packageFamilyName)
         {
@@ -45,7 +46,7 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private bool BelongsTo(int processId, string packageFamilyName, IReadOnlyList<string> locations)
+        private bool BelongsTo(int processId, string packageFamilyName, IReadOnlyList<PackageLocations> locations)
         {
             using var handle = OpenProcess(ProcessQueryLimitedInformation, false, processId);
             if (handle.IsInvalid) return false; // access denied, or it has already exited
@@ -76,10 +77,10 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private static bool IsUnderAny(string? imagePath, IReadOnlyList<string> locations) =>
-            imagePath is not null && locations.Any(location => imagePath.StartsWith(location, StringComparison.OrdinalIgnoreCase));
+        private static bool IsUnderAny(string? imagePath, IReadOnlyList<PackageLocations> locations) =>
+            imagePath is not null && locations.Any(package => package.Contains(imagePath));
 
-        private IReadOnlyList<string> InstallLocationsOf(string packageFamilyName)
+        private IReadOnlyList<PackageLocations> InstallLocationsOf(string packageFamilyName)
         {
             if (!installLocations.TryGetValue(packageFamilyName, out var locations))
             {
@@ -90,13 +91,14 @@ namespace UWPHook.Infrastructure
             return locations;
         }
 
-        private static IReadOnlyList<string> ReadInstallLocations(string packageFamilyName)
+        private IReadOnlyList<PackageLocations> ReadInstallLocations(string packageFamilyName)
         {
             try
             {
                 return new PackageManager().FindPackagesForUser(string.Empty, packageFamilyName)
-                    .Select(InstallLocationOrNull)
-                    .OfType<string>()
+                    .Select(LocationsOrNull)
+                    .OfType<PackageLocations>()
+                    .Where(locations => locations.All.Count > 0)
                     .ToList();
             }
             catch (Exception e)
@@ -106,13 +108,11 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        // InstalledLocation, not InstalledPath: InstalledPath needs Windows 10 2004 and the app supports 1809.
-        private static string? InstallLocationOrNull(Windows.ApplicationModel.Package package)
+        private PackageLocations? LocationsOrNull(Windows.ApplicationModel.Package package)
         {
             try
             {
-                var path = package.InstalledLocation.Path;
-                return string.IsNullOrEmpty(path) ? null : Path.TrimEndingDirectorySeparator(path) + Path.DirectorySeparatorChar;
+                return packageLocations.Of(package);
             }
             catch (Exception e)
             {

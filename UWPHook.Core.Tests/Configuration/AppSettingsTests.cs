@@ -12,8 +12,6 @@ public class AppSettingsTests
     {
         var defaults = AppSettings.Defaults;
 
-        Assert.False(defaults.ChangeLanguage);
-        Assert.Equal("", defaults.TargetLanguage);
         Assert.Equal(5, defaults.Seconds);
         Assert.False(defaults.StreamMode);
         Assert.Equal("", defaults.SteamGridDbApiKey);
