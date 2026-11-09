@@ -40,10 +40,11 @@ public class SteamAccountChoiceTests
     [Fact]
     public void IsStale_WhenNoChosenAccountExistsAnyMore() => Assert.True(Chosen("999").IsStaleFor(Everyone));
 
-    [Theory]
-    [InlineData(new string[0])]
-    [InlineData(new[] { "222", "999" })]
-    public void IsNotStale_ForAllOrAChoiceThatStillMatches(string[] ids) => Assert.False(Chosen(ids).IsStaleFor(Everyone));
+    [Fact]
+    public void IsNotStale_ForAll() => Assert.False(SteamAccountChoice.All.IsStaleFor(Everyone));
+
+    [Fact]
+    public void IsNotStale_WhenAChosenAccountStillExists() => Assert.False(Chosen("222", "999").IsStaleFor(Everyone));
 
     [Fact]
     public void IsNotStale_WithoutUsers() => Assert.False(Chosen("111").IsStaleFor([]));
