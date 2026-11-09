@@ -23,8 +23,6 @@ public sealed class SettingsStoreTests : IDisposable
 
     private static readonly AppSettings Changed = new()
     {
-        ChangeLanguage = true,
-        TargetLanguage = "ja-JP",
         Seconds = 3,
         StreamMode = true,
         SteamGridDbApiKey = Key,
@@ -73,6 +71,30 @@ public sealed class SettingsStoreTests : IDisposable
         File.WriteAllText(SettingsPath, "{ \"exportSteamAccounts\": [\"222\", \"111\"] }");
 
         Assert.Equal(new[] { "111", "222" }, Store().Load().ExportSteamAccounts.AccountIds);
+    }
+
+    // R37: settings.json written by a 2.15 preview still has the removed language keys; they are ignored.
+    [Fact]
+    public void Load_AFileWithTheRemovedLanguageKeys_LoadsTheOtherSettings()
+    {
+        File.WriteAllText(SettingsPath, "{ \"changeLanguage\": true, \"targetLanguage\": \"ja-JP\", \"seconds\": 7, \"streamMode\": true }");
+
+        Assert.Equal(AppSettings.Defaults with { Seconds = 7, StreamMode = true }, Store().Load());
+    }
+
+    // The upgrade path: a file with the removed keys is loaded and saved again; the keys go, the rest stays.
+    [Fact]
+    public void LoadThenSave_AFileWithTheRemovedLanguageKeys_DropsThemAndKeepsTheRest()
+    {
+        File.WriteAllText(SettingsPath, "{ \"changeLanguage\": true, \"targetLanguage\": \"ja-JP\", \"seconds\": 7, \"tags\": \"XBOX\" }");
+
+        Store().Save(Store().Load());
+
+        var json = SavedJson();
+        Assert.False(json.ContainsKey("changeLanguage"));
+        Assert.False(json.ContainsKey("targetLanguage"));
+        Assert.Equal(7, json["seconds"]!.GetValue<int>());
+        Assert.Equal("XBOX", json["tags"]!.GetValue<string>());
     }
 
     [Fact]

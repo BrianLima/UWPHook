@@ -42,7 +42,7 @@ namespace UWPHook.Infrastructure
             var exporter = new ShortcutExporter(steam, NewSteamRestarter(steam), backups, artwork, _log);
             var remover = new ShortcutRemover(steam, NewSteamRestarter(steam), backups, _log);
 
-            var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog()), exporter, Settings, dialogs, _log, StableExePath);
+            var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), exporter, Settings, dialogs, _log, StableExePath);
             return new UWPHook.GamesWindow(games, () => new SettingsWindow(new SettingsViewModel(Settings, steam, remover, dialogs, new AppHost(), _log)));
         }
 

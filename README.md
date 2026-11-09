@@ -60,6 +60,8 @@ Special thanks to @FusRoDah061 for implementing the base feature!
   - UWPHook writes to the Steam install the Steam client last ran from (`HKCU\Software\Valve\Steam\SteamPath`), and falls back to the installer's path. If you moved Steam, start it once so it records the new folder.
 - **The app list is empty or says "Error trying to get installed apps"**
   - UWPHook lists your apps through Windows' own package manager (the apps that have a Start menu entry). Check `application.log` (see below) for the error; a package that can't be read is skipped and logged there.
+- **My Windows display language changed, or the language option is gone**
+  - The per-game language option was removed in 2.15. Windows only applies a display-language change after you sign out, so it never worked when launching a game. If a previous version left your Windows display language changed, set it back in Settings > Time & language > Language & region.
 - **I have shortcuts from other application that broke when i used UWPHook**
   - Since 2.15, exporting only adds or updates UWPHook's own shortcuts and leaves every other shortcut as it was.
   - Before every change, UWPHook backs up your `shortcuts.vdf` to `%AppData%\Briano\UWPHook\backups`. Each file is named `{userid}_{yyyyMMddHHmmssfff}_shortcuts.vdf`, and the newest 20 of each Steam account are kept. To restore one, close Steam, copy it over `<Steam folder>\userdata\{userid}\config\shortcuts.vdf`, and start Steam again.

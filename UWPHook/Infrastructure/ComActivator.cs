@@ -17,7 +17,7 @@ namespace UWPHook.Infrastructure
 
             try
             {
-                var manager = (IApplicationActivationManager)new ApplicationActivationManager();
+                var manager = CreateManager();
                 manager.ActivateApplication(request.Aumid, request.ExtraArguments, ActivateOptions.None, out var processId);
                 Log.Verbose("Activated {Aumid}, process id {ProcessId}", request.Aumid, processId);
 
@@ -33,23 +33,39 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private enum ActivateOptions
+        private const uint ClsctxLocalServer = 0x4;
+
+        private static readonly Guid ApplicationActivationManagerClsid = new("45BA127D-10A8-46EA-8AB7-56EA9078943C");
+
+        /// <summary>
+        /// Creates Windows' activation manager out of process (<c>CLSCTX_LOCAL_SERVER</c>), as Microsoft documents
+        /// for a process that only starts to launch an app.
+        /// </summary>
+        /// <exception cref="COMException">Windows could not create it; the HRESULT is the exception's.</exception>
+        internal static IApplicationActivationManager CreateManager()
+        {
+            var clsid = ApplicationActivationManagerClsid;
+            var iid = typeof(IApplicationActivationManager).GUID;
+            Marshal.ThrowExceptionForHR(CoCreateInstance(ref clsid, IntPtr.Zero, ClsctxLocalServer, ref iid, out var manager));
+            return (IApplicationActivationManager)manager;
+        }
+
+        [DllImport("ole32.dll", ExactSpelling = true)]
+        private static extern int CoCreateInstance(
+            ref Guid classId, IntPtr outer, uint context, ref Guid interfaceId, [MarshalAs(UnmanagedType.IUnknown)] out object instance);
+
+        internal enum ActivateOptions
         {
             None = 0x00000000,
         }
 
         [ComImport, Guid("2e941141-7f97-4756-ba1d-9decde894a3d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        private interface IApplicationActivationManager
+        internal interface IApplicationActivationManager
         {
             // Activates the app for the "Launch" contract with the given arguments and returns its process id.
             IntPtr ActivateApplication([In] string appUserModelId, [In] string arguments, [In] ActivateOptions options, [Out] out uint processId);
             IntPtr ActivateForFile([In] string appUserModelId, [In] IntPtr itemArray, [In] string verb, [Out] out uint processId);
             IntPtr ActivateForProtocol([In] string appUserModelId, [In] IntPtr itemArray, [Out] out uint processId);
-        }
-
-        [ComImport, Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")] // ApplicationActivationManager
-        private class ApplicationActivationManager
-        {
         }
     }
 }

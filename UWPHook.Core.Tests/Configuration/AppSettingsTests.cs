@@ -12,8 +12,6 @@ public class AppSettingsTests
     {
         var defaults = AppSettings.Defaults;
 
-        Assert.False(defaults.ChangeLanguage);
-        Assert.Equal("", defaults.TargetLanguage);
         Assert.Equal(5, defaults.Seconds);
         Assert.False(defaults.StreamMode);
         Assert.Equal("", defaults.SteamGridDbApiKey);
@@ -49,6 +47,16 @@ public class AppSettingsTests
 
         Assert.DoesNotContain("secret-key-123", text);
         Assert.Contains("Seconds", text);
+    }
+
+    // R37: the language override was removed.
+    [Fact]
+    public void ToString_HasNoLanguageSetting()
+    {
+        var text = AppSettings.Defaults.ToString();
+
+        Assert.DoesNotContain("ChangeLanguage", text);
+        Assert.DoesNotContain("TargetLanguage", text);
     }
 
     [Theory]

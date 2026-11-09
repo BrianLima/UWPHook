@@ -12,12 +12,6 @@ public sealed record AppSettings
 {
     public static AppSettings Defaults { get; } = new();
 
-    /// <summary>Override the Windows UI language while a game runs.</summary>
-    public bool ChangeLanguage { get; init; }
-
-    /// <summary>The language for <see cref="ChangeLanguage"/>, e.g. "ja-JP"; empty means none chosen.</summary>
-    public string TargetLanguage { get; init; } = "";
-
     /// <summary>The range Settings offers for <see cref="Seconds"/>; a launch needs at least 1.</summary>
     public const int MinSeconds = 1;
 
@@ -69,7 +63,7 @@ public sealed record AppSettings
     // Keeps the API key out of logs and debugger output.
     private bool PrintMembers(StringBuilder builder)
     {
-        builder.Append($"ChangeLanguage = {ChangeLanguage}, TargetLanguage = {TargetLanguage}, Seconds = {Seconds}, ")
+        builder.Append($"Seconds = {Seconds}, ")
             .Append($"StreamMode = {StreamMode}, SteamGridDbApiKey = {(HasSteamGridDbApiKey ? "(set)" : "(empty)")}, ")
             .Append($"ArtworkStyle = {ArtworkStyle}, ArtworkType = {ArtworkType}, ArtworkNsfw = {ArtworkNsfw}, ArtworkHumor = {ArtworkHumor}, ")
             .Append($"OfferedSteamGridDb = {OfferedSteamGridDb}, Tags = {Tags}, LogLevel = {LogLevel}, ")

@@ -9,8 +9,10 @@ namespace UWPHook.Windows.Tests;
 // Runs the real WinRT PackageManager against whatever is installed on the machine (the CI runner).
 public class PackageManagerCatalogTests
 {
+    private static PackageManagerCatalog Catalog() => new(new WindowsPackageLocations(WindowsOsVersion.Capabilities));
+
     private static Task<IReadOnlyList<XboxApp>> AllApps() =>
-        new PackageManagerCatalog().GetInstalledAppsAsync(includeSystem: true, TestContext.Current.CancellationToken);
+        Catalog().GetInstalledAppsAsync(includeSystem: true, TestContext.Current.CancellationToken);
 
     [Fact]
     public async Task GetInstalledAppsAsync_FindsAtLeastOneApp()
@@ -65,7 +67,7 @@ public class PackageManagerCatalogTests
     public async Task GetInstalledAppsAsync_WithoutSystemAppsReturnsASubset()
     {
         var all = (await AllApps()).Select(app => app.Aumid).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var nonSystem = await new PackageManagerCatalog().GetInstalledAppsAsync(includeSystem: false, TestContext.Current.CancellationToken);
+        var nonSystem = await Catalog().GetInstalledAppsAsync(includeSystem: false, TestContext.Current.CancellationToken);
 
         Assert.All(nonSystem, app => Assert.Contains(app.Aumid, all));
     }

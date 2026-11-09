@@ -21,9 +21,9 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] With PowerShell 7 installed and set as the default shell, the app list loads (since Task 8b discovery uses the WinRT `PackageManager`, not PowerShell).
 - [ ] Forza Motorsport, or any app whose manifest name is an `ms-resource:` reference, appears in the list (PR #169).
 - [ ] Two different games whose names share a prefix (e.g. "Hollow Knight" and "Hollow Knight: Silksong") both appear (PR #182).
-- [ ] Changing settings and pressing Save doesn't crash, including with no language selected; the seconds value round-trips after reopening Settings.
+- [ ] Changing settings and pressing Save doesn't crash; the seconds value round-trips after reopening Settings.
 - [ ] The Settings window no longer shows the "Change host resolution" toggle/combo.
-- [ ] With "Set system language when launching an app" on, launching a game switches the UI language and it is restored after the game closes.
+- [x] ~~With "Set system language when launching an app" on, launching a game switches the UI language and it is restored after the game closes.~~ *(superseded: language override removed in Task 13, R37)*
 - [ ] No console window flashes while the app list loads (the `PackageManager` catalog starts no process).
 
 ## Task 4
@@ -85,12 +85,12 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Steam Remote Play / in-home streaming of a UWPHook game, with stream mode on (the splash shows for about 10 s, then the game streams) and off.
 - [ ] On an NVIDIA Advanced Optimus laptop: launching a game through UWPHook no longer blocks the switch to dGPU-only mode (#165), with stream mode on and off.
 - [ ] Steam launch options (e.g. `-windowed` added after the executable in the shortcut's launch options) reach the game.
-- [ ] With Settings → language override on: the game starts in the target language, and the Windows UI language is back to what it was after the game exits; with the override script failing (e.g. an invalid language), UWPHook still exits when the game ends.
+- [x] ~~With Settings → language override on: the game starts in the target language, and the Windows UI language is back to what it was after the game exits; with the override script failing (e.g. an invalid language), UWPHook still exits when the game ends.~~ *(superseded: language override removed in Task 13, R37)*
 - [ ] A shortcut for a game that is no longer installed shows an error box and UWPHook exits; a shortcut whose launch options have no AUMID shows "Invalid launch arguments" and exits.
 - [ ] Opening UWPHook normally (no arguments, Start menu) shows the games list; closing it exits the process.
 
 ## Task 10b
-- [ ] Upgrade from 2.14.x: with 2.14 settings changed from the defaults (language override on with a target language, stream mode on, seconds = 3, a SteamGridDB key, style "No Logo", log level DEBUG, custom tags), install 2.15 and open Settings: every value is kept. `%AppData%\Briano\UWPHook\settings.json` now exists, and the first-run SteamGridDB offer does not appear again.
+- [ ] Upgrade from 2.14.x: with 2.14 settings changed from the defaults (stream mode on, seconds = 3, a SteamGridDB key, style "No Logo", log level DEBUG, custom tags), install 2.15 and open Settings: every value is kept. `%AppData%\Briano\UWPHook\settings.json` now exists, and the first-run SteamGridDB offer does not appear again.
 - [ ] Fresh install (no 2.14 user.config under `%LocalAppData%\Briano`): Settings shows the defaults (5 seconds, tags `READY TO PLAY,XBOX`, log level ERROR); the SteamGridDB offer appears once.
 - [ ] Enter a SteamGridDB key on the first-run offer, restart UWPHook: the key is still there (it is no longer wiped on first run).
 - [ ] `settings.json` does not contain the SteamGridDB key in plain text (only `steamGridDbApiKeyProtected`); export still downloads artwork with that key.
@@ -107,7 +107,7 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] M6: a `userdata\0` folder (or a non-numeric folder) gets no `config\shortcuts.vdf` or grid art after an export.
 - [ ] M7: export with Steam running: Steam closes first, then the shortcuts are written, then Steam starts and shows the games (check `application.log` at DEBUG: "Requesting Steam shutdown" before "Shortcuts written", "Starting Steam" after). Same for Settings → "Remove UWPHook shortcuts": the removed entries stay gone after Steam restarts.
 - [ ] M7: with a modal dialog open in Steam (so it doesn't exit within 15 s), export says "Steam did not close in time, so nothing was exported. Close Steam, then export again." and `shortcuts.vdf` is unchanged (no new backup).
-- [ ] M10: with the language option on and an invalid target language (edit `targetLanguage` in `settings.json`), the game still launches and `application.log` has "Setting the Windows UI language to ... failed; launching anyway".
+- [x] ~~M10: with the language option on and an invalid target language (edit `targetLanguage` in `settings.json`), the game still launches and `application.log` has "Setting the Windows UI language to ... failed; launching anyway".~~ *(superseded: language override removed in Task 13, R37)*
 - [ ] M12: a failure while loading the app list shows the error box in front of the UWPHook window.
 - [ ] M2: a game whose executable path has a space (e.g. a GDK game with `Some Game.exe`, or edit a shortcut's launch options to `<AUMID> "Bin\Some Game.exe"`) gets `LaunchOptions` `<AUMID> "…\Some Game.exe"` in `shortcuts.vdf`. Steam passes it to UWPHook as one argument: the game launches, Steam shows "Playing" for the whole session, and at DEBUG `application.log` names the full executable, not `Some`.
 - [ ] R33: with one account's `userdata\<id>\config\grid` made read-only (or a file there locked), export still says the apps were exported, adds "Artwork could not be copied for Steam account(s) <id>", and the other accounts get their art.
@@ -137,7 +137,7 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] First start (delete `offeredSteamGridDb` from `settings.json`): the SteamGridDB question shows once; Yes opens Settings, No doesn't; it is not asked again.
 - [ ] Settings shows every stored value (seconds, streaming, tags, log level, key, artwork choices); the seconds combo offers 1 to 9 seconds (no "0 seconds"). Save stores them, applies the log level, and closes.
 - [ ] Settings save failure: make `settings.json` read-only (or lock it), change a value and Save: "Saving your settings failed." shows, the window stays open with your edits.
-- [ ] R37: Settings no longer shows the language options (the "Set system language" toggle and the language combo); saving keeps whatever `changeLanguage`/`targetLanguage` `settings.json` had.
+- [ ] R37: Settings no longer shows the language options (the "Set system language" toggle and the language combo); saving drops `changeLanguage`/`targetLanguage` from `settings.json` (Task 13, R37).
 - [ ] Steam user picker (#76) with one Steam account: it is listed as `PersonaName (AccountName)` (or its id without names), ticked, marked "(most recent)".
 - [ ] Steam user picker with 2+ accounts: all ticked by default; untick one and Save: export and "Remove UWPHook shortcuts" only touch the ticked accounts (check each `userdata\<id>\config\shortcuts.vdf`). Untick all and Save: "Choose at least one Steam account..." shows and nothing is saved.
 - [ ] An account removed after being chosen (choose only account B, then delete `userdata\<B>`): Settings ticks the remaining accounts, and export writes to all of them.
@@ -156,3 +156,9 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] In both themes, the Settings Steam account picker, the "Enable streaming mode" check box, the "Show system apps" check box and the games DataGrid (headers, rows, the selection checkboxes) are readable.
 - [ ] The stream splash (stream mode on, launch a game from Steam) is dark even with Windows in light mode, and still renders in software (NVIDIA Advanced Optimus switches to the dGPU, #165).
 - [ ] The header band behind the white UWPHook logo uses the Windows accent colour and the white welcome text is readable on it.
+
+## Task 13
+- [ ] No `powershell.exe` (or `pwsh.exe`) is spawned while listing apps, exporting, or launching a game from Steam (Process Monitor filter "Process Name is powershell.exe", or Task Manager).
+- [ ] A moddable GDK game installed under `XboxGames` (e.g. `C:\XboxGames\<Game>\Content`) is listed with that folder as its install location, launches from Steam, and Steam shows "Playing" until the game exits.
+- [ ] On Windows 10 1809 (build 17763), if available: the app list loads and a game launches and is tracked until it exits.
+- [ ] An old `settings.json` that still has `"changeLanguage": true, "targetLanguage": "ja-JP"` loads with every other setting kept, the Windows display language is not touched at launch, and the next Save drops the two keys.

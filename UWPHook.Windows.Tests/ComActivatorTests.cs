@@ -17,4 +17,9 @@ public class ComActivatorTests
         Assert.Contains(aumid, thrown.Message);
         Assert.NotNull(thrown.InnerException);
     }
+
+    // CoCreateInstance(..., CLSCTX_LOCAL_SERVER, ...) works on this machine. Nothing is launched.
+    [Fact]
+    public void CreateManager_GivesTheActivationManager() =>
+        Assert.NotNull(ComActivator.CreateManager());
 }

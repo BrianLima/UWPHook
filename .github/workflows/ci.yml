@@ -70,7 +70,7 @@ jobs:
             Group-Object | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
           Write-Output "::notice title=build warnings::$($warnings.Count) unique warnings ($($byCode -join ', '))"
 
-      # Integration tests of real Windows behaviour (powershell.exe, Appx, ...).
+      # Integration tests of real Windows behaviour (COM activation, Appx, ...).
       - name: Windows tests
         run: >-
           dotnet test UWPHook.Windows.Tests -c Release

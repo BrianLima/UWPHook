@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -28,17 +27,13 @@ namespace UWPHook
         /// <summary>Runs the whole session. Never throws: errors are logged and shown in a message box.</summary>
         public static async Task RunAsync(LaunchRequest request, ISettingsService settingsService)
         {
-            var languageToRestore = (string?)null;
-
             try
             {
                 var settings = settingsService.Current;
                 if (settings.StreamMode) await ShowStreamSplashAsync();
 
-                languageToRestore = LanguageToRestore(settings);
-                if (languageToRestore is not null) OverrideLanguage(settings);
-
-                var session = new GameSession(new ComActivator(), new PackageProcessWatcher(), TimeProvider.System)
+                var watcher = new PackageProcessWatcher(new WindowsPackageLocations(WindowsOsVersion.Capabilities));
+                var session = new GameSession(new ComActivator(), watcher, TimeProvider.System)
                 {
                     OnWatcherError = e => Log.Warning(e, "Looking for processes of {FamilyName} failed", request.PackageFamilyName),
                 };
@@ -48,10 +43,6 @@ namespace UWPHook
             {
                 Log.Error(e, "Launching {Aumid} failed", request.Aumid);
                 MessageBox.Show(e.Message, "UWPHook", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            finally
-            {
-                RestoreLanguage(languageToRestore);
             }
         }
 
@@ -105,46 +96,6 @@ namespace UWPHook
             finally
             {
                 splash.Close();
-            }
-        }
-
-        /// <summary>
-        /// The language to put back after the game, or null when the language override is off.
-        /// Read before overriding, so a restore happens even if the override script fails half-way.
-        /// </summary>
-        private static string? LanguageToRestore(AppSettings settings) =>
-            settings.ChangeLanguage && !string.IsNullOrEmpty(settings.TargetLanguage)
-                ? CultureInfo.CurrentCulture.ToString()
-                : null;
-
-        /// <summary>
-        /// Some games follow the Windows UI language, so overriding it can change the game's language.
-        /// Never throws: scripts stop on cmdlet errors, and a failed override must not keep the game from launching.
-        /// </summary>
-        private static void OverrideLanguage(AppSettings settings)
-        {
-            try
-            {
-                ScriptManager.RunScript("Set-WinUILanguageOverride " + settings.TargetLanguage);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Setting the Windows UI language to {Language} failed; launching anyway", settings.TargetLanguage);
-            }
-        }
-
-        /// <summary>Never throws: a failed restore is logged and must not keep UWPHook (and Steam's "Playing") alive.</summary>
-        private static void RestoreLanguage(string? language)
-        {
-            if (language is null) return;
-
-            try
-            {
-                ScriptManager.RunScript("Set-WinUILanguageOverride " + language);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Restoring the Windows UI language to {Language} failed", language);
             }
         }
     }

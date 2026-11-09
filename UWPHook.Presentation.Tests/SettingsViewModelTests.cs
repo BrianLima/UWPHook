@@ -15,8 +15,6 @@ public sealed class SettingsViewModelTests
 
     private static readonly AppSettings Stored = AppSettings.Defaults with
     {
-        ChangeLanguage = true,
-        TargetLanguage = "ja-JP",
         Seconds = 3,
         StreamMode = true,
         LogLevel = AppLogLevel.Debug,
@@ -108,16 +106,6 @@ public sealed class SettingsViewModelTests
             _settings.Current);
         Assert.Equal(new[] { AppLogLevel.Trace }, _host.AppliedLevels);
         Assert.Equal(1, _closes);
-    }
-
-    // R37: Settings no longer edits the language override; Task 13 removes it.
-    [Fact]
-    public void Save_LeavesTheLanguageSettingsAsTheyWere()
-    {
-        ViewModel().SaveCommand.Execute(null);
-
-        Assert.Equal((true, "ja-JP"), (_settings.Current.ChangeLanguage, _settings.Current.TargetLanguage));
-        Assert.Equal(1, _settings.Saves);
     }
 
     [Fact]
