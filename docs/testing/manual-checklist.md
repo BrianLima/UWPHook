@@ -112,3 +112,15 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] M2: a game whose executable path has a space (e.g. a GDK game with `Some Game.exe`, or edit a shortcut's launch options to `<AUMID> "Bin\Some Game.exe"`) gets `LaunchOptions` `<AUMID> "…\Some Game.exe"` in `shortcuts.vdf`. Steam passes it to UWPHook as one argument: the game launches, Steam shows "Playing" for the whole session, and at DEBUG `application.log` names the full executable, not `Some`.
 - [ ] R33: with one account's `userdata\<id>\config\grid` made read-only (or a file there locked), export still says the apps were exported, adds "Artwork could not be copied for Steam account(s) <id>", and the other accounts get their art.
 - [ ] R33: when steam.exe can't be found while Steam runs (rename `HKCU\Software\Valve\Steam\SteamExe` and start Steam from a copied folder not named in the registry), export says UWPHook "could not find steam.exe to close and restart it", not "did not close in time", and Steam is left running.
+
+## Task 10c-1
+Export and "Remove UWPHook shortcuts" now run through the Core `ShortcutExporter` / `ShortcutRemover`; re-run the earlier export cases.
+- [ ] I4: export with nothing selected, with Steam not installed (or its registry keys removed), and with Steam never signed in: each shows its own message and nothing is written.
+- [ ] I5: Steam moved to `D:\` with a stale HKLM key: the shortcuts go to `D:\Steam\userdata`, and the Steam that is restarted is `D:\Steam\steam.exe`.
+- [ ] Fix-wave minor 4: a stale `HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath` with a valid 64-bit `HKLM\SOFTWARE\Valve\Steam\InstallPath` (and no HKCU `SteamPath`): export finds the valid one.
+- [ ] M7: export while Steam runs: Steam closes, the shortcuts are written, Steam starts again and shows them. Same for "Remove UWPHook shortcuts".
+- [ ] R33: make one account's `config\grid` folder read-only: the export still succeeds for every account, and the message names that account for the artwork.
+- [ ] A Steam account whose `loginusers.vdf` entry is missing (delete its block from `Steam\config\loginusers.vdf`, keep `userdata\<id>`): it is still exported to. A corrupt `loginusers.vdf` gives a warning in `application.log` and the export still reaches every account.
+- [ ] M3: Tags `" A , ,B"` gives the Steam collections `A` and `B` only; an empty Tags box adds no collection.
+- [ ] An invalid SteamGridDB key during export shows the "key was rejected" box once, then the export continues.
+- [ ] Settings: delete `settings.json` and put a `settings.json.bad` next to it: the next start uses the defaults (2.14's settings are not imported again) and writes a new `settings.json`.

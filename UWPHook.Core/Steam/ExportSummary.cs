@@ -49,7 +49,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public static ExportSummary SteamNotFound() => new(ExportStatus.SteamNotFound, 0, 0, StopOutcome.NotRunning);
 
-    public static ExportSummary NoSteamUsers() => throw new NotImplementedException();
+    public static ExportSummary NoSteamUsers() => new(ExportStatus.NoSteamUsers, 0, 0, StopOutcome.NotRunning);
 
     public static ExportSummary SteamStillRunning() => new(ExportStatus.SteamStillRunning, 0, 0, StopOutcome.StillRunning);
 
@@ -64,9 +64,6 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     /// <summary>The outcome of writing each Steam account's shortcuts.vdf, with Steam stopped as <paramref name="steam"/> says.</summary>
     public static ExportSummary ForUsers(int written, int failed, StopOutcome steam) =>
         new(StatusOf(written, failed, steam), written, failed, steam);
-
-    /// <summary>True when at least one account's shortcuts.vdf was written.</summary>
-    public bool WroteAnything => UsersWritten > 0 && Status is ExportStatus.Exported or ExportStatus.PartiallyExported;
 
     public MessageSeverity Severity => Status switch
     {

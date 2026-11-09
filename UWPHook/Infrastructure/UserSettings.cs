@@ -5,38 +5,26 @@ using UWPHook.Core.Configuration;
 namespace UWPHook.Infrastructure
 {
     /// <summary>
-    /// The app's settings, in <c>%AppData%\Briano\UWPHook\settings.json</c>. Loaded on first use; when the
-    /// file does not exist yet, 2.14's settings are imported once and saved.
+    /// The app's settings, in <c>%AppData%\Briano\UWPHook\settings.json</c>: a thin static facade over one
+    /// <see cref="SettingsService"/> (load once, import 2.14 once), until Task 10c-2's composition root owns it.
     /// </summary>
     internal static class UserSettings
     {
-        private static readonly object gate = new object();
-        private static AppSettings? current;
-
         public static string FilePath =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook", "settings.json");
 
-        public static AppSettings Current
-        {
-            get
-            {
-                lock (gate) return current ??= LoadOrImport();
-            }
-        }
+        // One store for the app's lifetime: it remembers a key it could not decrypt, so saving does not erase it.
+        private static readonly Lazy<SettingsService> service = new Lazy<SettingsService>(() => new SettingsService(
+            NewStore(),
+            () => LegacySettingsImport.From(LegacySettingsImport.DefaultBrianoFolder),
+            SerilogLog.Instance));
+
+        public static AppSettings Current => service.Value.Current;
 
         /// <summary>Changes the settings and saves them. Throws when saving fails (the change is then not kept).</summary>
-        public static void Update(Func<AppSettings, AppSettings> change)
-        {
-            lock (gate)
-            {
-                var changed = change(current ?? LoadOrImport());
-                Store().Save(changed);
-                current = changed;
-            }
-        }
+        public static void Update(Func<AppSettings, AppSettings> change) => service.Value.Update(change);
 
-        // One store for the app's lifetime: it remembers a key it could not decrypt, so saving does not erase it.
-        private static readonly Lazy<SettingsStore> lazyStore = new Lazy<SettingsStore>(() => new SettingsStore(FilePath, new DpapiSecretProtector())
+        private static SettingsStore NewStore() => new SettingsStore(FilePath, new DpapiSecretProtector())
         {
             OnUnreadableFile = (e, movedTo) =>
             {
@@ -46,27 +34,6 @@ namespace UWPHook.Infrastructure
                     Log.Error(e, "settings.json is damaged, so the defaults are used; it was moved to {MovedTo}", movedTo);
             },
             OnUndecryptableKey = e => Log.Warning(e, "The SteamGridDB key in settings.json was saved by another Windows user or PC and cannot be read; enter it again in Settings"),
-        });
-
-        private static SettingsStore Store() => lazyStore.Value;
-
-        private static AppSettings LoadOrImport()
-        {
-            var store = Store();
-            // An existing file is never overwritten here, also when it cannot be read right now.
-            if (store.Exists) return store.Load();
-
-            var imported = LegacySettingsImport.From(LegacySettingsImport.DefaultBrianoFolder) ?? AppSettings.Defaults;
-            try
-            {
-                store.Save(imported);
-            }
-            catch (Exception e)
-            {
-                // Still usable for this run; the import is tried again next time.
-                Log.Error(e, "Saving {Path} failed", FilePath);
-            }
-            return imported;
-        }
+        };
     }
 }

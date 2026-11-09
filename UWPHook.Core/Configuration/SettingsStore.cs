@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -12,12 +14,19 @@ namespace UWPHook.Core.Configuration;
 /// </summary>
 public sealed class SettingsStore(string path, ISecretProtector protector, TimeProvider? time = null)
 {
-    // Red stub: not used yet.
-    public TimeProvider Clock { get; } = time ?? TimeProvider.System;
+    private readonly TimeProvider clock = time ?? TimeProvider.System;
 
     public string FilePath => path;
 
-    public bool HasMovedAsideFile => false;
+    /// <summary>True when a damaged settings file was moved aside (<c>settings.json.bad*</c>) at some point.</summary>
+    public bool HasMovedAsideFile
+    {
+        get
+        {
+            var folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            return Directory.Exists(folder) && Directory.EnumerateFiles(folder, Path.GetFileName(path) + ".bad*").Any();
+        }
+    }
 
     private const string ProtectedKeyProperty = "steamGridDbApiKeyProtected";
 
@@ -75,16 +84,19 @@ public sealed class SettingsStore(string path, ISecretProtector protector, TimeP
         }
     }
 
-    /// <summary>Atomic: writes <c>settings.json.tmp</c> next to the file, then moves it over the file.</summary>
+    /// <summary>
+    /// Atomic: writes a temp file of its own (<c>settings.json.&lt;guid&gt;.tmp</c>, so two processes never share one)
+    /// next to the file, flushes it to disk, then moves it over the file.
+    /// </summary>
     public void Save(AppSettings settings)
     {
         var text = Serialize(settings);
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-        var temp = path + ".tmp";
+        var temp = $"{path}.{Guid.NewGuid():N}.tmp";
 
         try
         {
-            File.WriteAllText(temp, text);
+            WriteThrough(temp, text);
             File.Move(temp, path, overwrite: true);
             if (settings.HasSteamGridDbApiKey) undecryptableKey = null;
         }
@@ -93,6 +105,15 @@ public sealed class SettingsStore(string path, ISecretProtector protector, TimeP
             TryDelete(temp);
             throw;
         }
+    }
+
+    /// <summary>Flushed to disk before the move, so a power loss can't leave an empty settings.json.</summary>
+    private static void WriteThrough(string file, string text)
+    {
+        using var stream = new FileStream(file, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(text);
+        stream.Write(bytes);
+        stream.Flush(flushToDisk: true);
     }
 
     private AppSettings Parse(string text)
@@ -161,7 +182,7 @@ public sealed class SettingsStore(string path, ISecretProtector protector, TimeP
         try
         {
             var target = path + ".bad";
-            if (File.Exists(target)) target += "-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");
+            if (File.Exists(target)) target += "-" + clock.GetLocalNow().ToString("yyyyMMdd-HHmmss-fff", CultureInfo.InvariantCulture);
             File.Move(path, target);
             return target;
         }

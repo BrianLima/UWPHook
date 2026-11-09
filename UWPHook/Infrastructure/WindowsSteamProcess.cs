@@ -12,6 +12,14 @@ namespace UWPHook.Infrastructure
     {
         private const string ProcessName = "steam";
 
+        private readonly ISteamLocator _steam;
+
+        /// <param name="steam">The Steam install that export writes to, so the restart works on the same one (I5).</param>
+        public WindowsSteamProcess(ISteamLocator steam)
+        {
+            _steam = steam;
+        }
+
         public bool IsRunning()
         {
             var processes = Process.GetProcessesByName(ProcessName);
@@ -25,8 +33,8 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        /// <summary>steam.exe of the install that export writes to (<see cref="SteamManager"/>), else the registry's SteamExe, else the running process.</summary>
-        public string? ExecutablePath() => SteamManager.GetSteamExecutable() ?? PathFromRegistry() ?? PathFromRunningProcess();
+        /// <summary>steam.exe of the install that export writes to (<see cref="ISteamLocator"/>), else the registry's SteamExe, else the running process.</summary>
+        public string? ExecutablePath() => _steam.SteamExecutable() ?? PathFromRegistry() ?? PathFromRunningProcess();
 
         public void RequestExit()
         {

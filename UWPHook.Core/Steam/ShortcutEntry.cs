@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using ValveKeyValue;
 
@@ -97,7 +96,7 @@ internal static class ShortcutEntry
     }
 
     private static string ReadString(KVObject entry, string key) =>
-        TryFind(entry, key, out var value) ? (string?)value ?? "" : "";
+        KeyValueLookup.TryFind(entry, key, out var value) ? (string?)value ?? "" : "";
 
     /// <summary>
     /// The appid, leniently: another tool may have written it as a string, and one odd entry must not block
@@ -105,7 +104,7 @@ internal static class ShortcutEntry
     /// </summary>
     private static int ReadAppId(KVObject entry)
     {
-        if (!TryFind(entry, AppId, out var value)) return 0;
+        if (!KeyValueLookup.TryFind(entry, AppId, out var value)) return 0;
 
         try
         {
@@ -115,20 +114,5 @@ internal static class ShortcutEntry
         {
             return 0;
         }
-    }
-
-    private static bool TryFind(KVObject entry, string key, [MaybeNullWhen(false)] out KVObject value)
-    {
-        foreach (var (candidate, child) in entry)
-        {
-            if (string.Equals(candidate, key, StringComparison.OrdinalIgnoreCase))
-            {
-                value = child;
-                return true;
-            }
-        }
-
-        value = default;
-        return false;
     }
 }
