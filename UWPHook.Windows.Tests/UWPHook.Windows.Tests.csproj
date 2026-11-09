@@ -34,6 +34,8 @@
     <Compile Include="..\UWPHook.Core.Tests\Steam\BinaryVdf.cs" Link="Steam\BinaryVdf.cs" />
     <Compile Include="..\UWPHook.Core.Tests\Diagnostics\RecordingLog.cs" Link="Diagnostics\RecordingLog.cs" />
     <Compile Include="..\UWPHook.Core.Tests\Artwork\SteamGridDb\FakeHandler.cs" Link="Artwork\FakeHandler.cs" />
+    <!-- The ViewModels' fakes, so the XAML-load tests can build every window. -->
+    <Compile Include="..\UWPHook.Presentation.Tests\Fakes.cs" Link="Presentation\Fakes.cs" />
   </ItemGroup>
 
   <ItemGroup>
