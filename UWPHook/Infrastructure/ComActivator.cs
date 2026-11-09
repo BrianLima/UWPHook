@@ -36,7 +36,7 @@ namespace UWPHook.Infrastructure
         /// <summary>Creates Windows' activation manager.</summary>
         internal static IApplicationActivationManager CreateManager() => null!;
 
-        private enum ActivateOptions
+        internal enum ActivateOptions
         {
             None = 0x00000000,
         }
