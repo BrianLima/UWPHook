@@ -148,3 +148,11 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] The list is ordered by the friendly name from `KnownApps.json` (2.14 sorted by the package's name, then renamed), e.g. a known app sits under its friendly name.
 - [ ] Choose only account B in Settings, then delete `userdata\<B>`: export and Remove use every account, and `application.log` has the Warning "The Steam accounts chosen in Settings (…) no longer exist; using every account".
 - [ ] The Remove question says it removes UWPHook's shortcuts from the Steam accounts saved in Settings.
+
+## Task 12
+- [ ] On Windows 10 and Windows 11, the games list and Settings follow the system's light/dark setting (switch it while UWPHook is open, and on a fresh start); Windows 11 may show Mica, Windows 10 shows a plain background.
+- [ ] `%AppData%\Briano\UWPHook\application.log` has no missing-resource (`ResourceReferenceKeyNotFoundException`/`XamlParseException`) entry after opening the games list, Settings and a stream-mode launch.
+- [ ] Every icon shows, with no empty boxes, on Windows 10 (Segoe MDL2 Assets) and Windows 11 (Segoe Fluent Icons): Settings (gear), Load (refresh), the SteamGridDB key button, and the GitHub/PayPal/@brianostorm buttons in Settings and the splash.
+- [ ] In both themes, the Settings Steam account picker, the "Enable streaming mode" check box, the "Show system apps" check box and the games DataGrid (headers, rows, the selection checkboxes) are readable.
+- [ ] The stream splash (stream mode on, launch a game from Steam) is dark even with Windows in light mode, and still renders in software (NVIDIA Advanced Optimus switches to the dGPU, #165).
+- [ ] The header band behind the white UWPHook logo uses the Windows accent colour and the white welcome text is readable on it.
