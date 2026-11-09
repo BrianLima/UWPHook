@@ -75,6 +75,25 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(new[] { "111", "222" }, Store().Load().ExportSteamAccounts.AccountIds);
     }
 
+    // R37: settings.json written by a 2.15 preview still has the removed language keys; they are ignored.
+    [Fact]
+    public void Load_AFileWithTheRemovedLanguageKeys_LoadsTheOtherSettings()
+    {
+        File.WriteAllText(SettingsPath, "{ \"changeLanguage\": true, \"targetLanguage\": \"ja-JP\", \"seconds\": 7, \"streamMode\": true }");
+
+        Assert.Equal(AppSettings.Defaults with { Seconds = 7, StreamMode = true }, Store().Load());
+    }
+
+    [Fact]
+    public void Save_DoesNotWriteTheRemovedLanguageKeys()
+    {
+        Store().Save(Changed);
+
+        var json = SavedJson();
+        Assert.False(json.ContainsKey("changeLanguage"));
+        Assert.False(json.ContainsKey("targetLanguage"));
+    }
+
     [Fact]
     public void Load_WithoutAFile_GivesTheDefaults()
     {

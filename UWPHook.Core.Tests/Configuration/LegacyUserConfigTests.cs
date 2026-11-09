@@ -28,10 +28,9 @@ public class LegacyUserConfigTests
     [Fact]
     public void TryParse_A214UserConfig_KeepsEverySetting()
     {
+        // The fixture also has 2.14's ChangeLanguage/TargetLanguage, which 2.15 no longer reads (R37).
         var expected = new AppSettings
         {
-            ChangeLanguage = true,
-            TargetLanguage = "ja-JP",
             Seconds = 3,
             StreamMode = true,
             SteamGridDbApiKey = "0123456789abcdef0123456789abcdef",
@@ -46,6 +45,12 @@ public class LegacyUserConfigTests
 
         Assert.Equal(expected, Parse(Fixture()));
     }
+
+    // R37: the language override was removed, so its 2.14 settings are not imported.
+    [Fact]
+    public void TryParse_IgnoresTheRemovedLanguageSettings() =>
+        Assert.Equal(AppSettings.Defaults,
+            Parse(UserConfig(Setting("ChangeLanguage", "True") + Setting("TargetLanguage", "ja-JP"))));
 
     [Fact]
     public void TryParse_NoSettings_GivesTheDefaults() =>

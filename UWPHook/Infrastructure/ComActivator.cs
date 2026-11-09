@@ -33,13 +33,16 @@ namespace UWPHook.Infrastructure
             }
         }
 
+        /// <summary>Creates Windows' activation manager.</summary>
+        internal static IApplicationActivationManager CreateManager() => null!;
+
         private enum ActivateOptions
         {
             None = 0x00000000,
         }
 
         [ComImport, Guid("2e941141-7f97-4756-ba1d-9decde894a3d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        private interface IApplicationActivationManager
+        internal interface IApplicationActivationManager
         {
             // Activates the app for the "Launch" contract with the given arguments and returns its process id.
             IntPtr ActivateApplication([In] string appUserModelId, [In] string arguments, [In] ActivateOptions options, [Out] out uint processId);

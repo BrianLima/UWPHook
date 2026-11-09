@@ -51,6 +51,11 @@ public class AppSettingsTests
         Assert.Contains("Seconds", text);
     }
 
+    // R37: the language override was removed.
+    [Fact]
+    public void ToString_HasNoLanguageSetting() =>
+        Assert.DoesNotContain("Language", AppSettings.Defaults.ToString());
+
     [Theory]
     [InlineData(-3, 1)]
     [InlineData(0, 1)]
