@@ -309,11 +309,13 @@ Audit result: no API UWPHook uses is deprecated on Windows 11. `IApplicationActi
 - Core: add `PlatformCapabilities`, a record of feature flags computed from an `IOsVersion` seam, with unit tests for 1809, 1903, 2004 and 11. App code asks the capability, never the build number.
 - Package paths: when the OS is 18362 or later (`OperatingSystem.IsWindowsVersionAtLeast(10,0,18362)`), prefer `Package.EffectiveLocation` over `InstalledLocation`. It returns the mutable/ModifiableWindowsApps folder for moddable games. Do this in `PackageManagerCatalog` (exe resolution) and in `PackageProcessWatcher` (image-path fallback). Also add the XboxGames flat-install root to the fallback test cases.
 - `ComActivator`: create `ApplicationActivationManager` with `CoCreateInstance(..., CLSCTX_LOCAL_SERVER, ...)`, as the docs recommend for a process spawned only to launch an app.
-- Language override (decision pending, default = remove):
+- Language override (decided 2026-11-09 by Brian: **remove**; ruling R37):
   - Remove the "change language" setting and the per-launch override, along with `ScriptManager`, `ScriptManagerTests` and the PowerShell dependency.
   - The 10b settings import drops the legacy keys.
   - CHANGELOG: a "Removed" entry with the reason.
   - This supersedes wave-2 item I1.
+  - Never change the user's Windows display language while removing it. A user may still have an override that I1 left behind; the README explains how to clear it in Settings > Time & language.
+  - 10c-2 already removes the language controls from Settings.
 - Gate any remaining OS-specific UI on `PlatformCapabilities` (hide, don't fail).
 - *Manual:* a moddable GDK game (in XboxGames) is tracked until exit, launch on Win10 1809 still works, and no `powershell.exe` is spawned at any point (Process Monitor).
 
