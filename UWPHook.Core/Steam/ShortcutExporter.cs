@@ -46,7 +46,7 @@ public sealed class ShortcutExporter(
             return ExportSummary.NoSteamUsers();
         }
 
-        await artwork.PrepareAsync(apps, ct).ConfigureAwait(false);
+        var artworkFailed = await PrepareArtworkAsync(apps, ct).ConfigureAwait(false);
 
         // The same shortcuts go to every account, so each icon is persisted once, not once per account.
         // UWPHook.exe is only looked for now that nothing can stop the export (10c-1 minor 1).
@@ -71,7 +71,26 @@ public sealed class ShortcutExporter(
         }
 
         // Not running or stopped: the write ran.
-        return ExportSummary.ForUsers(writes!.Written, writes.Failed, stopped).WithArtworkFailures(writes.ArtworkFailed);
+        return ExportSummary.ForUsers(writes!.Written, writes.Failed, stopped)
+            .WithArtworkDownloadFailures(artworkFailed)
+            .WithArtworkFailures(writes.ArtworkFailed);
+    }
+
+    /// <summary>
+    /// The names of the apps whose artwork could not be downloaded. Artwork is optional (R33): when preparing it
+    /// throws, every app is exported without it. Cancelling still stops the export.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> PrepareArtworkAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
+    {
+        try
+        {
+            return await artwork.PrepareAsync(apps, ct).ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.Error(e, "Preparing the artwork failed; the apps are exported without it");
+            return [.. apps.Select(app => app.Name)];
+        }
     }
 
     private sealed record AccountWrites(int Written, int Failed, IReadOnlyList<string> ArtworkFailed);

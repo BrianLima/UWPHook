@@ -20,6 +20,8 @@ public sealed class SettingsViewModel : ObservableObject
         + "Non-Steam games added by Steam or other tools are kept, and shortcuts.vdf is backed up first."
         + "\r\nAre you sure you want to continue?";
 
+    public const string StillRemoving = "UWPHook is still removing its shortcuts. Please wait until it finishes: it may have closed Steam, and it starts Steam again when it is done.";
+
     private const string ApiKeyPage = "https://www.steamgriddb.com/profile/preferences/api";
 
     private const string ApiKeyHelp = "You are being redirected to SteamGridDB website!\r\n" +
@@ -30,6 +32,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly IDialogService dialogs;
     private readonly IAppHost host;
     private readonly ILog log;
+    private bool isRemoving;
 
     public SettingsViewModel(ISettingsService settings, ISteamLocator steam, IShortcutRemover remover, IDialogService dialogs, IAppHost host, ILog log)
     {
@@ -91,6 +94,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         if (!dialogs.Confirm(RemoveWarning, ConfirmTone.Warning)) return;
 
+        isRemoving = true;
         try
         {
             var accounts = settings.Current.ExportSteamAccounts;
@@ -102,6 +106,22 @@ public sealed class SettingsViewModel : ObservableObject
         {
             dialogs.ReportError(e, "Removing UWPHook's shortcuts failed.");
         }
+        finally
+        {
+            isRemoving = false;
+        }
+    }
+
+    /// <summary>
+    /// Whether the window may close now; when it may not, tells the user why. Not while removing (I1): the removal
+    /// would go on with Steam possibly closed, behind a closed window.
+    /// </summary>
+    public bool ConfirmClose()
+    {
+        if (!isRemoving) return true;
+
+        dialogs.Show(MessageSeverity.Information, StillRemoving);
+        return false;
     }
 
     private void GetApiKey()

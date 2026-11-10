@@ -284,6 +284,41 @@ public sealed class SettingsViewModelTests
         Assert.Equal((failure, "Removing UWPHook's shortcuts failed."), Assert.Single(_dialogs.Errors));
     }
 
+    // Closing the window (I1): Remove keeps running when Settings closes, and could then overlap an export.
+
+    [Fact]
+    public async Task WhileRemoving_RefusesToClose_AndSaysWhy()
+    {
+        _remover.Gate = new TaskCompletionSource();
+        var viewModel = ViewModel();
+        var removing = viewModel.RemoveShortcutsCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.ConfirmClose());
+        Assert.Equal(new FakeDialogs.Shown(MessageSeverity.Information, SettingsViewModel.StillRemoving, "UWPHook"), Assert.Single(_dialogs.Messages));
+
+        _remover.Gate.SetResult();
+        await removing;
+        Assert.True(viewModel.ConfirmClose());
+    }
+
+    [Fact]
+    public void WhenIdle_Closes_WithoutAsking()
+    {
+        Assert.True(ViewModel().ConfirmClose());
+        Assert.Empty(_dialogs.Messages);
+    }
+
+    [Fact]
+    public async Task AfterAFailedRemove_Closes()
+    {
+        _remover.Failure = new IOException("locked");
+        var viewModel = ViewModel();
+
+        await viewModel.RemoveShortcutsCommand.ExecuteAsync(null);
+
+        Assert.True(viewModel.ConfirmClose());
+    }
+
     // Links
 
     [Fact]

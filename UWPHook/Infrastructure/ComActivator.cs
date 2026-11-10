@@ -59,13 +59,18 @@ namespace UWPHook.Infrastructure
             None = 0x00000000,
         }
 
+        /// <remarks>
+        /// The methods return an HRESULT natively. Declared <c>void</c> without <c>[PreserveSig]</c>, the runtime turns a
+        /// failure HRESULT into an exception, and the managed signature matches the native one (a non-void return would
+        /// be marshalled as an extra out argument the native method doesn't have).
+        /// </remarks>
         [ComImport, Guid("2e941141-7f97-4756-ba1d-9decde894a3d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         internal interface IApplicationActivationManager
         {
             // Activates the app for the "Launch" contract with the given arguments and returns its process id.
-            IntPtr ActivateApplication([In] string appUserModelId, [In] string arguments, [In] ActivateOptions options, [Out] out uint processId);
-            IntPtr ActivateForFile([In] string appUserModelId, [In] IntPtr itemArray, [In] string verb, [Out] out uint processId);
-            IntPtr ActivateForProtocol([In] string appUserModelId, [In] IntPtr itemArray, [Out] out uint processId);
+            void ActivateApplication([In] string appUserModelId, [In] string arguments, [In] ActivateOptions options, [Out] out uint processId);
+            void ActivateForFile([In] string appUserModelId, [In] IntPtr itemArray, [In] string verb, [Out] out uint processId);
+            void ActivateForProtocol([In] string appUserModelId, [In] IntPtr itemArray, [Out] out uint processId);
         }
     }
 }

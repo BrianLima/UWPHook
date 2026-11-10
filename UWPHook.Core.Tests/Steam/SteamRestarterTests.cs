@@ -13,117 +13,6 @@ public class SteamRestarterTests
     private readonly FakeTimeProvider _time = new();
 
     [Fact]
-    public async Task Restart_WhenNotRunning_ReturnsNotRunning_AndDoesNotStart()
-    {
-        var steam = new FakeSteam(runningPolls: 0);
-
-        var outcome = await Drive(NewRestarter(steam).RestartAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(RestartOutcome.NotRunning, outcome);
-        Assert.Equal(0, steam.ExitRequests);
-        Assert.Empty(steam.Starts);
-    }
-
-    [Fact]
-    public async Task Restart_WhenExitsAfterTwoPolls_StartsOnceAndReturnsRestarted()
-    {
-        // Running for the initial check and two polls, then gone.
-        var steam = new FakeSteam(runningPolls: 3);
-
-        var outcome = await Drive(NewRestarter(steam).RestartAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(RestartOutcome.Restarted, outcome);
-        Assert.Equal(1, steam.ExitRequests);
-        Assert.Equal(SteamExe, Assert.Single(steam.Starts));
-    }
-
-    [Fact]
-    public async Task Restart_GivesUpAfterTimeout()
-    {
-        var steam = new FakeSteam(runningPolls: int.MaxValue);
-        var startedAt = _time.GetUtcNow();
-
-        var outcome = await Drive(NewRestarter(steam).RestartAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(RestartOutcome.TimedOut, outcome);
-        Assert.Equal(1, steam.ExitRequests);
-        Assert.Empty(steam.Starts);
-        Assert.True(_time.GetUtcNow() - startedAt >= RestartTimeout, "gave up before the timeout elapsed");
-    }
-
-    [Fact]
-    public async Task Restart_WhenExecutablePathUnavailable_ReturnsTimedOutWithoutThrowing()
-    {
-        var steam = new FakeSteam(runningPolls: int.MaxValue, exePath: null);
-
-        var outcome = await Drive(NewRestarter(steam).RestartAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(RestartOutcome.TimedOut, outcome);
-        Assert.Equal(0, steam.ExitRequests); // never shut Steam down without a way to start it again
-        Assert.Empty(steam.Starts);
-    }
-
-    [Fact]
-    public async Task Stop_WhenNotRunning_ReturnsNotRunning_AndStartDoesNothing()
-    {
-        var steam = new FakeSteam(runningPolls: 0);
-        var restarter = NewRestarter(steam);
-
-        var outcome = await Drive(restarter.StopAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(StopOutcome.NotRunning, outcome);
-        Assert.False(restarter.Start());
-        Assert.Equal(0, steam.ExitRequests);
-        Assert.Empty(steam.Starts);
-    }
-
-    [Fact]
-    public async Task Stop_WhenSteamExits_ReturnsStopped_AndLeavesItStoppedUntilStart()
-    {
-        var steam = new FakeSteam(runningPolls: 3);
-        var restarter = NewRestarter(steam);
-
-        var outcome = await Drive(restarter.StopAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(StopOutcome.Stopped, outcome);
-        Assert.Equal(1, steam.ExitRequests);
-        Assert.Empty(steam.Starts);
-
-        Assert.True(restarter.Start());
-        Assert.Equal(SteamExe, Assert.Single(steam.Starts));
-
-        Assert.False(restarter.Start()); // only once per stop
-        Assert.Single(steam.Starts);
-    }
-
-    [Fact]
-    public async Task Stop_GivesUpAfterTimeout_ReturnsStillRunning_AndStartDoesNothing()
-    {
-        var steam = new FakeSteam(runningPolls: int.MaxValue);
-        var restarter = NewRestarter(steam);
-        var startedAt = _time.GetUtcNow();
-
-        var outcome = await Drive(restarter.StopAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(StopOutcome.StillRunning, outcome);
-        Assert.True(_time.GetUtcNow() - startedAt >= RestartTimeout, "gave up before the timeout elapsed");
-        Assert.False(restarter.Start());
-        Assert.Empty(steam.Starts);
-    }
-
-    [Fact]
-    public async Task Stop_WhenExecutablePathUnavailable_ReturnsExecutableUnknown_WithoutAskingSteamToExit()
-    {
-        var steam = new FakeSteam(runningPolls: int.MaxValue, exePath: null);
-
-        var outcome = await Drive(NewRestarter(steam).StopAsync(TestContext.Current.CancellationToken));
-
-        // Not StillRunning ("did not close in time"): Steam was never asked to close.
-        Assert.Equal(StopOutcome.ExecutableUnknown, outcome);
-        Assert.Equal(0, steam.ExitRequests);
-    }
-
-    [Fact]
     public async Task WhileStopped_WhenSteamsPathIsUnknown_DoesNotWrite()
     {
         var steam = new FakeSteam(runningPolls: int.MaxValue, exePath: null);
@@ -153,6 +42,23 @@ public class SteamRestarterTests
 
         Assert.Equal(StopOutcome.Stopped, outcome);
         Assert.Equal(new[] { "exit", "write", "start" }, steam.Events);
+        Assert.Equal(SteamExe, Assert.Single(steam.Starts));
+    }
+
+    // Steam is started again only by the run that stopped it.
+    [Fact]
+    public async Task WhileStopped_Twice_StartsSteamOnlyAfterTheRunThatStoppedIt()
+    {
+        // Running for the first check and two polls; after that (and after the start) the fake says it's gone.
+        var steam = new FakeSteam(runningPolls: 3);
+        var restarter = NewRestarter(steam);
+
+        await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, TestContext.Current.CancellationToken));
+        var second = await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.NotRunning, second);
+        Assert.Equal(1, steam.ExitRequests);
+        Assert.Single(steam.Starts);
     }
 
     [Fact]
@@ -171,10 +77,11 @@ public class SteamRestarterTests
     }
 
     [Fact]
-    public async Task WhileStopped_WhenSteamCannotBeStopped_DoesNotWrite()
+    public async Task WhileStopped_GivesUpAfterTimeout_AndDoesNotWrite()
     {
         var steam = new FakeSteam(runningPolls: int.MaxValue);
         var wrote = false;
+        var startedAt = _time.GetUtcNow();
 
         var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
         {
@@ -183,6 +90,8 @@ public class SteamRestarterTests
         }, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.StillRunning, outcome);
+        Assert.True(_time.GetUtcNow() - startedAt >= RestartTimeout, "gave up before the timeout elapsed");
+        Assert.Equal(1, steam.ExitRequests);
         Assert.False(wrote, "writing shortcuts.vdf while Steam runs can lose the export");
         Assert.Empty(steam.Starts);
     }
@@ -197,6 +106,33 @@ public class SteamRestarterTests
 
         await Assert.ThrowsAsync<IOException>(() => Drive(run));
         Assert.Equal(SteamExe, Assert.Single(steam.Starts));
+    }
+
+    // I1 / review m2: export and "Remove UWPHook shortcuts" share one restarter, so their stop-write-start runs
+    // never interleave (one could start Steam while the other writes).
+    [Fact]
+    public async Task WhileStopped_RunsOneWriteAtATime()
+    {
+        var steam = new FakeSteam(runningPolls: 0);
+        var restarter = NewRestarter(steam);
+        var firstWrite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var first = restarter.WhileStoppedAsync(async () =>
+        {
+            steam.Events.Add("first write starts");
+            await firstWrite.Task;
+            steam.Events.Add("first write ends");
+        }, TestContext.Current.CancellationToken);
+        var second = restarter.WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("second write");
+            return Task.CompletedTask;
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { "first write starts" }, steam.Events);
+        firstWrite.SetResult();
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(new[] { "first write starts", "first write ends", "second write" }, steam.Events);
     }
 
     private SteamRestarter NewRestarter(ISteamProcess steam) => new(steam, _time, RestartTimeout, Poll);

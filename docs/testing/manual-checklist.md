@@ -11,10 +11,10 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Re-exporting a game that UWPHook added with 2.14 gives the same `appid` in `shortcuts.vdf`, and its SteamGridDB grid/hero/logo images still show in Steam (the id switched from Crc32.NET to `SteamShortcutId`).
 
 ## Task 3
-- [ ] A Steam shortcut whose `Exe` is UWPHook's path **without quotes** (in a folder with spaces, e.g. `C:\Program Files (x86)\Briano\UWPHook\UWPHook.exe`) launches the game instead of failing with "Value does not fall within the expected range".
+- [ ] A Steam shortcut whose `Exe` is UWPHook's path **without quotes** (in a folder with spaces, e.g. a 2.15 portable copy in `D:\My Games\UWPHook\UWPHook.exe`; 2.14's installer used `%AppData%\Briano\UWPHook`) launches the game instead of failing with "Value does not fall within the expected range". A shortcut made by 2.14 keeps launching the 2.14 exe it names until it is exported again from 2.15.
 - [ ] A shortcut whose launch options use forward slashes in the executable (e.g. Halo MCC `MCC/Binaries/...`) launches, and UWPHook keeps running until the game exits.
 - [ ] Launching UWPHook with a junk argument (e.g. `UWPHook.exe foo`) shows "Invalid launch arguments", and `application.log` lists the arguments.
-- [ ] Launching a shortcut for an uninstalled app shows the "Error while trying to launch your app." message, and `application.log` has a line with `HRESULT 0x........`.
+- [ ] Launching a shortcut for an uninstalled app shows the "Error while trying to launch `<AUMID>`." message, and `application.log` has a line with `HRESULT 0x........`.
 - [ ] AUMID-only shortcut (no executable arg) launches, and UWPHook exits when the game's original process exits, without latching onto another process.
 
 ## Task 6
@@ -35,7 +35,7 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] Export with Steam running: Steam closes and reopens within ~15 s, and the message says "Steam has been restarted." The app stays open.
 - [ ] Export with Steam closed: the message says the games will show up the next time Steam starts, and Steam is not launched. The app stays open.
 - [ ] Export with the SteamGridDB "animated" filter on: the grid images are saved with their original extension (e.g. `.webp`/`.png`), still animate, and Steam shows them. The app stays open.
-- [ ] If Steam does not exit within 15 s (e.g. a modal dialog is open in Steam), export finishes with "Please restart Steam to see your games." instead of hanging.
+- [ ] If Steam does not exit within 15 s (e.g. a modal dialog is open in Steam), export finishes with "Steam did not close in time, so nothing was exported. Close Steam, then export again." instead of hanging.
 - [ ] Force an error during export (e.g. make `shortcuts.vdf` read-only): an error message box appears, the error is in `%AppData%\Briano\UWPHook\application.log`, and the window is re-enabled.
 
 ## Integration 4+5
@@ -162,3 +162,15 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] A moddable GDK game installed under `XboxGames` (e.g. `C:\XboxGames\<Game>\Content`) is listed with that folder as its install location, launches from Steam, and Steam shows "Playing" until the game exits.
 - [ ] On Windows 10 1809 (build 17763), if available: the app list loads and a game launches and is tracked until it exits.
 - [ ] An old `settings.json` that still has `"changeLanguage": true, "targetLanguage": "ja-JP"` loads with every other setting kept, the Windows display language is not touched at launch, and the next Save drops the two keys.
+
+## Final fix wave
+- [ ] C1, on a PC with 2.14 installed by its NSIS installer (into `%AppData%\Briano\UWPHook`): install 2.15 Setup, then check Windows Settings > Apps: how many "UWPHook" entries are listed, and which uninstaller each runs (Velopack's `Update.exe --uninstall` or 2.14's `uninstall.exe`). Check whether Velopack's uninstall entry and 2.14's `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\UWPHook` key collide (same key, one overwriting the other). If they do, the README's "do not uninstall 2.14 from Settings > Apps" warning is essential; note the result here.
+- [ ] C1: with 2.14 and 2.15 installed, the 2.14 Start menu folder "UWPHook" still opens 2.14, the desktop `UWPHook` shortcut opens whichever version wrote it last (note which), and 2.15's own Start menu entry opens 2.15.
+- [ ] C1: after following the README upgrade steps (open 2.15, export again, delete only 2.14's listed program files and Start menu folder), `%AppData%\Briano\UWPHook\{settings.json,backups,icons,application.log}` still exist, every Steam shortcut launches through `%LocalAppData%\UWPHook\current\UWPHook.exe`, and the icons show in Steam.
+- [ ] I1: press Export with Steam running, then at once try to close the games window (title-bar X and Alt+F4): it stays open and says UWPHook is still exporting; after the export, Steam is running again and the window closes normally.
+- [ ] I1: in Settings, press "Remove UWPHook shortcuts" with Steam running, then at once try to close Settings (X, Esc if bound, Save): it stays open and says UWPHook is still removing; afterwards Steam is running again.
+- [ ] m3: with a SteamGridDB key set and a leftover `%TEMP%\UWPHook\tmp_grid\<AUMID>` folder held open by another program (e.g. a Command Prompt `cd`'d into it, so it can't be deleted), export still writes the shortcuts and says "Artwork could not be downloaded for <app>"; the error is in `application.log`.
+- [ ] m4: a 2.14 backup (`<userid>_<yyyyMMddHHmmss>_shortcuts.vdf`, 14 digits) in `%AppData%\Briano\UWPHook\backups` is still there after more than 20 exports with 2.15.
+- [ ] Settings: clicking the text "Enable streaming mode" ticks and unticks the box.
+- [ ] Velopack: run a 2.15.1 Setup while a game launched through UWPHook is running. Note whether Setup kills `current\UWPHook.exe`; if it does, Steam's "Playing" ends early (a known limitation to document for Phase 3 updates).
+- [ ] Session end for a non-game UWP app with background tasks (e.g. Mail/Calendar-style apps): launch it from Steam, close it; UWPHook exits within the grace period plus one poll (package-family tracking also counts `backgroundTaskHost.exe` processes of that package).

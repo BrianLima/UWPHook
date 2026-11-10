@@ -9,13 +9,6 @@ public static class SteamInstallChooser
 {
     private static readonly char[] Separators = ['\\', '/'];
 
-    /// <param name="hkcuPath">HKCU SteamPath, which Steam writes with forward slashes.</param>
-    /// <param name="hklmPath">HKLM (WOW6432Node) InstallPath.</param>
-    /// <param name="dirExists">Whether a folder exists.</param>
-    /// <returns>The first of the two (normalised to backslashes) whose folder exists, or null.</returns>
-    public static string? Choose(string? hkcuPath, string? hklmPath, Func<string, bool> dirExists) =>
-        Choose([hkcuPath, hklmPath], dirExists);
-
     /// <param name="candidates">The registry's paths, most trusted first (HKCU SteamPath, then each HKLM view).</param>
     /// <param name="dirExists">Whether a folder exists.</param>
     /// <returns>The first candidate (normalised to backslashes) whose folder exists, or null.</returns>

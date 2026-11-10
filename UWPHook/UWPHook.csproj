@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Read from the assembly (AppManager), so no copy ships next to the exe. -->
+		<!-- Read from the assembly (KnownAppsCatalog), so no copy ships next to the exe. -->
 		<EmbeddedResource Include="Resources\KnownApps.json" />
 	</ItemGroup>
 
@@ -47,9 +47,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Serilog" />
-		<PackageReference Include="Serilog.Sinks.Console" />
 		<PackageReference Include="Serilog.Sinks.File" />
 		<!-- Installer and updates (per-user install under %LocalAppData%\UWPHook). -->
 		<PackageReference Include="Velopack" />

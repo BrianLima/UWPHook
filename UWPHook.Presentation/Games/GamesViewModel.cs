@@ -18,6 +18,7 @@ public sealed class GamesViewModel : ObservableObject
     public const string LoadingStatus = "Loading your installed apps";
     public const string LoadedStatus = "Installed Apps";
     public const string SteamGridDbOffer = "Do you want to automatically import grid images for imported games?";
+    public const string StillExporting = "UWPHook is still exporting your games. Please wait until it finishes: it may have closed Steam, and it starts Steam again when it is done.";
 
     private readonly IAppCatalog catalog;
     private readonly IShortcutExporter exporter;
@@ -26,6 +27,7 @@ public sealed class GamesViewModel : ObservableObject
     private readonly ILog log;
     private readonly Func<string> uwpHookExe;
     private bool isBusy;
+    private bool isExporting;
     private string status = PressLoadStatus;
     private bool includeSystemApps = true;
 
@@ -115,6 +117,7 @@ public sealed class GamesViewModel : ObservableObject
     private async Task<ExportSummary?> ExportedAsync(ExportRequest request)
     {
         IsBusy = true;
+        isExporting = true;
         try
         {
             var summary = await Task.Run(() => exporter.ExportAsync(request));
@@ -128,8 +131,21 @@ public sealed class GamesViewModel : ObservableObject
         }
         finally
         {
+            isExporting = false;
             IsBusy = false;
         }
+    }
+
+    /// <summary>
+    /// Whether the window may close now; when it may not, tells the user why. Not while exporting (I1): closing the
+    /// app would end the export while Steam may be closed, and Steam would not be started again. Loading may be cut short.
+    /// </summary>
+    public bool ConfirmClose()
+    {
+        if (!isExporting) return true;
+
+        dialogs.Show(MessageSeverity.Information, StillExporting);
+        return false;
     }
 
     /// <summary>

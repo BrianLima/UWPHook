@@ -9,9 +9,6 @@ namespace UWPHook.Core.Steam;
 /// </summary>
 public sealed class ShortcutRemover(ISteamLocator steam, SteamRestarter restarter, ShortcutsBackupFolder backups, ILog log) : IShortcutRemover
 {
-    /// <summary>Removes them from every account.</summary>
-    public Task<RemoveSummary> RemoveAsync(CancellationToken ct = default) => RemoveAsync(SteamAccountChoice.All, ct);
-
     /// <summary>Removes them from the chosen accounts (#76).</summary>
     public async Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default)
     {

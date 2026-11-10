@@ -37,18 +37,24 @@ namespace UWPHook.Infrastructure
             _icons = new IconPersister(iconsFolder, _temp, iconIn ?? (folder => SquareIcons.WidestIn(folder)), log);
         }
 
-        /// <summary>Downloads each app's artwork; does nothing without an API key. A rejected key is told once per export.</summary>
-        public async Task PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
+        /// <summary>
+        /// Downloads each app's artwork; does nothing without an API key. A rejected key is told once per export.
+        /// Returns the names of the apps whose download failed.
+        /// </summary>
+        public async Task<IReadOnlyList<string>> PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
         {
             _log.Debug("Downloading SteamGridDB artwork: {HasApiKey}", _sgdb.HasApiKey);
-            if (!_sgdb.HasApiKey) return;
+            if (!_sgdb.HasApiKey) return [];
 
-            if (await _downloader.DownloadAllAsync(apps, ct))
+            var downloads = await _downloader.DownloadAllAsync(apps, ct);
+            if (downloads.KeyRejected)
             {
                 // The key is kept so the user can fix it in Settings
                 _log.Warning("SteamGridDB rejected the API key (HTTP 401); exporting without artwork");
                 _onKeyRejected();
             }
+
+            return downloads.FailedApps;
         }
 
         public string IconFor(ExportApp app) => _icons.IconFor(app);

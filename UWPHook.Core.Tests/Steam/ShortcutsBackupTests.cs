@@ -54,13 +54,13 @@ public class ShortcutsBackupTests
         Assert.DoesNotContain(other, ShortcutsBackup.ToPrune(names, "123", keep: 0));
     }
 
+    // Review m4: 2.14 named its backups to the second (yyyyMMddHHmmss). They are the snapshots from before 2.15's
+    // writer, so they are never pruned and don't count towards the 20 kept.
     [Fact]
-    public void ToPrune_OrdersSecondAndMillisecondTimestampsTogether()
+    public void ToPrune_NeverPrunesBackupsNamedBy214()
     {
-        // Earlier 2.15 builds wrote yyyyMMddHHmmss; the newer millisecond name is the newest.
-        var older = "123_20261108120000_shortcuts.vdf";
-        var newer = "123_20261108120000500_shortcuts.vdf";
+        var from214 = "123_20241108120000_shortcuts.vdf";
 
-        Assert.Equal([older], ShortcutsBackup.ToPrune([newer, older], "123", keep: 1));
+        Assert.Equal([Name("123", 0)], ShortcutsBackup.ToPrune([from214, Name("123", 0), Name("123", 1)], "123", keep: 1));
     }
 }

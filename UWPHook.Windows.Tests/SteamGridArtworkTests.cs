@@ -175,4 +175,29 @@ public sealed class SteamGridArtworkTests : IDisposable
         Assert.Equal(1, _keyRejections);
         Assert.Single(_log.At(LogLevel.Warning));
     }
+
+    // Review m3: an exception the SteamGridDB client doesn't turn into a result (a locked temp folder, a key a header
+    // can't hold, ...) costs only that app its artwork; the others still download, and the app is named.
+    [Fact]
+    public async Task PrepareAsync_WhenOneAppThrows_StillDownloadsTheOthers_AndNamesIt()
+    {
+        var handler = new FakeHandler((request, _) => request.RequestUri!.AbsoluteUri.Contains("Halo")
+            ? Task.FromException<HttpResponseMessage>(new InvalidOperationException("boom"))
+            : Task.FromResult(FakeHandler.Response("{\"success\":true,\"data\":[]}")));
+        var apps = new[] { App(), new ExportApp("Forza", "Microsoft.Forza_8wekyb3d8bbwe!App", "forza.exe", "") };
+
+        var failed = await Artwork(WithKey(handler)).PrepareAsync(apps, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { "Halo" }, failed);
+        Assert.Contains(_log.At(LogLevel.Error), entry => entry.Exception is InvalidOperationException);
+        Assert.Contains(handler.Requests, request => request.RequestUri!.AbsoluteUri.Contains("Forza"));
+    }
+
+    [Fact]
+    public async Task PrepareAsync_WhenEveryAppDownloads_NamesNone()
+    {
+        var failed = await Artwork(WithKey(FakeHandler.Json("{\"success\":true,\"data\":[]}"))).PrepareAsync([App()], TestContext.Current.CancellationToken);
+
+        Assert.Empty(failed);
+    }
 }
