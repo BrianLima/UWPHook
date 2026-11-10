@@ -207,12 +207,31 @@ public class ShortcutsFileTests
         Assert.Equal(Spec.StartDir, after["StartDir"].Value);
         Assert.Equal(Spec.LaunchOptions, after["LaunchOptions"].Value);
         Assert.Equal(Spec.Icon, after["icon"].Value);
-        Assert.Equal(new[] { "0=UWP (String)", "1=Xbox (String)" }, after["tags"].Flatten());
+        // The tag already on the entry stays (the user or another tool may have put it there); the spec's follow.
+        Assert.Equal(new[] { "0=old (String)", "1=UWP (String)", "2=Xbox (String)" }, after["tags"].Flatten());
         Assert.Equal(1, after["IsHidden"].Value);
         Assert.Equal(0, after["AllowOverlay"].Value);
         Assert.Equal(1_650_000_000, after["LastPlayTime"].Value);
         Assert.Equal("Zelda-like", after["sortas"].Value);
         Assert.Equal(new ExistingShortcut(-2222, Spec.AppName, Spec.Exe, Spec.LaunchOptions), file.Entries[1]);
+    }
+
+    // A re-export never drops a tag and never doubles one it already wrote.
+    [Fact]
+    public void Apply_AddsOnlyTheTagsTheEntryLacks_AfterTheOnesItHas()
+    {
+        var file = Load(BinaryVdf.Document("shortcuts", root => root.Object("0", entry => entry
+            .Int("appid", -1111)
+            .String("AppName", "Old Name")
+            .String("Exe", UwpHookExe)
+            .String("LaunchOptions", "Pfn_abc!App old.exe")
+            .Object("tags", tags => tags.String("0", "Xbox").String("1", "mine")))));
+
+        file.Apply(new MergeResult([new MergedShortcut(-1111, Spec, 0)]));
+
+        Assert.Equal(
+            new[] { "0=Xbox (String)", "1=mine (String)", "2=UWP (String)" },
+            BinaryVdf.Parse(Save(file))["0"]["tags"].Flatten());
     }
 
     [Fact]
@@ -231,7 +250,9 @@ public class ShortcutsFileTests
         Assert.Equal(Spec.Exe, first["exe"].Value);
         Assert.Equal(Spec.LaunchOptions, first["LaunchOptions"].Value);
         Assert.Equal(-2222, first["appid"].Value);
-        Assert.Equal(new[] { "0=UWP (String)", "1=Xbox (String)" }, first["tags"].Flatten());
+        Assert.Equal(
+            new[] { "0=favorite (String)", "1=music (String)", "2=teste (String)", "3=UWP (String)", "4=Xbox (String)" },
+            first["tags"].Flatten());
     }
 
     [Fact]

@@ -15,3 +15,6 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+# Steam's own files, kept byte for byte (the tests compare bytes)
+UWPHook.Core.Tests/Steam/Fixtures/*.json -text

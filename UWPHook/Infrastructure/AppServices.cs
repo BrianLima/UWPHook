@@ -41,7 +41,7 @@ namespace UWPHook.Infrastructure
                 () => dialogs.Show(MessageSeverity.Warning, SteamGridDbService.InvalidKeyMessage), _log);
             // One restarter for both, so an export and a removal never stop, write and start Steam at the same time.
             var restarter = NewSteamRestarter(steam);
-            var exporter = new ShortcutExporter(steam, restarter, backups, artwork, _log);
+            var exporter = new ShortcutExporter(steam, restarter, backups, artwork, new CloudStorageCollections(backups, TimeProvider.System, _log), _log);
             var remover = new ShortcutRemover(steam, restarter, backups, _log);
 
             var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), exporter, Settings, dialogs, _log, StableExePath);

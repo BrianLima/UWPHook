@@ -72,6 +72,15 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     /// <summary>The same outcome, noting the apps whose artwork could not be downloaded.</summary>
     public ExportSummary WithArtworkDownloadFailures(IReadOnlyList<string> apps) => this with { ArtworkFailedApps = apps };
 
+    /// <summary>
+    /// The Steam accounts whose shortcuts were written but could not be added to the Steam collections named in
+    /// Settings (the collections file was missing, unreadable or could not be written).
+    /// </summary>
+    public IReadOnlyList<string> CollectionsSkippedUsers { get; init; } = [];
+
+    /// <summary>The same outcome, noting the accounts whose collections could not be updated (the shortcuts were written).</summary>
+    public ExportSummary WithCollectionsSkipped(IReadOnlyList<string> users) => this;
+
     /// <summary>The same outcome, noting the accounts whose artwork could not be copied (the shortcuts were written).</summary>
     public ExportSummary WithArtworkFailures(IReadOnlyList<string> users) => this with { ArtworkFailedUsers = users };
 

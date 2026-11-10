@@ -23,6 +23,9 @@ public sealed class ShortcutsBackupFolder(string folder, TimeProvider time, ILog
         Prune(userId);
     }
 
+    /// <summary>The same for Steam's collections file: <c>&lt;user id&gt;_&lt;timestamp&gt;_collections.json</c>, pruned on its own.</summary>
+    public void BackUpCollections(string collectionsPath, string userId) => BackUp(collectionsPath, userId);
+
     /// <summary>A backup that can't be deleted is only logged: it must not stop the write it protects.</summary>
     private void Prune(string userId)
     {

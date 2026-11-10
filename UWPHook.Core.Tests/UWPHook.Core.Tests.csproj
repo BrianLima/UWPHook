@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <None Include="Steam\Fixtures\*.vdf" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Steam\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

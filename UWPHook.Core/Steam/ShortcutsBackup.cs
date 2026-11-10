@@ -11,19 +11,25 @@ public static class ShortcutsBackup
 {
     public const int KeepPerUser = 20;
 
-    private const string Suffix = "_shortcuts.vdf";
+    /// <summary>The end of a shortcuts.vdf backup's name.</summary>
+    public const string ShortcutsSuffix = "_shortcuts.vdf";
+
+    /// <summary>The end of the name of a backup of Steam's collections file.</summary>
+    public const string CollectionsSuffix = "_collections.json";
+
     private const string TimestampFormat = "yyyyMMddHHmmssfff";
 
-    public static string FileName(string userId, DateTime timestamp) =>
-        $"{userId}_{timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{Suffix}";
+    public static string FileName(string userId, DateTime timestamp, string suffix = ShortcutsSuffix) =>
+        $"{userId}_{timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{ShortcutsSuffix}";
 
     /// <summary>
     /// The backup file names of <paramref name="userId"/> beyond the newest <paramref name="keep"/>.
     /// Other users' backups, 2.14's backups and files that are not backups are never returned.
     /// </summary>
-    public static IReadOnlyList<string> ToPrune(IEnumerable<string> fileNames, string userId, int keep = KeepPerUser) =>
+    public static IReadOnlyList<string> ToPrune(
+        IEnumerable<string> fileNames, string userId, int keep = KeepPerUser, string suffix = ShortcutsSuffix) =>
         [.. fileNames
-            .Select(name => (Name: name, Timestamp: TimestampOf(name, userId)))
+            .Select(name => (Name: name, Timestamp: TimestampOf(name, userId, ShortcutsSuffix)))
             .Where(backup => backup.Timestamp is not null)
             .OrderByDescending(backup => backup.Timestamp, StringComparer.Ordinal)
             .ThenByDescending(backup => backup.Name, StringComparer.Ordinal)
@@ -31,15 +37,15 @@ public static class ShortcutsBackup
             .Select(backup => backup.Name)];
 
     /// <summary>The timestamp of a backup named by 2.15 (<see cref="FileName"/>); null for every other file.</summary>
-    private static string? TimestampOf(string fileName, string userId)
+    private static string? TimestampOf(string fileName, string userId, string suffix)
     {
         var prefix = userId + "_";
-        if (fileName.Length <= prefix.Length + Suffix.Length
+        if (fileName.Length <= prefix.Length + suffix.Length
             || !fileName.StartsWith(prefix, StringComparison.Ordinal)
-            || !fileName.EndsWith(Suffix, StringComparison.Ordinal))
+            || !fileName.EndsWith(suffix, StringComparison.Ordinal))
             return null;
 
-        var timestamp = fileName[prefix.Length..^Suffix.Length];
+        var timestamp = fileName[prefix.Length..^suffix.Length];
         return timestamp.Length == TimestampFormat.Length && timestamp.All(char.IsAsciiDigit) ? timestamp : null;
     }
 }

@@ -14,6 +14,25 @@ public class ShortcutsBackupTests
             ShortcutsBackup.FileName("123", new DateTime(2026, 11, 8, 12, 34, 56, 789)));
 
     [Fact]
+    public void FileName_OfACollectionsBackup_EndsDifferently() =>
+        Assert.Equal("123_20261108123456789_collections.json",
+            ShortcutsBackup.FileName("123", new DateTime(2026, 11, 8, 12, 34, 56, 789), ShortcutsBackup.CollectionsSuffix));
+
+    // Each kind of backup keeps its own newest twenty: many collections backups never push out a shortcuts.vdf backup.
+    [Fact]
+    public void ToPrune_CountsEachKindOfBackupOnItsOwn()
+    {
+        string Collections(int minute) =>
+            ShortcutsBackup.FileName("123", new DateTime(2026, 11, 8, 12, 0, 0).AddMinutes(minute), ShortcutsBackup.CollectionsSuffix);
+        var names = Enumerable.Range(0, 3).Select(minute => Name("123", minute))
+            .Concat(Enumerable.Range(0, 3).Select(Collections))
+            .ToList();
+
+        Assert.Equal(new[] { Name("123", 0) }, ShortcutsBackup.ToPrune(names, "123", keep: 2));
+        Assert.Equal(new[] { Collections(0) }, ShortcutsBackup.ToPrune(names, "123", keep: 2, ShortcutsBackup.CollectionsSuffix));
+    }
+
+    [Fact]
     public void ToPrune_KeepsTheNewestTwentyOfAUser_AndReturnsTheOlderOnes()
     {
         var names = Enumerable.Range(0, 25).Select(minute => Name("123", minute)).Reverse().ToList();
