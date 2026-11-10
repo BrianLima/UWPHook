@@ -247,12 +247,37 @@ public sealed class GamesViewModelTests
         Assert.Equal(0, _exeLookups);
     }
 
+    // Manual-test finding 3: the exporter asks (only when Steam runs, after its pre-checks); the user answers.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Export_LetsTheUserDecide_WhetherSteamMayBeClosed(bool answer)
+    {
+        var games = await LoadedWithSelected("Halo");
+        _dialogs.Answer = answer;
+
+        await games.ExportCommand.ExecuteAsync(null);
+        Assert.Empty(_dialogs.Questions); // asking is the exporter's call
+
+        Assert.Equal(answer, Assert.Single(_exporter.Requests).MayCloseSteam());
+        Assert.Equal((CloseSteamQuestion.Text, ConfirmTone.Question), Assert.Single(_dialogs.Questions));
+    }
+
+    [Fact]
+    public void CloseSteamQuestion_SaysWhyAndThatSteamComesBack()
+    {
+        Assert.Contains("Steam must be closed to write your shortcuts.", CloseSteamQuestion.Text);
+        Assert.Contains("Close Steam now?", CloseSteamQuestion.Text);
+        Assert.Contains("started again afterwards", CloseSteamQuestion.Text);
+    }
+
     public static TheoryData<ExportSummary, MessageSeverity> Summaries => new()
     {
         { ExportSummary.ForUsers(2, 0, StopOutcome.Stopped), MessageSeverity.Information },
         { ExportSummary.NothingSelected(), MessageSeverity.Information },
         { ExportSummary.ForUsers(1, 1, StopOutcome.NotRunning), MessageSeverity.Warning },
         { ExportSummary.SteamStillRunning(), MessageSeverity.Warning },
+        { ExportSummary.SteamNotStopped(StopOutcome.Declined), MessageSeverity.Information },
         { ExportSummary.ForUsers(1, 0, StopOutcome.NotRunning).WithArtworkFailures(["111"]), MessageSeverity.Warning },
         { ExportSummary.SteamNotFound(), MessageSeverity.Error },
         { ExportSummary.ForUsers(0, 2, StopOutcome.NotRunning), MessageSeverity.Error },

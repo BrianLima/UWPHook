@@ -16,4 +16,7 @@ public enum StopOutcome
     /// without the path it could not be started again.
     /// </summary>
     ExecutableUnknown,
+
+    /// <summary>Steam is running and the user chose to keep it open, so it was left alone (never asked to exit).</summary>
+    Declined,
 }

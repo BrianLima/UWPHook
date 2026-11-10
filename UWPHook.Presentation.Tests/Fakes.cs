@@ -79,12 +79,16 @@ public sealed class FakeExporter(ExportSummary summary) : IShortcutExporter
 public sealed class FakeRemover(RemoveSummary summary) : IShortcutRemover
 {
     public List<SteamAccountChoice> Calls { get; } = [];
+
+    /// <summary>The "may UWPHook close Steam?" question of each call, for a test to ask.</summary>
+    public List<Func<bool>> MayCloseSteam { get; } = [];
     public Exception? Failure { get; set; }
     public TaskCompletionSource? Gate { get; set; }
 
-    public async Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default)
+    public async Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, Func<bool> mayCloseSteam, CancellationToken ct = default)
     {
         Calls.Add(accounts);
+        MayCloseSteam.Add(mayCloseSteam);
         if (Gate is not null) await Gate.Task;
         if (Failure is not null) throw Failure;
         return summary;

@@ -98,7 +98,7 @@ public sealed class SettingsViewModel : ObservableObject
         try
         {
             var accounts = settings.Current.ExportSteamAccounts;
-            var summary = await Task.Run(() => remover.RemoveAsync(accounts));
+            var summary = await Task.Run(() => remover.RemoveAsync(accounts, CloseSteamQuestion.AskWith(dialogs)));
             log.Information("Remove finished: {Summary}", summary);
             dialogs.Show(summary.Severity, summary.Message);
         }

@@ -22,7 +22,7 @@ public class SteamRestarterTests
         {
             wrote = true;
             return Task.CompletedTask;
-        }, TestContext.Current.CancellationToken));
+        }, Yes, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.ExecutableUnknown, outcome);
         Assert.False(wrote, "Steam is still running, so writing shortcuts.vdf could lose the export");
@@ -38,7 +38,7 @@ public class SteamRestarterTests
         {
             steam.Events.Add("write");
             return Task.CompletedTask;
-        }, TestContext.Current.CancellationToken));
+        }, Yes, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.Stopped, outcome);
         Assert.Equal(new[] { "exit", "write", "start" }, steam.Events);
@@ -53,8 +53,8 @@ public class SteamRestarterTests
         var steam = new FakeSteam(runningPolls: 3);
         var restarter = NewRestarter(steam);
 
-        await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, TestContext.Current.CancellationToken));
-        var second = await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, TestContext.Current.CancellationToken));
+        await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, Yes, TestContext.Current.CancellationToken));
+        var second = await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, Yes, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.NotRunning, second);
         Assert.Equal(1, steam.ExitRequests);
@@ -70,7 +70,7 @@ public class SteamRestarterTests
         {
             steam.Events.Add("write");
             return Task.CompletedTask;
-        }, TestContext.Current.CancellationToken));
+        }, Yes, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.NotRunning, outcome);
         Assert.Equal(new[] { "write" }, steam.Events);
@@ -87,7 +87,7 @@ public class SteamRestarterTests
         {
             wrote = true;
             return Task.CompletedTask;
-        }, TestContext.Current.CancellationToken));
+        }, Yes, TestContext.Current.CancellationToken));
 
         Assert.Equal(StopOutcome.StillRunning, outcome);
         Assert.True(_time.GetUtcNow() - startedAt >= RestartTimeout, "gave up before the timeout elapsed");
@@ -102,7 +102,7 @@ public class SteamRestarterTests
         var steam = new FakeSteam(runningPolls: 3);
 
         var run = NewRestarter(steam).WhileStoppedAsync(
-            () => throw new IOException("disk full"), TestContext.Current.CancellationToken);
+            () => throw new IOException("disk full"), Yes, TestContext.Current.CancellationToken);
 
         await Assert.ThrowsAsync<IOException>(() => Drive(run));
         Assert.Equal(SteamExe, Assert.Single(steam.Starts));
@@ -122,18 +122,106 @@ public class SteamRestarterTests
             steam.Events.Add("first write starts");
             await firstWrite.Task;
             steam.Events.Add("first write ends");
-        }, TestContext.Current.CancellationToken);
+        }, Yes, TestContext.Current.CancellationToken);
         var second = restarter.WhileStoppedAsync(() =>
         {
             steam.Events.Add("second write");
             return Task.CompletedTask;
-        }, TestContext.Current.CancellationToken);
+        }, Yes, TestContext.Current.CancellationToken);
 
         Assert.Equal(new[] { "first write starts" }, steam.Events);
         firstWrite.SetResult();
         await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(new[] { "first write starts", "first write ends", "second write" }, steam.Events);
     }
+
+    // Manual-test finding 3: Steam is never closed without the user's yes.
+    [Fact]
+    public async Task WhileStopped_AsksBeforeClosingARunningSteam()
+    {
+        var steam = new FakeSteam(runningPolls: 3);
+
+        await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("write");
+            return Task.CompletedTask;
+        }, () =>
+        {
+            steam.Events.Add("ask");
+            return true;
+        }, TestContext.Current.CancellationToken));
+
+        Assert.Equal(new[] { "ask", "exit", "write", "start" }, steam.Events);
+    }
+
+    [Fact]
+    public async Task WhileStopped_WhenTheUserKeepsSteamOpen_LeavesItAlone_AndDoesNotWrite()
+    {
+        var steam = new FakeSteam(runningPolls: int.MaxValue);
+        var wrote = false;
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            wrote = true;
+            return Task.CompletedTask;
+        }, No, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.Declined, outcome);
+        Assert.False(wrote, "Steam is still running, so writing shortcuts.vdf could lose the export");
+        Assert.Equal(0, steam.ExitRequests);
+        Assert.Empty(steam.Starts);
+    }
+
+    [Fact]
+    public async Task WhileStopped_WhenSteamIsNotRunning_DoesNotAsk()
+    {
+        var asked = 0;
+
+        var outcome = await Drive(NewRestarter(new FakeSteam(runningPolls: 0)).WhileStoppedAsync(() => Task.CompletedTask, () =>
+        {
+            asked++;
+            return false;
+        }, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.NotRunning, outcome);
+        Assert.Equal(0, asked);
+    }
+
+    // Steam could not be closed anyway: the user is told to close it, not asked.
+    [Fact]
+    public async Task WhileStopped_WhenSteamsPathIsUnknown_DoesNotAsk()
+    {
+        var asked = 0;
+
+        var outcome = await Drive(NewRestarter(new FakeSteam(runningPolls: int.MaxValue, exePath: null)).WhileStoppedAsync(() => Task.CompletedTask, () =>
+        {
+            asked++;
+            return true;
+        }, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.ExecutableUnknown, outcome);
+        Assert.Equal(0, asked);
+    }
+
+    // The user may close Steam themselves while the question is open: then there is nothing to close or start again.
+    [Fact]
+    public async Task WhileStopped_WhenSteamExitedWhileAsking_WritesWithoutClosingOrStartingIt()
+    {
+        var steam = new FakeSteam(runningPolls: 1); // running when first checked, gone after
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("write");
+            return Task.CompletedTask;
+        }, Yes, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.NotRunning, outcome);
+        Assert.Equal(new[] { "write" }, steam.Events);
+    }
+
+    private static bool Yes() => true;
+
+    private static bool No() => false;
 
     private SteamRestarter NewRestarter(ISteamProcess steam) => new(steam, _time, RestartTimeout, Poll);
 

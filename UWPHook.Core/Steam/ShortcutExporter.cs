@@ -62,7 +62,7 @@ public sealed class ShortcutExporter(
         {
             writes = WriteEveryAccount(folders, wanted);
             return Task.CompletedTask;
-        }, ct).ConfigureAwait(false);
+        }, () => true, ct).ConfigureAwait(false);
 
         if (stopped is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
         {

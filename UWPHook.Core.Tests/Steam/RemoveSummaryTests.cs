@@ -37,6 +37,17 @@ public class RemoveSummaryTests
             summary.Message);
     }
 
+    // Manual-test finding 3: the user chose to keep Steam open, so this is information, not a warning.
+    [Fact]
+    public void SteamNotStopped_WhenTheUserKeptSteamOpen_SaysNothingWasRemoved()
+    {
+        var summary = RemoveSummary.SteamNotStopped(StopOutcome.Declined);
+
+        Assert.Equal((RemoveStatus.SteamLeftOpen, StopOutcome.Declined), (summary.Status, summary.Steam));
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+        Assert.Equal("Nothing was removed. Close Steam and try again.", summary.Message);
+    }
+
     [Fact]
     public void SteamNotStopped_AfterATimeout_SaysSteamDidNotClose()
     {

@@ -14,6 +14,9 @@ public enum RemoveStatus
     /// <summary>Steam is running and steam.exe could not be found to close it, so nothing was removed.</summary>
     SteamPathUnknown,
 
+    /// <summary>Steam is running and the user chose to keep it open, so nothing was removed.</summary>
+    SteamLeftOpen,
+
     /// <summary>Removing failed for every account that had UWPHook shortcuts.</summary>
     Failed,
 

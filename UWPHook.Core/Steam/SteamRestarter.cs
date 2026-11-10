@@ -46,7 +46,7 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
     /// running (<see cref="StopOutcome.StillRunning"/> or <see cref="StopOutcome.ExecutableUnknown"/>) the write
     /// is skipped rather than risked.
     /// </summary>
-    public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, CancellationToken ct = default)
+    public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, Func<bool> mayClose, CancellationToken ct = default)
     {
         await _oneAtATime.WaitAsync(ct).ConfigureAwait(false);
         try

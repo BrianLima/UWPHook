@@ -46,7 +46,8 @@ public sealed class ShortcutExporterTests : IDisposable
 
     private ShortcutExporter Exporter(ISteamProcess steam, params SteamUser[] users) => Exporter(steam, Install, users);
 
-    private static ExportRequest Request(string tags, params ExportApp[] apps) => new(apps, tags, UwpHookExe);
+    /// <summary>A request whose user lets UWPHook close Steam.</summary>
+    private static ExportRequest Request(string tags, params ExportApp[] apps) => new(apps, tags, UwpHookExe) { MayCloseSteam = () => true };
 
     private static ExportRequest Request(params ExportApp[] apps) => Request("READY TO PLAY,XBOX", apps);
 
@@ -302,6 +303,94 @@ public sealed class ShortcutExporterTests : IDisposable
         AssertOutcome(ExportSummary.SteamNotStopped(StopOutcome.ExecutableUnknown), summary);
         Assert.Equal(0, steam.ExitRequests);
         Assert.False(File.Exists(ShortcutsOf(Alice)));
+    }
+
+    // Manual-test finding 3: Steam is never closed without the user's yes.
+    [Fact]
+    public async Task Export_WhenTheUserKeepsSteamOpen_WritesNothing_AndSaysSo()
+    {
+        var steam = new FakeSteamProcess(running: true);
+
+        var summary = await Exporter(steam, Alice).ExportAsync(Request(Halo) with { MayCloseSteam = () => false }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.SteamLeftOpen, summary.Status);
+        Assert.Equal("Nothing was exported. Close Steam and export again.", summary.Message);
+        Assert.Equal(0, steam.ExitRequests);
+        Assert.Empty(steam.Starts);
+        Assert.False(File.Exists(ShortcutsOf(Alice)));
+        Assert.Empty(_artwork.Installed);
+        Assert.Equal(1, _artwork.CleanUps);
+    }
+
+    [Fact]
+    public async Task Export_WithoutAnAnswer_LeavesARunningSteamAlone()
+    {
+        var steam = new FakeSteamProcess(running: true);
+
+        var summary = await Exporter(steam, Alice).ExportAsync(new ExportRequest([Halo], "", UwpHookExe), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.SteamLeftOpen, summary.Status);
+        Assert.Equal(0, steam.ExitRequests);
+        Assert.False(File.Exists(ShortcutsOf(Alice)));
+    }
+
+    [Fact]
+    public async Task Export_AsksOnce_AfterThePreChecks_AndBeforeClosingSteam()
+    {
+        var steam = new FakeSteamProcess(running: true);
+        var exitRequestsWhenAsked = new List<int>();
+
+        var summary = await Exporter(steam, Alice, Bob).ExportAsync(Request(Halo) with
+        {
+            MayCloseSteam = () =>
+            {
+                exitRequestsWhenAsked.Add(steam.ExitRequests);
+                return true;
+            },
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { 0 }, exitRequestsWhenAsked);
+        Assert.Equal(1, steam.ExitRequests);
+    }
+
+    [Fact]
+    public async Task Export_WhenAPreCheckStopsIt_DoesNotAsk()
+    {
+        var asked = 0;
+        var request = Request(Halo) with
+        {
+            MayCloseSteam = () =>
+            {
+                asked++;
+                return true;
+            },
+        };
+
+        var nothingSelected = await Exporter(new FakeSteamProcess(running: true), Alice).ExportAsync(request with { Apps = [] }, TestContext.Current.CancellationToken);
+        var noAccount = await Exporter(new FakeSteamProcess(running: true)).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.NothingSelected, nothingSelected.Status);
+        Assert.Equal(ExportStatus.NoSteamUsers, noAccount.Status);
+        Assert.Equal(0, asked);
+    }
+
+    [Fact]
+    public async Task Export_WhenSteamIsNotRunning_DoesNotAsk()
+    {
+        var asked = 0;
+
+        var summary = await Exporter(NotRunning(), Alice).ExportAsync(Request(Halo) with
+        {
+            MayCloseSteam = () =>
+            {
+                asked++;
+                return false;
+            },
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(0, asked);
     }
 
     // R33: artwork that can't be copied is a note, not a failed export.

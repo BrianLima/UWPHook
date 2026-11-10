@@ -50,6 +50,17 @@ public class ExportSummaryTests
         Assert.Contains("Close Steam", summary.Message);
     }
 
+    // Manual-test finding 3: the user chose to keep Steam open, so this is information, not a warning.
+    [Fact]
+    public void SteamNotStopped_WhenTheUserKeptSteamOpen_SaysNothingWasExported()
+    {
+        var summary = ExportSummary.SteamNotStopped(StopOutcome.Declined);
+
+        Assert.Equal((ExportStatus.SteamLeftOpen, StopOutcome.Declined), (summary.Status, summary.Steam));
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+        Assert.Equal("Nothing was exported. Close Steam and export again.", summary.Message);
+    }
+
     [Fact]
     public void SteamNotStopped_AfterATimeout_IsSteamStillRunning() =>
         Assert.Equal(ExportStatus.SteamStillRunning, ExportSummary.SteamNotStopped(StopOutcome.StillRunning).Status);

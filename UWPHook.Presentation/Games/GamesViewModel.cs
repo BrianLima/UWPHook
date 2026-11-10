@@ -107,6 +107,7 @@ public sealed class GamesViewModel : ObservableObject
         var request = new ExportRequest([.. Apps.Selected.Select(row => row.ToExportApp())], current.Tags, uwpHookExe)
         {
             Accounts = current.ExportSteamAccounts,
+            MayCloseSteam = CloseSteamQuestion.AskWith(dialogs),
         };
 
         if (await ExportedAsync(request) is { } summary)
