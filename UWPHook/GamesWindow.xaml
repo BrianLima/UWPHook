@@ -53,7 +53,7 @@
             <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
         </Grid>
         <DataGrid x:Name="listGames" Grid.Row="1" Margin="10,40,10,10" ItemsSource="{Binding Apps.Visible}" CanUserSortColumns="True" CanUserAddRows="False"
-                  IsHitTestVisible="{Binding IsIdle}"/>
+                  IsHitTestVisible="{Binding IsIdle}" IsReadOnly="{Binding IsBusy}"/>
         <!-- While busy: the list shows through the window's own (theme) background, and can't be clicked. -->
         <Border x:Name="busyOverlay" Grid.Row="1" Margin="10,40,10,10" Background="{DynamicResource ApplicationBackgroundBrush}" Opacity="0.7"
                 Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>
