@@ -11,7 +11,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 ### Upgrading from 2.14
 - **Do not run the 2.14 uninstaller** (not from its Start menu entry, and not from Windows Settings > Apps), **and do not delete `%AppData%\Briano\UWPHook`.** The 2.14 installer put UWPHook into that folder, which is where 2.15 keeps your settings, `shortcuts.vdf` backups and the icons your Steam shortcuts use, and the 2.14 uninstaller deletes the whole `%AppData%\Briano` folder.
 - Install 2.15, open it once (your settings are imported), then **export your games again**. Until you do, shortcuts made by 2.14 keep starting the old 2.14 `UWPHook.exe`.
-- After that, you can remove 2.14 by deleting only its program files from `%AppData%\Briano\UWPHook` (`UWPHook.exe`, `UWPHook.exe.config`, `uninstall.exe`, `UWPHook website.url`, the `.dll` and `.xml` files and the `Resources` folder) and its `UWPHook` Start menu folder. Keep `settings.json`, the `application*.log` files, `backups` and `icons`. The [README](README.md#upgrading-from-214-or-older) has the details.
+- After that, you can remove 2.14 by deleting only its program files from `%AppData%\Briano\UWPHook` (`UWPHook.exe`, `UWPHook.exe.config`, `uninstall.exe`, `UWPHook website.url`, the `.dll` and `.xml` files and the `Resources` folder) and its `UWPHook` Start menu folder. Keep `settings.json`, the `application*.log` files, `backups` and `icons`. Skip this if you put the 2.15 portable files into that same folder. The [README](README.md#upgrading-from-214-or-older) has the details.
 
 ### Added
 - Settings → "Remove UWPHook shortcuts" removes only the shortcuts UWPHook created, from the chosen Steam accounts, after backing up `shortcuts.vdf`. Shortcuts from Steam and other tools are kept.

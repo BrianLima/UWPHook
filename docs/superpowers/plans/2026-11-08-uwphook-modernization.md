@@ -43,7 +43,7 @@ These tasks need a working `dotnet` SDK plus NuGet restore. The 2026-11-08 cloud
 ## Review Focus
 
 1. **Existing users' shortcuts written by 2.14.3 (unquoted `Exe`) and by ≤2.14.2 (quoted).** Re-export must update in place (same appid, so artwork and collections stay) and must not duplicate. Test: Task 4 `Merge_UpdatesUnquotedLegacyEntry_KeepingAppId`.
-2. **Steam already running with several `steam` processes, or refusing to exit.** Export must finish within the timeout and report "restart Steam manually", never hang. Test: Task 5 `Restart_GivesUpAfterTimeout`.
+2. **Steam already running with several `steam` processes, or refusing to exit.** Export must finish within the timeout and report "restart Steam manually", never hang. Test: `WhileStopped_GivesUpAfterTimeout_AndDoesNotWrite` (was Task 5 `Restart_GivesUpAfterTimeout`).
 3. **Launch args split by an unquoted path with spaces** (all 2.14.3 shortcuts in `Program Files`). Launch must still find the AUMID. Test: Task 3 `Parse_RecoversAumidFromSplitUnquotedExePath`.
 4. **Non-ASCII app names** (e.g. `Taiko no Tatsujin: The Drum Master!`, Japanese titles). Ids and vdf round-trip must use UTF-8. Test: Task 2 `Compute_UsesUtf8Bytes` and Task 9 `RoundTrip_PreservesUtf8Names`.
 5. **Shortcuts from other tools with keys UWPHook doesn't model** (`sortas`, `FlatpakAppID`, `DevkitOverrideAppID`). They must survive a write. Test: Task 9 `RoundTrip_PreservesUnknownKeys`.

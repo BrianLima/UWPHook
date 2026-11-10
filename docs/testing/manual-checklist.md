@@ -174,3 +174,5 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] Settings: clicking the text "Enable streaming mode" ticks and unticks the box.
 - [ ] Velopack: run a 2.15.1 Setup while a game launched through UWPHook is running. Note whether Setup kills `current\UWPHook.exe`; if it does, Steam's "Playing" ends early (a known limitation to document for Phase 3 updates).
 - [ ] Session end for a non-game UWP app with background tasks (e.g. Mail/Calendar-style apps): launch it from Steam, close it; UWPHook exits within the grace period plus one poll (package-family tracking also counts `backgroundTaskHost.exe` processes of that package).
+- [ ] While "Remove UWPHook shortcuts" is running from Settings, try to close the main window from the taskbar: the app must stay open until the removal ends and Steam is started again. If it closes, report it (the main window does not yet check a removal in progress).
+- [ ] After deleting 2.14's `UWPHook` Start menu folder (upgrade step 3), 2.15's own Start menu entry is still there and starts 2.15.
