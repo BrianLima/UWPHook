@@ -274,7 +274,7 @@ public class CollectionsFileTests
         var changed = Text(Added(Fixture(), ["Ação & RPG", "Jogos de Ação"], Halo));
 
         Assert.Contains("""\"name\":\"Ação & RPG\",\"added\":[292030,4000000111]""", changed, StringComparison.Ordinal);
-        Assert.Contains("""\"name\":\"Jogos de Ação\"""", changed, StringComparison.Ordinal);
+        Assert.Contains("""\"name\":\"Jogos de Ação\",""", changed, StringComparison.Ordinal);
     }
 
     [Fact]
