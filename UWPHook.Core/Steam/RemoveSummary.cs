@@ -34,10 +34,15 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
     /// <param name="unreadable">The accounts whose shortcuts.vdf could not be read.</param>
     public static RemoveSummary NothingFound(int unreadable) => new(RemoveStatus.NothingFound, 0, 0, unreadable, StopOutcome.NotRunning);
 
-    /// <summary>Nothing was removed because Steam kept running: it timed out, or its steam.exe was unknown.</summary>
-    public static RemoveSummary SteamNotStopped(StopOutcome steam) => steam == StopOutcome.ExecutableUnknown
-        ? new(RemoveStatus.SteamPathUnknown, 0, 0, 0, steam)
-        : new(RemoveStatus.SteamStillRunning, 0, 0, 0, StopOutcome.StillRunning);
+    /// <summary>
+    /// Nothing was removed because Steam kept running: it timed out, its steam.exe was unknown, or the user kept it open.
+    /// </summary>
+    public static RemoveSummary SteamNotStopped(StopOutcome steam) => steam switch
+    {
+        StopOutcome.ExecutableUnknown => new(RemoveStatus.SteamPathUnknown, 0, 0, 0, steam),
+        StopOutcome.Declined => new(RemoveStatus.SteamLeftOpen, 0, 0, 0, steam),
+        _ => new(RemoveStatus.SteamStillRunning, 0, 0, 0, StopOutcome.StillRunning),
+    };
 
     /// <summary>The outcome of removing the shortcuts from each account, with Steam stopped as <paramref name="steam"/> says.</summary>
     public static RemoveSummary ForUsers(int removed, int failed, StopOutcome steam) =>
@@ -47,7 +52,7 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
     {
         RemoveStatus.NothingFound when UsersUnreadable > 0 => MessageSeverity.Warning,
         RemoveStatus.Removed when UsersFailed > 0 => MessageSeverity.Warning,
-        RemoveStatus.NothingFound or RemoveStatus.Removed => MessageSeverity.Information,
+        RemoveStatus.NothingFound or RemoveStatus.Removed or RemoveStatus.SteamLeftOpen => MessageSeverity.Information,
         RemoveStatus.SteamStillRunning or RemoveStatus.SteamPathUnknown => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
     };
@@ -56,6 +61,7 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
     {
         RemoveStatus.SteamNotFound => "Steam was not found, so nothing was changed.",
         RemoveStatus.NothingFound => "No UWPHook shortcuts were found, so nothing was changed." + UnreadableNote(),
+        RemoveStatus.SteamLeftOpen => "Nothing was removed. Close Steam and try again.",
         RemoveStatus.SteamStillRunning => "Steam did not close in time" + TryAgain,
         RemoveStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it" + TryAgain,
         RemoveStatus.Failed => $"Removing UWPHook's shortcuts failed for {UsersFailed} Steam account(s), so nothing was changed. Details are in application.log.",

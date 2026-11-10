@@ -20,3 +20,10 @@ public enum StopOutcome
     /// <summary>Steam is running and the user chose to keep it open, so it was left alone (never asked to exit).</summary>
     Declined,
 }
+
+public static class StopOutcomes
+{
+    /// <summary>Steam is still running, so nothing may be written.</summary>
+    public static bool LeftSteamRunning(this StopOutcome outcome) =>
+        outcome is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown or StopOutcome.Declined;
+}
