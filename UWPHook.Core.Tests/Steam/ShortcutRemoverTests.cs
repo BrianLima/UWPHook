@@ -63,7 +63,7 @@ public sealed class ShortcutRemoverTests : IDisposable
     [Fact]
     public async Task SteamNotFound_ChangesNothing()
     {
-        var summary = await Remover(new FakeSteamProcess(running: false), install: null, Alice).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(new FakeSteamProcess(running: false), install: null, Alice).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveStatus.SteamNotFound, summary.Status);
     }
@@ -74,7 +74,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, ForeignOnly);
         var steam = new FakeSteamProcess(running: true);
 
-        var summary = await Remover(steam, Alice, Bob).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(steam, Alice, Bob).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.NothingFound(unreadable: 0).Message, summary.Message);
         Assert.Equal(0, steam.ExitRequests);
@@ -87,7 +87,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, ForeignOnly);
         Corrupt(Bob);
 
-        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveStatus.NothingFound, summary.Status);
         Assert.Equal(1, summary.UsersUnreadable);
@@ -101,7 +101,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, Mixed);
         Seed(Bob, Mixed);
 
-        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.ForUsers(removed: 2, failed: 0, StopOutcome.NotRunning), summary);
         Assert.Equal(ForeignOnly, File.ReadAllBytes(ShortcutsOf(Alice)));
@@ -117,7 +117,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         byte[]? fileWhenStarted = null;
         steam.OnStart = () => fileWhenStarted = File.ReadAllBytes(ShortcutsOf(Alice));
 
-        var summary = await Remover(steam, Alice).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(steam, Alice).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.ForUsers(removed: 1, failed: 0, StopOutcome.Stopped), summary);
         Assert.Equal(1, steam.ExitRequests);
@@ -131,7 +131,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, Mixed);
         var steam = new FakeSteamProcess(running: true, exitsWhenAsked: false);
 
-        var summary = await Remover(steam, Alice).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(steam, Alice).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.SteamNotStopped(StopOutcome.StillRunning), summary);
         Assert.Equal(Mixed, File.ReadAllBytes(ShortcutsOf(Alice)));
@@ -143,7 +143,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, Mixed);
         var steam = new FakeSteamProcess(running: true, exePath: null);
 
-        var summary = await Remover(steam, Alice).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(steam, Alice).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.SteamNotStopped(StopOutcome.ExecutableUnknown), summary);
         Assert.Equal(0, steam.ExitRequests);
@@ -156,7 +156,7 @@ public sealed class ShortcutRemoverTests : IDisposable
         Seed(Alice, Mixed);
         Corrupt(Bob);
 
-        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(TestContext.Current.CancellationToken);
+        var summary = await Remover(new FakeSteamProcess(running: false), Alice, Bob).RemoveAsync(SteamAccountChoice.All, TestContext.Current.CancellationToken);
 
         Assert.Equal(RemoveSummary.ForUsers(removed: 1, failed: 1, StopOutcome.NotRunning), summary);
         Assert.Equal(ForeignOnly, File.ReadAllBytes(ShortcutsOf(Alice)));
