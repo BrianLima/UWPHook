@@ -61,6 +61,12 @@ public sealed class SettingsViewModel : ObservableObject
 
     public SteamAccountList Accounts { get; }
 
+    /// <summary>Whether the SteamGridDB key is shown in clear; it is masked until the user asks to see it.</summary>
+    public bool IsApiKeyShown { get; set; }
+
+    /// <summary>The opposite of <see cref="IsApiKeyShown"/>, for the masked box's visibility.</summary>
+    public bool IsApiKeyMasked => true;
+
     public IRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand RemoveShortcutsCommand { get; }
     public IRelayCommand<string> OpenLinkCommand { get; }

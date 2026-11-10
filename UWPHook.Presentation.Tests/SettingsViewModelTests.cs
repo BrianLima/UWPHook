@@ -345,6 +345,30 @@ public sealed class SettingsViewModelTests
         Assert.True(viewModel.ConfirmClose());
     }
 
+    // SteamGridDB key (manual-test finding 1): masked until the user asks to see it.
+
+    [Fact]
+    public void ApiKey_IsMaskedAtFirst()
+    {
+        var viewModel = ViewModel();
+
+        Assert.False(viewModel.IsApiKeyShown);
+        Assert.True(viewModel.IsApiKeyMasked);
+    }
+
+    [Fact]
+    public void ShowingTheApiKey_UnmasksIt_AndTellsTheWindow()
+    {
+        var viewModel = ViewModel();
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        viewModel.IsApiKeyShown = true;
+
+        Assert.False(viewModel.IsApiKeyMasked);
+        Assert.Equal(new[] { nameof(SettingsViewModel.IsApiKeyShown), nameof(SettingsViewModel.IsApiKeyMasked) }, changed);
+    }
+
     // Links
 
     [Fact]
