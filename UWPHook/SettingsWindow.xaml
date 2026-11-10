@@ -67,8 +67,8 @@
             </ScrollViewer>
             <Label x:Name="label_seconds" ToolTip="How often UWPHook checks whether the launched app is still running, to keep Steam's in-game status" Content="Check if the launched app is running every" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"/>
             <ComboBox x:Name="seconds_comboBox" ItemsSource="{Binding SecondsChoices}" SelectedIndex="{Binding Form.SecondsIndex}" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="2"/>
-            <CheckBox x:Name="streaming_toggle" ToolTip="Enable streaming mode" IsChecked="{Binding Form.StreamMode}" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label_streaming" Content="Enable streaming mode" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"/>
+            <!-- The text is the check box's own content, so clicking it toggles the box. -->
+            <CheckBox x:Name="streaming_toggle" ToolTip="This fixes Steam in-home Streaming, set this in the host computer." Content="Enable streaming mode" IsChecked="{Binding Form.StreamMode}" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3" VerticalAlignment="Center" Margin="5,0,0,0"/>
             <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label_tags" Content="Export with these tags:" Margin="0,0,8,0" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="5"/>
             <TextBox x:Name="tags_textBox" Text="{Binding Form.Tags, UpdateSourceTrigger=PropertyChanged}" Grid.Column="2" Height="32" Margin="0,0,10,0" Grid.Row="5" TextWrapping="Wrap" VerticalAlignment="Center" Grid.ColumnSpan="2" Width="220" HorizontalAlignment="Right"/>
             <Label x:Name="label_logLevel" Content="Define log severity level" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
