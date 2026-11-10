@@ -109,8 +109,8 @@ public sealed class XamlLoadTests
             return (window.MinWidth, Clipped((FrameworkElement)window.Content).ToList());
         });
 
-        Assert.True(minWidth >= 700, $"MinWidth is {minWidth}");
         Assert.Empty(clipped);
+        Assert.True(minWidth >= 700, $"MinWidth is {minWidth}");
     }
 
     [Fact]
