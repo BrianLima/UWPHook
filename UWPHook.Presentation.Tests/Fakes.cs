@@ -59,27 +59,35 @@ public sealed class FakeCatalog(params XboxApp[] apps) : IAppCatalog
     }
 }
 
+/// <summary>Answers with the summary (or throws <see cref="Failure"/>), after <see cref="Gate"/> when it is set.</summary>
 public sealed class FakeExporter(ExportSummary summary) : IShortcutExporter
 {
     public List<ExportRequest> Requests { get; } = [];
     public Exception? Failure { get; set; }
+    public TaskCompletionSource? Gate { get; set; }
 
-    public Task<ExportSummary> ExportAsync(ExportRequest request, CancellationToken ct = default)
+    public async Task<ExportSummary> ExportAsync(ExportRequest request, CancellationToken ct = default)
     {
         Requests.Add(request);
-        return Failure is null ? Task.FromResult(summary) : Task.FromException<ExportSummary>(Failure);
+        if (Gate is not null) await Gate.Task;
+        if (Failure is not null) throw Failure;
+        return summary;
     }
 }
 
+/// <summary>Answers with the summary (or throws <see cref="Failure"/>), after <see cref="Gate"/> when it is set.</summary>
 public sealed class FakeRemover(RemoveSummary summary) : IShortcutRemover
 {
     public List<SteamAccountChoice> Calls { get; } = [];
     public Exception? Failure { get; set; }
+    public TaskCompletionSource? Gate { get; set; }
 
-    public Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default)
+    public async Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default)
     {
         Calls.Add(accounts);
-        return Failure is null ? Task.FromResult(summary) : Task.FromException<RemoveSummary>(Failure);
+        if (Gate is not null) await Gate.Task;
+        if (Failure is not null) throw Failure;
+        return summary;
     }
 }
 

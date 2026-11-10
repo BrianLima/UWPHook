@@ -319,6 +319,45 @@ public sealed class ShortcutExporterTests : IDisposable
         Assert.True(File.Exists(ShortcutsOf(Alice)));
     }
 
+    // Review m3 / R33: artwork is optional, so preparing it can't fail the export.
+    [Fact]
+    public async Task Export_WhenPreparingTheArtworkThrows_StillWritesTheShortcuts_AndNotesEveryApp()
+    {
+        _artwork.PrepareFailure = new IOException("tmp_grid is locked");
+
+        var summary = await Exporter(NotRunning(), Alice).ExportAsync(Request(Halo, Forza), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { "Halo", "Forza" }, summary.ArtworkFailedApps);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.Equal(2, Written(Alice).Children.Count);
+        Assert.Contains(_log.At(LogLevel.Error), entry => entry.Exception is IOException);
+    }
+
+    [Fact]
+    public async Task Export_NotesTheAppsWhoseArtworkCouldNotBeDownloaded()
+    {
+        _artwork.FailedToPrepare = ["Forza"];
+
+        var summary = await Exporter(NotRunning(), Alice).ExportAsync(Request(Halo, Forza), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { "Forza" }, summary.ArtworkFailedApps);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+    }
+
+    [Fact]
+    public async Task Export_WhenPreparingTheArtworkIsCancelled_StopsBeforeTouchingSteam()
+    {
+        _artwork.PrepareFailure = new OperationCanceledException();
+        var steam = new FakeSteamProcess(running: true);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Exporter(steam, Alice).ExportAsync(Request(Halo), TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, steam.ExitRequests);
+        Assert.False(File.Exists(ShortcutsOf(Alice)));
+    }
+
     [Fact]
     public async Task Export_CleansUpTheArtwork_AlsoWhenItThrows()
     {
@@ -338,11 +377,13 @@ public sealed class ShortcutExporterTests : IDisposable
         public List<(string UserFolder, IReadOnlyDictionary<string, uint> GridIds)> Installed { get; } = [];
         public int CleanUps { get; private set; }
         public string? FailFor { get; set; }
+        public Exception? PrepareFailure { get; set; }
+        public IReadOnlyList<string> FailedToPrepare { get; set; } = [];
 
-        public Task PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
+        public Task<IReadOnlyList<string>> PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
         {
             Prepared.Add([.. apps]);
-            return Task.CompletedTask;
+            return PrepareFailure is null ? Task.FromResult(FailedToPrepare) : Task.FromException<IReadOnlyList<string>>(PrepareFailure);
         }
 
         public string IconFor(ExportApp app)

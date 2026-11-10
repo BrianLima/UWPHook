@@ -58,6 +58,12 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
         ? new(ExportStatus.SteamPathUnknown, 0, 0, steam)
         : SteamStillRunning();
 
+    /// <summary>The apps whose artwork could not be downloaded; they were exported without it.</summary>
+    public IReadOnlyList<string> ArtworkFailedApps { get; init; } = [];
+
+    /// <summary>The same outcome, noting the apps whose artwork could not be downloaded.</summary>
+    public ExportSummary WithArtworkDownloadFailures(IReadOnlyList<string> apps) => this;
+
     /// <summary>The same outcome, noting the accounts whose artwork could not be copied (the shortcuts were written).</summary>
     public ExportSummary WithArtworkFailures(IReadOnlyList<string> users) => this with { ArtworkFailedUsers = users };
 

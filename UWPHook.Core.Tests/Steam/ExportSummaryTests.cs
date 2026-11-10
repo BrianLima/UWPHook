@@ -70,6 +70,27 @@ public class ExportSummaryTests
         Assert.Contains("Steam has been restarted.", summary.Message);
     }
 
+    // Review m3: an app whose artwork could not be downloaded is a note too (R33: artwork is optional).
+    [Fact]
+    public void WithArtworkDownloadFailures_AddsANoteNamingTheApps_AndKeepsTheStatus()
+    {
+        var summary = ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning).WithArtworkDownloadFailures(["Halo", "Forza"]);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.StartsWith("Your apps were successfully exported!", summary.Message);
+        Assert.Contains("Artwork could not be downloaded for Halo, Forza; details are in application.log.", summary.Message);
+    }
+
+    [Fact]
+    public void WithArtworkDownloadFailures_WithNoFailures_ChangesNothing()
+    {
+        var summary = ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning);
+
+        Assert.Equal(summary.Message, summary.WithArtworkDownloadFailures([]).Message);
+        Assert.Equal(MessageSeverity.Information, summary.WithArtworkDownloadFailures([]).Severity);
+    }
+
     [Fact]
     public void WithArtworkFailures_WithNoFailures_ChangesNothing()
     {

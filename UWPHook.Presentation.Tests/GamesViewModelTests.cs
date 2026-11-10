@@ -303,6 +303,56 @@ public sealed class GamesViewModelTests
         Assert.Equal(new[] { true, false }, busy);
     }
 
+    // Closing the window (I1): an export killed by closing the app would leave Steam closed.
+
+    [Fact]
+    public async Task WhileExporting_RefusesToClose_AndSaysWhy()
+    {
+        var games = ViewModel();
+        _exporter.Gate = new TaskCompletionSource();
+        var exporting = games.ExportCommand.ExecuteAsync(null);
+
+        Assert.False(games.ConfirmClose());
+        Assert.Equal(new FakeDialogs.Shown(MessageSeverity.Information, GamesViewModel.StillExporting, "UWPHook"), Assert.Single(_dialogs.Messages));
+
+        _exporter.Gate.SetResult();
+        await exporting;
+        Assert.True(games.ConfirmClose());
+    }
+
+    [Fact]
+    public void WhenIdle_Closes_WithoutAsking()
+    {
+        Assert.True(ViewModel().ConfirmClose());
+        Assert.Empty(_dialogs.Messages);
+    }
+
+    // Loading touches neither Steam nor its files, so it doesn't hold the window open.
+    [Fact]
+    public async Task WhileLoading_Closes()
+    {
+        var games = ViewModel();
+        _catalog.Gate = new TaskCompletionSource();
+        var loading = games.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(games.ConfirmClose());
+        Assert.Empty(_dialogs.Messages);
+
+        _catalog.Gate.SetResult();
+        await loading;
+    }
+
+    [Fact]
+    public async Task AfterAFailedExport_Closes()
+    {
+        _exporter.Failure = new IOException("locked");
+        var games = ViewModel();
+
+        await games.ExportCommand.ExecuteAsync(null);
+
+        Assert.True(games.ConfirmClose());
+    }
+
     // The first-run SteamGridDB offer
 
     [Fact]

@@ -7,7 +7,8 @@ namespace UWPHook.Core.Steam;
 public interface IArtworkInstaller
 {
     /// <summary>Before Steam is touched: fetches whatever artwork the apps get. Failures are the installer's to log.</summary>
-    Task PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct);
+    /// <returns>The names of the apps whose artwork could not be downloaded.</returns>
+    Task<IReadOnlyList<string>> PrepareAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct);
 
     /// <summary>The icon path for the app's shortcut (the same for every Steam account).</summary>
     string IconFor(ExportApp app);

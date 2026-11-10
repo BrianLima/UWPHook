@@ -199,6 +199,33 @@ public class SteamRestarterTests
         Assert.Equal(SteamExe, Assert.Single(steam.Starts));
     }
 
+    // I1 / review m2: export and "Remove UWPHook shortcuts" share one restarter, so their stop-write-start runs
+    // never interleave (one could start Steam while the other writes).
+    [Fact]
+    public async Task WhileStopped_RunsOneWriteAtATime()
+    {
+        var steam = new FakeSteam(runningPolls: 0);
+        var restarter = NewRestarter(steam);
+        var firstWrite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var first = restarter.WhileStoppedAsync(async () =>
+        {
+            steam.Events.Add("first write starts");
+            await firstWrite.Task;
+            steam.Events.Add("first write ends");
+        }, TestContext.Current.CancellationToken);
+        var second = restarter.WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("second write");
+            return Task.CompletedTask;
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { "first write starts" }, steam.Events);
+        firstWrite.SetResult();
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(new[] { "first write starts", "first write ends", "second write" }, steam.Events);
+    }
+
     private SteamRestarter NewRestarter(ISteamProcess steam) => new(steam, _time, RestartTimeout, Poll);
 
     /// <summary>

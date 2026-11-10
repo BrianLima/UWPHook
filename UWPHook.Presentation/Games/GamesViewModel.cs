@@ -18,6 +18,7 @@ public sealed class GamesViewModel : ObservableObject
     public const string LoadingStatus = "Loading your installed apps";
     public const string LoadedStatus = "Installed Apps";
     public const string SteamGridDbOffer = "Do you want to automatically import grid images for imported games?";
+    public const string StillExporting = "UWPHook is still exporting your games. Please wait until it finishes: it may have closed Steam, and it starts Steam again when it is done.";
 
     private readonly IAppCatalog catalog;
     private readonly IShortcutExporter exporter;
@@ -131,6 +132,9 @@ public sealed class GamesViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    /// <summary>Whether the window may close now; when it may not, tells the user why.</summary>
+    public bool ConfirmClose() => true;
 
     /// <summary>
     /// The first time only: offers to set up SteamGridDB. True when the user wants Settings opened. A key the user
