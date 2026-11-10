@@ -330,6 +330,7 @@ Audit result: no API UWPHook uses is deprecated on Windows 11. `IApplicationActi
 6. **Sunshine/Apollo `apps.json` export** (replaces PR #85): only touch own entries, back up before writing.
 7. **Resolution switch** reimplemented via `ChangeDisplaySettingsEx` and restored on game exit (#124).
 8. In-app updates via Velopack `UpdateManager` + GitHub source; install-date sort (#61); Xbox app pre-launch option (#161).
+9. **Stopping from Steam also closes the game** (Brian, 2026-11-10; 3.0). Verify first how Steam stops a non-Steam shortcut (forced kill vs. close message). Approach to try: put the package's processes in a Windows Job Object owned by UWPHook with kill-on-close, so they end when UWPHook is killed. Opt-in and best effort (may fail with anti-cheat or protected processes).
 
 ## Phase 4 — Release engineering
 - Code signing: deferred (decision 4). SignPath Foundation is the candidate (#137). Also a winget manifest that points at the Velopack `Setup.exe`.
