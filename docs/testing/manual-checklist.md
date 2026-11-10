@@ -185,7 +185,7 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] While an export runs, Tab into the games list and try Space (tick) and F2 (rename): nothing changes until the export ends.
 
 ## Tags / collections
-- [ ] Settings shows "Add games to these Steam collections" with the old tags value (`READY TO PLAY,XBOX` by default); the label and its box are not cut off at 100/125/150% scaling and at the window's minimum width.
+- [ ] Settings shows "Add games to Steam collections" with the old tags value (`READY TO PLAY,XBOX` by default); the label and its box are not cut off at 100/125/150% scaling and at the window's minimum width.
 - [ ] With Steam running and signed in, export one game with `READY TO PLAY,XBOX` (answer Yes to closing Steam). After Steam restarts, the library's Collections view has "READY TO PLAY" and "XBOX" (created if they did not exist) and the game is in both. `%AppData%\Briano\UWPHook\backups` has a new `{userid}_{timestamp}_collections.json` that is the file from before the export.
 - [ ] If a collection named "XBOX" already existed with other games (Steam games and other tools' shortcuts), they are all still in it, the collection was not duplicated, and its name is unchanged. Also try a setting in another case (`xbox`): the game goes into the existing "XBOX", no second collection appears.
 - [ ] The collections survive a second Steam restart, and a sign-out/sign-in of Steam (this is the check that Steam's cloud sync does not undo them). Note whether a collection UWPHook created also shows up on a second PC signed in to the same account (not expected for the games themselves: shortcuts are per PC).
