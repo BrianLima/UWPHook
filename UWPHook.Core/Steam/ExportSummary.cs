@@ -79,7 +79,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     public IReadOnlyList<string> CollectionsSkippedUsers { get; init; } = [];
 
     /// <summary>The same outcome, noting the accounts whose collections could not be updated (the shortcuts were written).</summary>
-    public ExportSummary WithCollectionsSkipped(IReadOnlyList<string> users) => this;
+    public ExportSummary WithCollectionsSkipped(IReadOnlyList<string> users) => this with { CollectionsSkippedUsers = users };
 
     /// <summary>The same outcome, noting the accounts whose artwork could not be copied (the shortcuts were written).</summary>
     public ExportSummary WithArtworkFailures(IReadOnlyList<string> users) => this with { ArtworkFailedUsers = users };
@@ -90,7 +90,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public MessageSeverity Severity => Status switch
     {
-        ExportStatus.Exported when ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 => MessageSeverity.Warning,
+        ExportStatus.Exported when ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 || CollectionsSkippedUsers.Count > 0 => MessageSeverity.Warning,
         ExportStatus.NothingSelected or ExportStatus.Exported or ExportStatus.SteamLeftOpen => MessageSeverity.Information,
         ExportStatus.SteamStillRunning or ExportStatus.SteamPathUnknown or ExportStatus.PartiallyExported => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
@@ -105,8 +105,8 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
         ExportStatus.SteamLeftOpen => "Nothing was exported. Close Steam and export again.",
         ExportStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it, so nothing was exported. Close Steam, then export again.",
         ExportStatus.Failed => $"Your apps were not exported: it failed for all {UsersFailed} Steam account(s)." + SeeLog + SteamSentence(),
-        ExportStatus.PartiallyExported => $"Your apps were exported to {UsersWritten} of {UsersWritten + UsersFailed} Steam accounts; {UsersFailed} failed." + SeeLog + ArtworkNote() + SteamSentence(),
-        _ => "Your apps were successfully exported!" + ArtworkNote() + SteamSentence(),
+        ExportStatus.PartiallyExported => $"Your apps were exported to {UsersWritten} of {UsersWritten + UsersFailed} Steam accounts; {UsersFailed} failed." + SeeLog + ArtworkNote() + CollectionsNote() + SteamSentence(),
+        _ => "Your apps were successfully exported!" + ArtworkNote() + CollectionsNote() + SteamSentence(),
     };
 
     private string ArtworkNote() => DownloadNote() + CopyNote();
@@ -118,6 +118,10 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     private string CopyNote() => ArtworkFailedUsers.Count == 0
         ? ""
         : $" Artwork could not be copied for Steam account(s) {string.Join(", ", ArtworkFailedUsers)}; details are in application.log.";
+
+    private string CollectionsNote() => CollectionsSkippedUsers.Count == 0
+        ? ""
+        : $" They could not be added to your Steam collections for Steam account(s) {string.Join(", ", CollectionsSkippedUsers)}; details are in application.log.";
 
     private string SteamSentence() => (Status, Steam) switch
     {

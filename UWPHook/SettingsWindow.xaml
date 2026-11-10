@@ -92,8 +92,8 @@
                     <CheckBox x:Name="streaming_toggle" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,4" Content="Enable streaming mode" IsChecked="{Binding Form.StreamMode}"
                               ToolTip="This fixes Steam in-home Streaming, set this in the host computer."/>
 
-                    <TextBlock x:Name="label_tags" Style="{StaticResource FieldLabel}" Grid.Row="4" Text="Export with these tags"
-                               ToolTip="Add these tags to exported games, use comma separated values"/>
+                    <TextBlock x:Name="label_tags" Style="{StaticResource FieldLabel}" Grid.Row="4" Text="Add games to these Steam collections"
+                               ToolTip="Exported games are added to the Steam library collections with these names, separated by commas (a collection is created when it doesn't exist). Nothing is ever removed from a collection. Leave empty to not use collections."/>
                     <TextBox x:Name="tags_textBox" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Margin="0,4"
                              Text="{Binding Form.Tags, UpdateSourceTrigger=PropertyChanged}"/>
 

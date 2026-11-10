@@ -25,11 +25,11 @@ internal static class ShortcutEntry
     /// <summary>
     /// A copy of <paramref name="entry"/> with the spec's fields and <paramref name="appId"/> written over
     /// the existing keys, in place and under their existing spelling. Every other key is kept as it is;
-    /// spec fields the entry lacks are appended.
+    /// spec fields the entry lacks are appended. Tags are only added: the ones already on the entry stay.
     /// </summary>
     public static KVObject Updated(KVObject entry, ShortcutSpec spec, int appId)
     {
-        var replacements = Fields(spec, appId);
+        var replacements = Fields(spec, appId, KeyValueLookup.TryFind(entry, Tags, out var tags) ? tags : null);
         var updated = KVObject.ListCollection();
         foreach (var (key, value) in entry)
         {
@@ -47,7 +47,7 @@ internal static class ShortcutEntry
     /// <summary>A new entry for <paramref name="spec"/>, with Steam's defaults for every other standard field.</summary>
     public static KVObject New(ShortcutSpec spec, int appId) => Updated(Template(), spec, appId);
 
-    private static OrderedDictionary<string, KVObject> Fields(ShortcutSpec spec, int appId) =>
+    private static OrderedDictionary<string, KVObject> Fields(ShortcutSpec spec, int appId, KVObject? existingTags) =>
         new(StringComparer.OrdinalIgnoreCase)
         {
             [AppId] = appId,
@@ -56,7 +56,7 @@ internal static class ShortcutEntry
             [StartDir] = spec.StartDir,
             [Icon] = spec.Icon,
             [LaunchOptions] = spec.LaunchOptions,
-            [Tags] = TagsObject(spec.Tags),
+            [Tags] = MergedTags(existingTags, spec.Tags),
         };
 
     /// <summary>The standard keys in the order Steam writes them; the spec fields are filled in by <see cref="Updated"/>.</summary>
@@ -84,16 +84,34 @@ internal static class ShortcutEntry
         return entry;
     }
 
-    private static KVObject TagsObject(IReadOnlyList<string> tags)
+    /// <summary>
+    /// The tags already on the entry, in their order (the user or another tool may have put them there), then the
+    /// wanted ones it lacks, numbered "0".."n-1" as Steam does. Today's Steam client shows collections, not these
+    /// tags (see <see cref="CollectionsFile"/>); they are still written for older clients and other tools.
+    /// </summary>
+    private static KVObject MergedTags(KVObject? existing, IReadOnlyList<string> wanted)
     {
-        var tagsObject = KVObject.ListCollection();
-        for (var i = 0; i < tags.Count; i++)
+        var merged = KVObject.ListCollection();
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var next = 0;
+        if (existing is not null && existing.ValueType == KVValueType.Collection)
         {
-            tagsObject.Add(i.ToString(CultureInfo.InvariantCulture), tags[i]);
+            foreach (var (_, tag) in existing)
+            {
+                merged.Add(Index(next++), tag);
+                if (tag.ValueType != KVValueType.Collection && (string?)tag is { } name) names.Add(name);
+            }
         }
 
-        return tagsObject;
+        foreach (var tag in wanted.Where(names.Add))
+        {
+            merged.Add(Index(next++), tag);
+        }
+
+        return merged;
     }
+
+    private static string Index(int index) => index.ToString(CultureInfo.InvariantCulture);
 
     private static string ReadString(KVObject entry, string key) =>
         KeyValueLookup.TryFind(entry, key, out var value) ? (string?)value ?? "" : "";

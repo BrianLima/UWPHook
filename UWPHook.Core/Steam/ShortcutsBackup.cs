@@ -20,7 +20,7 @@ public static class ShortcutsBackup
     private const string TimestampFormat = "yyyyMMddHHmmssfff";
 
     public static string FileName(string userId, DateTime timestamp, string suffix = ShortcutsSuffix) =>
-        $"{userId}_{timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{ShortcutsSuffix}";
+        $"{userId}_{timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{suffix}";
 
     /// <summary>
     /// The backup file names of <paramref name="userId"/> beyond the newest <paramref name="keep"/>.
@@ -29,7 +29,7 @@ public static class ShortcutsBackup
     public static IReadOnlyList<string> ToPrune(
         IEnumerable<string> fileNames, string userId, int keep = KeepPerUser, string suffix = ShortcutsSuffix) =>
         [.. fileNames
-            .Select(name => (Name: name, Timestamp: TimestampOf(name, userId, ShortcutsSuffix)))
+            .Select(name => (Name: name, Timestamp: TimestampOf(name, userId, suffix)))
             .Where(backup => backup.Timestamp is not null)
             .OrderByDescending(backup => backup.Timestamp, StringComparer.Ordinal)
             .ThenByDescending(backup => backup.Name, StringComparer.Ordinal)
