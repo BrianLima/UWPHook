@@ -15,9 +15,20 @@ Get UWPHook from the [latest release](https://github.com/BrianLima/UWPHook/relea
 
 The `SHA256SUMS.txt` file in each release lists the checksums of every download.
 
-Upgrading from 2.14 or older: install 2.15 as above, then export your games again. UWPHook updates its existing Steam shortcuts in place, so your playtime, artwork and app ids are kept. Your settings (language, stream mode, check interval, SteamGridDB key and artwork choices, tags, log level) are imported from 2.14 the first time 2.15 starts. From then on they live in `%AppData%\Briano\UWPHook\settings.json`, next to your backups and logs, and updates no longer reset them. The SteamGridDB key in that file is encrypted for your Windows user, so after moving to another PC or Windows account you enter it again. You can delete the old UWPHook folder afterwards (or uninstall the old version).
+## Upgrading from 2.14 or older
 
-Click on the 🔄 to load installed UWP Apps, we will find every UWP app and Xbox Game Pass game installed on your PC.
+> **Do not run the 2.14 uninstaller** (not from its Start menu entry, and not from Windows Settings > Apps), **and do not delete the `%AppData%\Briano\UWPHook` folder.** The 2.14 installer put UWPHook *into* that folder, which is also where 2.15 keeps your settings, your `shortcuts.vdf` backups and the icons your Steam shortcuts use, and the 2.14 uninstaller deletes the whole `%AppData%\Briano` folder.
+
+1. Install 2.15 as above and open it once. Your settings (stream mode, check interval, SteamGridDB key and artwork choices, tags, log level) are imported from 2.14 the first time 2.15 starts. From then on they live in `%AppData%\Briano\UWPHook\settings.json`, next to your backups and logs, and updates no longer reset them. The SteamGridDB key in that file is encrypted for your Windows user, so after moving to another PC or Windows account you enter it again.
+2. **Export your games again from 2.15.** UWPHook updates its existing Steam shortcuts in place, so your playtime, artwork and app ids are kept. Until you do, your old shortcuts keep starting the old 2.14 `UWPHook.exe`.
+3. Only after that, if you want to remove 2.14, delete its program files by hand from `%AppData%\Briano\UWPHook`: `UWPHook.exe`, `UWPHook.exe.config`, `uninstall.exe`, `UWPHook website.url`, every `.dll` and `.xml` file, and the `Resources` folder. Also delete the `UWPHook` folder in the Start menu (it holds 2.14's "UWPHook", "Uninstall UWPHook" and "UWPHook Website" entries), and a desktop `UWPHook` shortcut if it still points at `%AppData%\Briano\UWPHook`. **Keep** `settings.json`, the `application*.log` files, and the `backups` and `icons` folders.
+4. 2.14 kept your settings, including the SteamGridDB key in plain text, in `user.config` files under `%LocalAppData%\Briano` (in `UWPHook.exe_Url_…` folders). Once 2.15 has started once and shows your settings, you can delete those `UWPHook.exe_Url_…` folders.
+
+If you used 2.14 as a portable exe, the same applies: export your games again from 2.15 first, then delete the old folder.
+
+## Using UWPHook
+
+When UWPHook opens, it lists every UWP app and Xbox Game Pass game installed on your PC. Press the 🔄 button to load the list again.
 
 ![](https://i.imgur.com/pjGfGHe.png)
 
@@ -25,7 +36,7 @@ Select every app you want to add to Steam, you can change the name by double cli
 
 ![](https://i.imgur.com/on46CMQ.png)
 
-Close UWPHook, restart Steam if prompted, click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
+If Steam is running, UWPHook closes it, writes the shortcuts and starts it again for you. Click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
 
 ----------
 
@@ -54,7 +65,7 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 - **Steam Deck?**
   - This app is not compatible with the Steam Deck in any way.
 - **"Value does not fall within the expected range", or the game doesn't start from Steam**
-  - Older versions wrote Steam shortcuts without quotes, which broke when UWPHook lived in a folder with spaces in its name (for example `C:\Program Files\...`). Since 2.15, shortcuts are quoted and old shortcuts are understood too. Open UWPHook and export your games again to refresh them.
+  - Older versions wrote Steam shortcuts without quotes, which broke when UWPHook lived in a folder with spaces in its name (for example `C:\Program Files\...`). Since 2.15, shortcuts are quoted. Open UWPHook 2.15 and export your games again: shortcuts made by an older version keep starting the old `UWPHook.exe` (and its bugs) until you do. If you use a portable copy and replaced the old `UWPHook.exe` with 2.15 in the same folder, old shortcuts already get the fix, but exporting again is still recommended.
 - **My exported games don't show up in Steam**
   - Steam only reads its shortcuts when it starts, and may write its own copy when it exits. So when Steam is running, UWPHook closes it, writes the shortcuts, and starts it again. If Steam doesn't close within 15 seconds, UWPHook writes nothing and asks you to close Steam and export again.
   - UWPHook writes to the Steam install the Steam client last ran from (`HKCU\Software\Valve\Steam\SteamPath`), and falls back to the installer's path. If you moved Steam, start it once so it records the new folder.
@@ -65,7 +76,7 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 - **I have shortcuts from other application that broke when i used UWPHook**
   - Since 2.15, exporting only adds or updates UWPHook's own shortcuts and leaves every other shortcut as it was.
   - Before every change, UWPHook backs up your `shortcuts.vdf` to `%AppData%\Briano\UWPHook\backups`. Each file is named `{userid}_{yyyyMMddHHmmssfff}_shortcuts.vdf`, and the newest 20 of each Steam account are kept. To restore one, close Steam, copy it over `<Steam folder>\userdata\{userid}\config\shortcuts.vdf`, and start Steam again.
-  - Uninstalling UWPHook does not delete this folder, so your backups, logs and settings stay where they are.
+  - Uninstalling UWPHook 2.15 or later does not delete this folder, so your backups, logs and settings stay where they are. The 2.14 uninstaller does delete it: see [Upgrading from 2.14 or older](#upgrading-from-214-or-older).
 - **My question isn't listed here!**
   - Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can:
  **[https://www.reddit.com/r/uwphook](https://www.reddit.com/r/uwphook)**

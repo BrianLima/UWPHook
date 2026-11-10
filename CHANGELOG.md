@@ -8,6 +8,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 A stabilization release: the app list loads again, existing shortcuts launch again, and exporting no longer hangs or crashes.
 
+### Upgrading from 2.14
+- **Do not run the 2.14 uninstaller** (not from its Start menu entry, and not from Windows Settings > Apps), **and do not delete `%AppData%\Briano\UWPHook`.** The 2.14 installer put UWPHook into that folder, which is where 2.15 keeps your settings, `shortcuts.vdf` backups and the icons your Steam shortcuts use, and the 2.14 uninstaller deletes the whole `%AppData%\Briano` folder.
+- Install 2.15, open it once (your settings are imported), then **export your games again**. Until you do, shortcuts made by 2.14 keep starting the old 2.14 `UWPHook.exe`.
+- After that, you can remove 2.14 by deleting only its program files from `%AppData%\Briano\UWPHook` (`UWPHook.exe`, `UWPHook.exe.config`, `uninstall.exe`, `UWPHook website.url`, the `.dll` and `.xml` files and the `Resources` folder) and its `UWPHook` Start menu folder. Keep `settings.json`, the `application*.log` files, `backups` and `icons`. The [README](README.md#upgrading-from-214-or-older) has the details.
+
 ### Added
 - Settings → "Remove UWPHook shortcuts" removes only the shortcuts UWPHook created, from the chosen Steam accounts, after backing up `shortcuts.vdf`. Shortcuts from Steam and other tools are kept.
 - Settings lets you choose which Steam accounts export and remove use, listed by their Steam name (#76). All accounts are used by default.
@@ -36,7 +41,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - **The app list is empty, or shows "Error trying to get installed apps"** (the Appx module could not load in the bundled PowerShell 7): #141 #149 #155 #164 #171 #178 #181 (also #132).
 - **"Value does not fall within the expected range" when launching from Steam**, and games not starting when UWPHook is in a folder with spaces: #157 #160 #168.
   - Shortcuts now quote their `Exe` and `Start In` paths.
-  - Shortcuts created by older versions launch again without being re-exported.
+  - Shortcuts from older versions are recognised and updated in place when you export again from 2.15 (same app id, artwork and playtime). Until then they keep starting the old `UWPHook.exe`, so installer users must export again to get the fix. Portable users who replace the old `UWPHook.exe` in its folder get the launch fix without re-exporting.
 - **Exporting no longer creates duplicate shortcuts or orphans your artwork and playtime.** Re-exporting updates UWPHook's existing entry in place, matched by the app's AUMID, and keeps its Steam app id. Exporting never changes or removes shortcuts created by other tools.
 - **Export hangs or closes the app** (#166 #176, also #80 #143 #158).
   - Restarting Steam now gives up after 15 seconds instead of waiting forever. If it gives up, UWPHook asks you to restart Steam yourself.
@@ -60,7 +65,5 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - Only real Steam account folders (numeric ids) get shortcuts; Steam's `0` folder and other folders in `userdata` are skipped.
 - A game whose executable has a space in its name is tracked correctly.
 - A non-Steam shortcut from another tool with an unusual app id no longer blocks the export for that Steam account.
-
-<!-- 8b/9+ entries added at merge -->
 
 [2.15.0]: https://github.com/BrianLima/UWPHook/compare/2.14.3...v2.15.0
