@@ -250,6 +250,32 @@ public sealed class SettingsViewModelTests
         Assert.Empty(_remover.Calls);
     }
 
+    // Manual-test finding 3: the remover asks (only when Steam runs and there is something to remove); the user answers.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Remove_LetsTheUserDecide_WhetherSteamMayBeClosed(bool answer)
+    {
+        await ViewModel().RemoveShortcutsCommand.ExecuteAsync(null);
+        _dialogs.Answer = answer;
+
+        Assert.Equal(answer, Assert.Single(_remover.MayCloseSteam)());
+        Assert.Equal(
+            new[] { (SettingsViewModel.RemoveWarning, ConfirmTone.Warning), (CloseSteamQuestion.Text, ConfirmTone.Question) },
+            _dialogs.Questions);
+    }
+
+    [Fact]
+    public async Task Remove_WhenTheUserKeptSteamOpen_SaysNothingWasRemoved()
+    {
+        var remover = new FakeRemover(RemoveSummary.SteamNotStopped(StopOutcome.Declined));
+
+        await new SettingsViewModel(_settings, _steam, remover, _dialogs, _host, _log).RemoveShortcutsCommand.ExecuteAsync(null);
+
+        Assert.Equal(new FakeDialogs.Shown(MessageSeverity.Information, "Nothing was removed. Close Steam and try again.", "UWPHook"),
+            Assert.Single(_dialogs.Messages));
+    }
+
     [Fact]
     public async Task Remove_FromTheSavedAccounts_AndShowsWhatHappened()
     {
@@ -317,6 +343,30 @@ public sealed class SettingsViewModelTests
         await viewModel.RemoveShortcutsCommand.ExecuteAsync(null);
 
         Assert.True(viewModel.ConfirmClose());
+    }
+
+    // SteamGridDB key (manual-test finding 1): masked until the user asks to see it.
+
+    [Fact]
+    public void ApiKey_IsMaskedAtFirst()
+    {
+        var viewModel = ViewModel();
+
+        Assert.False(viewModel.IsApiKeyShown);
+        Assert.True(viewModel.IsApiKeyMasked);
+    }
+
+    [Fact]
+    public void ShowingTheApiKey_UnmasksIt_AndTellsTheWindow()
+    {
+        var viewModel = ViewModel();
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        viewModel.IsApiKeyShown = true;
+
+        Assert.False(viewModel.IsApiKeyMasked);
+        Assert.Equal(new[] { nameof(SettingsViewModel.IsApiKeyShown), nameof(SettingsViewModel.IsApiKeyMasked) }, changed);
     }
 
     // Links

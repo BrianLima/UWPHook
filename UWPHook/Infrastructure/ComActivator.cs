@@ -18,6 +18,7 @@ namespace UWPHook.Infrastructure
             try
             {
                 var manager = CreateManager();
+                AllowSetForeground(manager);
                 manager.ActivateApplication(request.Aumid, request.ExtraArguments, ActivateOptions.None, out var processId);
                 Log.Verbose("Activated {Aumid}, process id {ProcessId}", request.Aumid, processId);
 
@@ -49,6 +50,24 @@ namespace UWPHook.Infrastructure
             Marshal.ThrowExceptionForHR(CoCreateInstance(ref clsid, IntPtr.Zero, ClsctxLocalServer, ref iid, out var manager));
             return (IApplicationActivationManager)manager;
         }
+
+        /// <summary>
+        /// Hands this process's right to set the foreground window to the activation manager, which runs out of process:
+        /// as Microsoft's <c>IApplicationActivationManager</c> remarks say, without it the launched app may start behind
+        /// other windows. Best effort: a failure is logged (Debug) and the launch goes on.
+        /// </summary>
+        /// <returns>Whether Windows accepted it.</returns>
+        internal static bool AllowSetForeground(IApplicationActivationManager manager)
+        {
+            var hresult = CoAllowSetForegroundWindow(manager, IntPtr.Zero);
+            if (hresult >= 0) return true;
+
+            Log.Debug("CoAllowSetForegroundWindow failed with HRESULT 0x{HResult:X8}; the app may start behind other windows", hresult);
+            return false;
+        }
+
+        [DllImport("ole32.dll", ExactSpelling = true)]
+        private static extern int CoAllowSetForegroundWindow([MarshalAs(UnmanagedType.IUnknown)] object unknown, IntPtr reserved);
 
         [DllImport("ole32.dll", ExactSpelling = true)]
         private static extern int CoCreateInstance(

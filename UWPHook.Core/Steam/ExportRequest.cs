@@ -15,6 +15,12 @@ public sealed record ExportRequest(IReadOnlyList<ExportApp> Apps, string CommaSe
     /// <summary>The Steam accounts to export to (#76).</summary>
     public SteamAccountChoice Accounts { get; init; } = SteamAccountChoice.All;
 
+    /// <summary>
+    /// Asked once, only when Steam is running and the pre-checks passed: true lets UWPHook close Steam (and start it
+    /// again). Without an answer a running Steam is left alone and nothing is written.
+    /// </summary>
+    public Func<bool> MayCloseSteam { get; init; } = () => false;
+
     /// <summary>The Steam collections, trimmed, without empty ones (M3).</summary>
     public IReadOnlyList<string> Tags =>
         CommaSeparatedTags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);

@@ -36,7 +36,7 @@ Select every app you want to add to Steam, you can change the name by double cli
 
 ![](https://i.imgur.com/on46CMQ.png)
 
-If Steam is running, UWPHook closes it, writes the shortcuts and starts it again for you. Click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
+If Steam is running, UWPHook asks before closing it, then writes the shortcuts and starts it again for you. Click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
 
 ----------
 
@@ -67,7 +67,7 @@ Special thanks to @FusRoDah061 for implementing the base feature!
 - **"Value does not fall within the expected range", or the game doesn't start from Steam**
   - Older versions wrote Steam shortcuts without quotes, which broke when UWPHook lived in a folder with spaces in its name (for example `C:\Program Files\...`). Since 2.15, shortcuts are quoted. Open UWPHook 2.15 and export your games again: shortcuts made by an older version keep starting the old `UWPHook.exe` (and its bugs) until you do. If you use a portable copy and replaced the old `UWPHook.exe` with 2.15 in the same folder, old shortcuts already get the fix, but exporting again is still recommended.
 - **My exported games don't show up in Steam**
-  - Steam only reads its shortcuts when it starts, and may write its own copy when it exits. So when Steam is running, UWPHook closes it, writes the shortcuts, and starts it again. If Steam doesn't close within 15 seconds, UWPHook writes nothing and asks you to close Steam and export again.
+  - Steam only reads its shortcuts when it starts, and may write its own copy when it exits. So when Steam is running, UWPHook asks whether it may close Steam; if you say yes, it closes Steam, writes the shortcuts, and starts it again, and if you say no, it writes nothing. If Steam doesn't close within 15 seconds, UWPHook writes nothing and asks you to close Steam and export again.
   - UWPHook writes to the Steam install the Steam client last ran from (`HKCU\Software\Valve\Steam\SteamPath`), and falls back to the installer's path. If you moved Steam, start it once so it records the new folder.
 - **The app list is empty or says "Error trying to get installed apps"**
   - UWPHook lists your apps through Windows' own package manager (the apps that have a Start menu entry). Check `application.log` (see below) for the error; a package that can't be read is skipped and logged there.

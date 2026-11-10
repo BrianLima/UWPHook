@@ -15,14 +15,19 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
 
     /// <summary>
     /// Asks a running Steam to exit and waits until it has. Steam is only stopped when it can be started
-    /// again, so without a path to steam.exe it is left running.
+    /// again, so without a path to steam.exe it is left running, and only when <paramref name="mayClose"/> says yes.
     /// </summary>
-    private async Task<StopOutcome> StopAsync(CancellationToken ct)
+    private async Task<StopOutcome> StopAsync(Func<bool> mayClose, CancellationToken ct)
     {
         if (!steam.IsRunning()) return StopOutcome.NotRunning;
 
         var exePath = steam.ExecutablePath();
         if (exePath is null) return StopOutcome.ExecutableUnknown;
+
+        if (!mayClose()) return StopOutcome.Declined;
+
+        // The user may have closed Steam while the question was open: then it is not started again either.
+        if (!steam.IsRunning()) return StopOutcome.NotRunning;
 
         steam.RequestExit();
         if (!await ExitedInTimeAsync(ct).ConfigureAwait(false)) return StopOutcome.StillRunning;
@@ -43,15 +48,18 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
     /// <summary>
     /// Runs <paramref name="write"/> while Steam is closed: stops a running Steam, writes, and starts it again,
     /// also when the write throws. Steam may write its own copy of its files when it exits, so when it is still
-    /// running (<see cref="StopOutcome.StillRunning"/> or <see cref="StopOutcome.ExecutableUnknown"/>) the write
-    /// is skipped rather than risked.
+    /// running (see <see cref="StopOutcomes.LeftSteamRunning"/>) the write is skipped rather than risked.
     /// </summary>
-    public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, CancellationToken ct = default)
+    /// <param name="mayClose">
+    /// Asked once, only when Steam is running (and could be started again): true lets this close Steam. The user's
+    /// say, so Steam is never closed without it (manual-test finding 3).
+    /// </param>
+    public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, Func<bool> mayClose, CancellationToken ct = default)
     {
         await _oneAtATime.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            return await StopWriteStartAsync(write, ct).ConfigureAwait(false);
+            return await StopWriteStartAsync(write, mayClose, ct).ConfigureAwait(false);
         }
         finally
         {
@@ -59,10 +67,10 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
         }
     }
 
-    private async Task<StopOutcome> StopWriteStartAsync(Func<Task> write, CancellationToken ct)
+    private async Task<StopOutcome> StopWriteStartAsync(Func<Task> write, Func<bool> mayClose, CancellationToken ct)
     {
-        var outcome = await StopAsync(ct).ConfigureAwait(false);
-        if (outcome is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown) return outcome;
+        var outcome = await StopAsync(mayClose, ct).ConfigureAwait(false);
+        if (outcome.LeftSteamRunning()) return outcome;
 
         try
         {

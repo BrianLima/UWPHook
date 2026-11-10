@@ -17,6 +17,9 @@ public enum ExportStatus
     /// <summary>Steam is running and steam.exe could not be found to close it, so nothing was written.</summary>
     SteamPathUnknown,
 
+    /// <summary>Steam is running and the user chose to keep it open, so nothing was written.</summary>
+    SteamLeftOpen,
+
     /// <summary>Writing failed for every Steam account.</summary>
     Failed,
 
@@ -53,10 +56,15 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public static ExportSummary SteamStillRunning() => new(ExportStatus.SteamStillRunning, 0, 0, StopOutcome.StillRunning);
 
-    /// <summary>Nothing was written because Steam kept running: it timed out, or its steam.exe was unknown.</summary>
-    public static ExportSummary SteamNotStopped(StopOutcome steam) => steam == StopOutcome.ExecutableUnknown
-        ? new(ExportStatus.SteamPathUnknown, 0, 0, steam)
-        : SteamStillRunning();
+    /// <summary>
+    /// Nothing was written because Steam kept running: it timed out, its steam.exe was unknown, or the user kept it open.
+    /// </summary>
+    public static ExportSummary SteamNotStopped(StopOutcome steam) => steam switch
+    {
+        StopOutcome.ExecutableUnknown => new(ExportStatus.SteamPathUnknown, 0, 0, steam),
+        StopOutcome.Declined => new(ExportStatus.SteamLeftOpen, 0, 0, steam),
+        _ => SteamStillRunning(),
+    };
 
     /// <summary>The apps whose artwork could not be downloaded; they were exported without it.</summary>
     public IReadOnlyList<string> ArtworkFailedApps { get; init; } = [];
@@ -74,7 +82,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     public MessageSeverity Severity => Status switch
     {
         ExportStatus.Exported when ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 => MessageSeverity.Warning,
-        ExportStatus.NothingSelected or ExportStatus.Exported => MessageSeverity.Information,
+        ExportStatus.NothingSelected or ExportStatus.Exported or ExportStatus.SteamLeftOpen => MessageSeverity.Information,
         ExportStatus.SteamStillRunning or ExportStatus.SteamPathUnknown or ExportStatus.PartiallyExported => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
     };
@@ -85,6 +93,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
         ExportStatus.SteamNotFound => "Steam was not found, so nothing was exported. Make sure Steam is installed and has been started at least once, then try again.",
         ExportStatus.NoSteamUsers => "No Steam account was found, so nothing was exported. Sign in to Steam at least once, then try again.",
         ExportStatus.SteamStillRunning => "Steam did not close in time, so nothing was exported. Close Steam, then export again.",
+        ExportStatus.SteamLeftOpen => "Nothing was exported. Close Steam and export again.",
         ExportStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it, so nothing was exported. Close Steam, then export again.",
         ExportStatus.Failed => $"Your apps were not exported: it failed for all {UsersFailed} Steam account(s)." + SeeLog + SteamSentence(),
         ExportStatus.PartiallyExported => $"Your apps were exported to {UsersWritten} of {UsersWritten + UsersFailed} Steam accounts; {UsersFailed} failed." + SeeLog + ArtworkNote() + SteamSentence(),
@@ -112,6 +121,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     {
         _ when steam == StopOutcome.StillRunning => ExportStatus.SteamStillRunning,
         _ when steam == StopOutcome.ExecutableUnknown => ExportStatus.SteamPathUnknown,
+        _ when steam == StopOutcome.Declined => ExportStatus.SteamLeftOpen,
         (0, 0) => ExportStatus.NoSteamUsers,
         (0, _) => ExportStatus.Failed,
         (_, 0) => ExportStatus.Exported,

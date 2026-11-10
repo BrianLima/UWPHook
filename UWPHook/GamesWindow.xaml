@@ -11,39 +11,53 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
     </Window.Resources>
-    <Grid x:Name="grid" IsEnabled="{Binding IsIdle}">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="28*"/>
             <RowDefinition Height="144*"/>
             <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
-        <Border Style="{StaticResource HeaderBand}">
-            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="188,2,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
-        </Border>
-        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Button x:Name="settingsButton" Click="SettingsButton_Click"
-                        Margin="0,6,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
-                        ToolTip="Settings/About" VerticalAlignment="Top">
-            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE713;"/>
-        </Button>
-        <Button x:Name="reloadButton" Command="{Binding LoadCommand}"
-                        Margin="0,42,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
-                        ToolTip="Load installed UWP Apps" VerticalAlignment="Top" Grid.RowSpan="2">
-            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE72C;"/>
-        </Button>
-        <Grid Margin="10" Grid.Row="1">
-            <DataGrid x:Name="listGames" ItemsSource="{Binding Apps.Visible}" Margin="0,30,0,0" CanUserSortColumns="True" CanUserAddRows="False"/>
-            <Label x:Name="label" Content="{Binding Status}" HorizontalAlignment="Left" Margin="0,-6,0,0" VerticalAlignment="Top"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-8,50,0">
-                <CheckBox Content="Show system apps" IsChecked="{Binding IncludeSystemApps}" Command="{Binding LoadCommand}" VerticalAlignment="Center" Margin="0,0,10,0"
-                          ToolTip="List Windows' own apps too; changing it reloads the list"/>
-                <Button Content="Select all" Command="{Binding SelectAllCommand}" Height="32" Margin="0,0,6,0" ToolTip="Select the apps the filter shows"/>
-                <Button Content="Select none" Command="{Binding SelectNoneCommand}" Height="32" Margin="0,0,6,0" ToolTip="Clear the apps the filter shows"/>
-            </StackPanel>
+        <!-- Everything but the list is disabled while loading or exporting. The list is not: Fluent's DataGrid paints
+             itself white when disabled, which flashes in the dark theme. It is covered by busyOverlay instead. -->
+        <Grid x:Name="grid" Grid.RowSpan="3" IsEnabled="{Binding IsIdle}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28*"/>
+                <RowDefinition Height="144*"/>
+                <RowDefinition Height="19*"/>
+            </Grid.RowDefinitions>
+            <Border Style="{StaticResource HeaderBand}">
+                <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="188,2,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+            </Border>
+            <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+            <Button x:Name="settingsButton" Click="SettingsButton_Click"
+                            Margin="0,6,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
+                            ToolTip="Settings/About" VerticalAlignment="Top">
+                <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE713;"/>
+            </Button>
+            <Button x:Name="reloadButton" Command="{Binding LoadCommand}"
+                            Margin="0,42,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
+                            ToolTip="Load installed UWP Apps" VerticalAlignment="Top" Grid.RowSpan="2">
+                <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE72C;"/>
+            </Button>
+            <Grid Margin="10" Grid.Row="1">
+                <Label x:Name="label" Content="{Binding Status}" HorizontalAlignment="Left" Margin="0,-6,0,0" VerticalAlignment="Top"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-8,50,0">
+                    <CheckBox Content="Show system apps" IsChecked="{Binding IncludeSystemApps}" Command="{Binding LoadCommand}" VerticalAlignment="Center" Margin="0,0,10,0"
+                              ToolTip="List Windows' own apps too; changing it reloads the list"/>
+                    <Button Content="Select all" Command="{Binding SelectAllCommand}" Height="32" Margin="0,0,6,0" ToolTip="Select the apps the filter shows"/>
+                    <Button Content="Select none" Command="{Binding SelectNoneCommand}" Height="32" Margin="0,0,6,0" ToolTip="Clear the apps the filter shows"/>
+                </StackPanel>
+            </Grid>
+            <Button Content="Export selected apps to Steam" Command="{Binding ExportCommand}" Style="{DynamicResource AccentButtonStyle}" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
+            <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+            <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
         </Grid>
-        <Button Content="Export selected apps to Steam" Command="{Binding ExportCommand}" Style="{DynamicResource AccentButtonStyle}" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
-        <ProgressBar Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}" x:Name="progressBar" Margin="10,215,10,174" Grid.Row="1" IsIndeterminate="True" />
-        <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
+        <DataGrid x:Name="listGames" Grid.Row="1" Margin="10,40,10,10" ItemsSource="{Binding Apps.Visible}" CanUserSortColumns="True" CanUserAddRows="False"
+                  IsHitTestVisible="{Binding IsIdle}"/>
+        <!-- While busy: the list shows through the window's own (theme) background, and can't be clicked. -->
+        <Border x:Name="busyOverlay" Grid.Row="1" Margin="10,40,10,10" Background="{DynamicResource ApplicationBackgroundBrush}" Opacity="0.7"
+                Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>
+        <ProgressBar x:Name="progressBar" Grid.Row="1" Margin="10,40,10,10" IsIndeterminate="True" Width="300" VerticalAlignment="Center" HorizontalAlignment="Center"
+                     Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>
     </Grid>
 </Window>

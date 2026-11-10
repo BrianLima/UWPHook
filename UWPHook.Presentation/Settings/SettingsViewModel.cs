@@ -33,6 +33,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly IAppHost host;
     private readonly ILog log;
     private bool isRemoving;
+    private bool isApiKeyShown;
 
     public SettingsViewModel(ISettingsService settings, ISteamLocator steam, IShortcutRemover remover, IDialogService dialogs, IAppHost host, ILog log)
     {
@@ -60,6 +61,19 @@ public sealed class SettingsViewModel : ObservableObject
     public IReadOnlyList<string> SecondsChoices => SettingsForm.SecondsChoices;
 
     public SteamAccountList Accounts { get; }
+
+    /// <summary>Whether the SteamGridDB key is shown in clear; it is masked until the user asks to see it.</summary>
+    public bool IsApiKeyShown
+    {
+        get => isApiKeyShown;
+        set
+        {
+            if (SetProperty(ref isApiKeyShown, value)) OnPropertyChanged(nameof(IsApiKeyMasked));
+        }
+    }
+
+    /// <summary>The opposite of <see cref="IsApiKeyShown"/>, for the masked box's visibility.</summary>
+    public bool IsApiKeyMasked => !IsApiKeyShown;
 
     public IRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand RemoveShortcutsCommand { get; }
@@ -98,7 +112,7 @@ public sealed class SettingsViewModel : ObservableObject
         try
         {
             var accounts = settings.Current.ExportSteamAccounts;
-            var summary = await Task.Run(() => remover.RemoveAsync(accounts));
+            var summary = await Task.Run(() => remover.RemoveAsync(accounts, CloseSteamQuestion.AskWith(dialogs)));
             log.Information("Remove finished: {Summary}", summary);
             dialogs.Show(summary.Severity, summary.Message);
         }

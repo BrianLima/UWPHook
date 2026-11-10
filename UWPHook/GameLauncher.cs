@@ -30,6 +30,7 @@ namespace UWPHook
             try
             {
                 var settings = settingsService.Current;
+                // The splash is closed before the game is activated, so it never sits above the game.
                 if (settings.StreamMode) await ShowStreamSplashAsync();
 
                 var watcher = new PackageProcessWatcher(new WindowsPackageLocations(WindowsOsVersion.Capabilities));

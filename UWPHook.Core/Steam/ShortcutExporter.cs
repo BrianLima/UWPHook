@@ -4,8 +4,9 @@ namespace UWPHook.Core.Steam;
 
 /// <summary>
 /// Exports the selected apps to every Steam account. Everything that can stop the export (nothing selected,
-/// no Steam, no account) is checked before Steam is touched; the artwork and icons are prepared once; then each
-/// account's shortcuts.vdf is backed up, merged and saved, and its artwork copied, while Steam is closed (M7).
+/// no Steam, no account) is checked before Steam is touched; the artwork and icons are prepared once; then, if the
+/// user lets UWPHook close a running Steam, each account's shortcuts.vdf is backed up, merged and saved, and its
+/// artwork copied, while Steam is closed (M7).
 /// </summary>
 public sealed class ShortcutExporter(
     ISteamLocator steam,
@@ -62,9 +63,9 @@ public sealed class ShortcutExporter(
         {
             writes = WriteEveryAccount(folders, wanted);
             return Task.CompletedTask;
-        }, ct).ConfigureAwait(false);
+        }, request.MayCloseSteam, ct).ConfigureAwait(false);
 
-        if (stopped is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown)
+        if (stopped.LeftSteamRunning())
         {
             log.Warning("Steam is still running ({Outcome}); nothing was exported", stopped);
             return ExportSummary.SteamNotStopped(stopped);

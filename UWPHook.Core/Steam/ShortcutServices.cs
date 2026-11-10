@@ -9,5 +9,8 @@ public interface IShortcutExporter
 /// <summary>Removes UWPHook's shortcuts from Steam; see <see cref="ShortcutRemover"/>.</summary>
 public interface IShortcutRemover
 {
-    Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, CancellationToken ct = default);
+    /// <param name="mayCloseSteam">
+    /// Asked once, only when Steam is running and there is something to remove: true lets UWPHook close it.
+    /// </param>
+    Task<RemoveSummary> RemoveAsync(SteamAccountChoice accounts, Func<bool> mayCloseSteam, CancellationToken ct = default);
 }
