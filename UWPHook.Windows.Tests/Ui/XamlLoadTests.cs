@@ -266,11 +266,21 @@ public sealed class XamlLoadTests
         window.UpdateLayout();
     }
 
+    /// <summary>
+    /// Lays the window's content out at <paramref name="width"/> x <paramref name="height"/>. A window that was never
+    /// shown has no HWND, and WPF's Window then measures but never arranges its content, so the content is arranged
+    /// here, as the window would (its frame left out).
+    /// </summary>
     private static void LayOut(Window window, double width, double height)
     {
         window.Width = width;
         window.Height = height;
         LayOut(window);
+
+        var content = (FrameworkElement)window.Content;
+        content.Measure(new Size(width, height));
+        content.Arrange(new Rect(0, 0, width, height));
+        content.UpdateLayout();
     }
 
     /// <summary>
