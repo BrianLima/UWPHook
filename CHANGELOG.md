@@ -26,13 +26,14 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - App discovery uses Windows' package manager directly instead of a bundled PowerShell 7 script, so it no longer depends on PowerShell or the Appx module. The app no longer changes your PowerShell execution policy, and it no longer runs PowerShell at all.
 - Steam shortcuts of installed copies point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, a path that stays the same across updates, so updating UWPHook doesn't break or duplicate your shortcuts.
 - Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded. Artwork is downloaded for at most 4 games at a time.
-- When Steam is running, export (and "Remove UWPHook shortcuts") now closes Steam, writes the shortcuts, and starts it again, instead of writing first and restarting afterwards. If Steam doesn't close within 15 seconds, nothing is written and UWPHook asks you to close Steam.
+- When Steam is running, export (and "Remove UWPHook shortcuts") now asks before closing Steam: "Steam must be closed to write your shortcuts. Close Steam now? It is started again afterwards." Yes closes Steam, writes the shortcuts, and starts it again (instead of writing first and restarting afterwards); No writes nothing. If Steam doesn't close within 15 seconds, nothing is written and UWPHook asks you to close Steam.
 - Only the newest 20 backups of `shortcuts.vdf` per Steam account are kept. Backups made by 2.14 are never deleted.
 - The "Change resolution" option was removed. It did not work on desktop Windows (#124), and it will return in 3.0.
 - The NSIS installer was replaced by the Velopack installer.
 - The app uses Windows' built-in Fluent look and follows the system light/dark setting.
+- Settings was laid out again: labels and values are no longer cut off, every Steam account is listed on its own row, and the SteamGridDB API key is masked until you choose to show it.
 - Moddable Xbox games installed to an `XboxGames` folder are found, and their playtime tracked, from the folder they run from (Windows 10 1903 and later).
-- Games are started with Windows' activation manager running out of process, as Microsoft recommends for an app started only to launch another.
+- Games are started with Windows' activation manager running out of process, as Microsoft recommends for an app started only to launch another. UWPHook hands it the right to bring the game to the foreground.
 
 ### Removed
 - The per-game language option. Windows only applies a display-language change after you sign out, so it never worked when launching a game. If a previous version left your Windows display language changed, set it back in Settings > Time & language > Language & region.

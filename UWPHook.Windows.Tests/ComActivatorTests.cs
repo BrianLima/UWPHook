@@ -22,4 +22,10 @@ public class ComActivatorTests
     [Fact]
     public void CreateManager_GivesTheActivationManager() =>
         Assert.NotNull(ComActivator.CreateManager());
+
+    // Manual-test finding 4: the out-of-process manager gets this process's foreground rights before it activates.
+    // Whether Windows grants them depends on the session (a CI runner may refuse); it must never throw.
+    [Fact]
+    public void AllowSetForeground_OnTheActivationManager_DoesNotThrow() =>
+        ComActivator.AllowSetForeground(ComActivator.CreateManager());
 }

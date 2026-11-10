@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Threading;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Steam;
 using UWPHook.Presentation.Games;
@@ -109,7 +110,7 @@ public sealed class XamlLoadTests
             return (window.MinWidth, Clipped((FrameworkElement)window.Content).ToList());
         });
 
-        Assert.Empty(clipped);
+        if (clipped.Count > 0) Assert.Fail("Clipped: " + string.Join("; ", clipped));
         Assert.True(minWidth >= 700, $"MinWidth is {minWidth}");
     }
 
@@ -260,6 +261,8 @@ public sealed class XamlLoadTests
     /// <summary>Applies the templates and styles without showing the window (no desktop needed).</summary>
     private static void LayOut(Window window)
     {
+        // Let any binding update WPF queued (at DataBind priority) run first.
+        window.Dispatcher.Invoke(DispatcherPriority.DataBind, new Action(() => { }));
         window.ApplyTemplate();
         window.Measure(new Size(window.Width, window.Height));
         window.Arrange(new Rect(0, 0, window.Width, window.Height));
@@ -286,15 +289,39 @@ public sealed class XamlLoadTests
     /// <summary>
     /// The visible elements under <paramref name="root"/> that are arranged larger than their layout slot (less their
     /// margin), which WPF clips to the slot. Content inside a ScrollViewer gets a slot as large as itself, so only what
-    /// can't be scrolled to counts.
+    /// can't be scrolled to counts. Checked: the window's own elements and the content controls show (a combo box's
+    /// selected text), with every element up to <paramref name="root"/> they sit in, so a control too narrow for its
+    /// content counts too. The theme's own template parts are checked only as such containers. Images that fill
+    /// their box (UniformToFill) are cropped on purpose.
     /// </summary>
     private static IEnumerable<string> Clipped(FrameworkElement root) =>
-        from element in Descendants(root).OfType<FrameworkElement>()
-        let slot = LayoutInformation.GetLayoutSlot(element)
-        let width = slot.Width - element.Margin.Left - element.Margin.Right
-        let height = slot.Height - element.Margin.Top - element.Margin.Bottom
-        where element.ActualWidth > width + 0.5 || element.ActualHeight > height + 0.5
-        select $"{Describe(element)}: {element.ActualWidth:0.#}x{element.ActualHeight:0.#} in a {width:0.#}x{height:0.#} slot";
+        Descendants(root).OfType<FrameworkElement>()
+            .Where(element => element.TemplatedParent is null or ContentPresenter)
+            .SelectMany(element => AncestorsUpTo(root, element))
+            .Distinct()
+            .Where(element => element is not Image { Stretch: Stretch.UniformToFill } && IsClipped(element))
+            .Select(element =>
+            {
+                var slot = LayoutInformation.GetLayoutSlot(element);
+                return $"{Describe(element)}: {element.ActualWidth:0.#}x{element.ActualHeight:0.#} in a {slot.Width:0.#}x{slot.Height:0.#} slot";
+            });
+
+    private static bool IsClipped(FrameworkElement element)
+    {
+        var slot = LayoutInformation.GetLayoutSlot(element);
+        var width = slot.Width - element.Margin.Left - element.Margin.Right;
+        var height = slot.Height - element.Margin.Top - element.Margin.Bottom;
+        return element.ActualWidth > width + 0.5 || element.ActualHeight > height + 0.5;
+    }
+
+    /// <summary><paramref name="element"/> and its visual ancestors, up to (not including) <paramref name="root"/>.</summary>
+    private static IEnumerable<FrameworkElement> AncestorsUpTo(FrameworkElement root, FrameworkElement element)
+    {
+        for (DependencyObject? current = element; current is not null && current != root; current = VisualTreeHelper.GetParent(current))
+        {
+            if (current is FrameworkElement framework) yield return framework;
+        }
+    }
 
     /// <summary>Every visible element under <paramref name="root"/> (not inside a collapsed or hidden one).</summary>
     private static IEnumerable<UIElement> Descendants(DependencyObject root)
