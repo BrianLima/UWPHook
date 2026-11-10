@@ -122,11 +122,11 @@ public sealed class XamlLoadTests
             LayOut(window, 700, 750);
             var root = (FrameworkElement)window.Content;
             var labels = Descendants(root).OfType<TextBlock>().Where(label => label.Name.StartsWith("label_", StringComparison.Ordinal)).ToList();
-            var inputs = Descendants(root).Where(element => element is TextBox or PasswordBox or ComboBox or ItemsControl or ButtonBase && element.Visibility == Visibility.Visible).ToList();
+            var inputs = Descendants(root).OfType<FrameworkElement>().Where(element => element is TextBox or PasswordBox or ComboBox or ItemsControl or ButtonBase).ToList();
             Assert.True(labels.Count >= 8, $"found {labels.Count} field labels");
             return (from label in labels
                     from input in inputs
-                    where BoundsIn(root, label).IntersectsWith(BoundsIn(root, input)) && !IsWithin(label, input)
+                    where Overlap(BoundsIn(root, label), BoundsIn(root, input)) && !IsWithin(label, input)
                     select $"{label.Name} overlaps {Describe(input)}").ToList();
         });
 
@@ -300,6 +300,13 @@ public sealed class XamlLoadTests
 
     private static Rect BoundsIn(Visual root, FrameworkElement element) =>
         element.TransformToAncestor(root).TransformBounds(new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+
+    /// <summary>The rectangles share an area (not just an edge).</summary>
+    private static bool Overlap(Rect a, Rect b)
+    {
+        var shared = Rect.Intersect(a, b);
+        return !shared.IsEmpty && shared.Width > 0 && shared.Height > 0;
+    }
 
     private static bool IsWithin(DependencyObject element, DependencyObject ancestor)
     {
