@@ -62,7 +62,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     public IReadOnlyList<string> ArtworkFailedApps { get; init; } = [];
 
     /// <summary>The same outcome, noting the apps whose artwork could not be downloaded.</summary>
-    public ExportSummary WithArtworkDownloadFailures(IReadOnlyList<string> apps) => this;
+    public ExportSummary WithArtworkDownloadFailures(IReadOnlyList<string> apps) => this with { ArtworkFailedApps = apps };
 
     /// <summary>The same outcome, noting the accounts whose artwork could not be copied (the shortcuts were written).</summary>
     public ExportSummary WithArtworkFailures(IReadOnlyList<string> users) => this with { ArtworkFailedUsers = users };
@@ -73,7 +73,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public MessageSeverity Severity => Status switch
     {
-        ExportStatus.Exported when ArtworkFailedUsers.Count > 0 => MessageSeverity.Warning,
+        ExportStatus.Exported when ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 => MessageSeverity.Warning,
         ExportStatus.NothingSelected or ExportStatus.Exported => MessageSeverity.Information,
         ExportStatus.SteamStillRunning or ExportStatus.SteamPathUnknown or ExportStatus.PartiallyExported => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
@@ -91,7 +91,13 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
         _ => "Your apps were successfully exported!" + ArtworkNote() + SteamSentence(),
     };
 
-    private string ArtworkNote() => ArtworkFailedUsers.Count == 0
+    private string ArtworkNote() => DownloadNote() + CopyNote();
+
+    private string DownloadNote() => ArtworkFailedApps.Count == 0
+        ? ""
+        : $" Artwork could not be downloaded for {string.Join(", ", ArtworkFailedApps)}; details are in application.log.";
+
+    private string CopyNote() => ArtworkFailedUsers.Count == 0
         ? ""
         : $" Artwork could not be copied for Steam account(s) {string.Join(", ", ArtworkFailedUsers)}; details are in application.log.";
 

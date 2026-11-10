@@ -2,10 +2,14 @@ namespace UWPHook.Core.Steam;
 
 /// <summary>
 /// Stops and starts Steam around changes to its files, giving up after <c>timeout</c>
-/// instead of waiting forever for Steam to exit.
+/// instead of waiting forever for Steam to exit. One instance is shared by everything that writes Steam's files
+/// (export and "Remove UWPHook shortcuts"), so their stop-write-start runs never interleave.
 /// </summary>
 public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeSpan timeout, TimeSpan poll)
 {
+    /// <summary>One <see cref="WhileStoppedAsync"/> at a time.</summary>
+    private readonly SemaphoreSlim _oneAtATime = new(1, 1);
+
     /// <summary>The steam.exe that <see cref="StopAsync"/> stopped and <see cref="Start"/> has not started yet.</summary>
     private string? _stoppedExePath;
 
@@ -45,6 +49,19 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
     /// is skipped rather than risked.
     /// </summary>
     public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, CancellationToken ct = default)
+    {
+        await _oneAtATime.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            return await StopWriteStartAsync(write, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _oneAtATime.Release();
+        }
+    }
+
+    private async Task<StopOutcome> StopWriteStartAsync(Func<Task> write, CancellationToken ct)
     {
         var outcome = await StopAsync(ct).ConfigureAwait(false);
         if (outcome is StopOutcome.StillRunning or StopOutcome.ExecutableUnknown) return outcome;

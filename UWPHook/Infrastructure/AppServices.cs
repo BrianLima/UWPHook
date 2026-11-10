@@ -39,8 +39,10 @@ namespace UWPHook.Infrastructure
             var backups = new ShortcutsBackupFolder(Path.Combine(AppDataFolder, "backups"), TimeProvider.System, _log);
             var artwork = new SteamGridArtwork(new SteamGridDbService(() => Settings.Current), TempGridFolder, Path.Combine(AppDataFolder, "icons"),
                 () => dialogs.Show(MessageSeverity.Warning, SteamGridDbService.InvalidKeyMessage), _log);
-            var exporter = new ShortcutExporter(steam, NewSteamRestarter(steam), backups, artwork, _log);
-            var remover = new ShortcutRemover(steam, NewSteamRestarter(steam), backups, _log);
+            // One restarter for both, so an export and a removal never stop, write and start Steam at the same time.
+            var restarter = NewSteamRestarter(steam);
+            var exporter = new ShortcutExporter(steam, restarter, backups, artwork, _log);
+            var remover = new ShortcutRemover(steam, restarter, backups, _log);
 
             var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), exporter, Settings, dialogs, _log, StableExePath);
             return new UWPHook.GamesWindow(games, () => new SettingsWindow(new SettingsViewModel(Settings, steam, remover, dialogs, new AppHost(), _log)));

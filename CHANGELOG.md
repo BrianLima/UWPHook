@@ -27,7 +27,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - Steam shortcuts of installed copies point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, a path that stays the same across updates, so updating UWPHook doesn't break or duplicate your shortcuts.
 - Artwork from SteamGridDB is saved exactly as downloaded (PNG, JPEG or WebP) instead of being re-encoded. Artwork is downloaded for at most 4 games at a time.
 - When Steam is running, export (and "Remove UWPHook shortcuts") now closes Steam, writes the shortcuts, and starts it again, instead of writing first and restarting afterwards. If Steam doesn't close within 15 seconds, nothing is written and UWPHook asks you to close Steam.
-- Only the newest 20 backups of `shortcuts.vdf` per Steam account are kept.
+- Only the newest 20 backups of `shortcuts.vdf` per Steam account are kept. Backups made by 2.14 are never deleted.
 - The "Change resolution" option was removed. It did not work on desktop Windows (#124), and it will return in 3.0.
 - The NSIS installer was replaced by the Velopack installer.
 - The app uses Windows' built-in Fluent look and follows the system light/dark setting.
@@ -46,6 +46,8 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - **Export hangs or closes the app** (#166 #176, also #80 #143 #158).
   - Restarting Steam now gives up after 15 seconds instead of waiting forever. If it gives up, UWPHook asks you to restart Steam yourself.
   - Errors during export are reported instead of closing the app.
+  - Closing UWPHook while it exports (or removes its shortcuts) is refused until it has finished, so Steam is never left closed.
+  - Artwork that fails to download for one game no longer fails the whole export: the game is exported without it, and the message names it.
 - **The settings window crashed on Save** (#162).
 - **"An item with the same key has already been added" when reading `shortcuts.vdf`** (#139).
 - **Forza Motorsport and other games with localized names were missing from the list** (#127). Thanks to @icavalheiro (PR #169).

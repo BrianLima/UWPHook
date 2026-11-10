@@ -7,12 +7,23 @@ using UWPHook.Core.Steam;
 
 namespace UWPHook.Infrastructure
 {
+    /// <summary>What <see cref="ArtworkDownloader.DownloadAllAsync"/> did: whether SteamGridDB rejected the API key,
+    /// and the names of the apps whose download failed (they are exported without artwork).</summary>
+    internal sealed record ArtworkDownloads(bool KeyRejected, IReadOnlyList<string> FailedApps);
+
     /// <summary>
     /// Downloads each app's SteamGridDB artwork (grid, poster, hero, logo) to its <see cref="TempGridFolder"/>,
-    /// a few apps at a time. SteamGridDB errors leave the app without artwork; they never stop the export.
+    /// a few apps at a time. Any error leaves only that app without artwork; it never stops the export.
     /// </summary>
     internal sealed class ArtworkDownloader(SteamGridDbService sgdb, TempGridFolder temp, HttpClient images, ILog log)
     {
+        private enum Outcome
+        {
+            Downloaded,
+            KeyRejected,
+            Failed,
+        }
+
         /// <summary>At most this many apps download at once (each one makes up to 8 requests).</summary>
         private const int MaxConcurrentDownloads = 4;
 
@@ -22,24 +33,39 @@ namespace UWPHook.Infrastructure
             $"{TempGridFolder.Placeholder}_hero.png", $"{TempGridFolder.Placeholder}_logo.png",
         };
 
-        /// <returns>True when SteamGridDB rejected the API key for any app.</returns>
-        public async Task<bool> DownloadAllAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
+        public async Task<ArtworkDownloads> DownloadAllAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
         {
             using var throttle = new SemaphoreSlim(MaxConcurrentDownloads);
-            bool[] keyRejected = await Task.WhenAll(apps.Select(async app =>
+            var outcomes = await Task.WhenAll(apps.Select(async app =>
             {
                 await throttle.WaitAsync(ct);
                 try
                 {
-                    log.Debug("Downloading grid images for app {App}", app.Name);
-                    return await DownloadAsync(app, ct);
+                    return (App: app, Outcome: await DownloadOrLogAsync(app, ct));
                 }
                 finally
                 {
                     throttle.Release();
                 }
             }));
-            return keyRejected.Any(rejected => rejected);
+            return new ArtworkDownloads(
+                outcomes.Any(each => each.Outcome == Outcome.KeyRejected),
+                [.. outcomes.Where(each => each.Outcome == Outcome.Failed).Select(each => each.App.Name)]);
+        }
+
+        /// <summary>One app's failure is logged and costs only that app its artwork (review m3); cancelling still stops.</summary>
+        private async Task<Outcome> DownloadOrLogAsync(ExportApp app, CancellationToken ct)
+        {
+            log.Debug("Downloading grid images for app {App}", app.Name);
+            try
+            {
+                return await DownloadAsync(app, ct) ? Outcome.KeyRejected : Outcome.Downloaded;
+            }
+            catch (Exception exception) when (!ct.IsCancellationRequested)
+            {
+                log.Error(exception, "Downloading the artwork of {App} failed; it is exported without artwork", app.Name);
+                return Outcome.Failed;
+            }
         }
 
         /// <summary>Takes the first search result and the first image of each kind. True when the key was rejected.</summary>

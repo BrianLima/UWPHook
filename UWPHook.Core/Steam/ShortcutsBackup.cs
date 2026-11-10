@@ -3,8 +3,9 @@ using System.Globalization;
 namespace UWPHook.Core.Steam;
 
 /// <summary>
-/// The backups of shortcuts.vdf: one file per write, named <c>&lt;user id&gt;_&lt;timestamp&gt;_shortcuts.vdf</c>,
-/// of which only the newest <see cref="KeepPerUser"/> of each user are kept.
+/// The backups of shortcuts.vdf: one file per write, named <c>&lt;user id&gt;_&lt;yyyyMMddHHmmssfff&gt;_shortcuts.vdf</c>,
+/// of which only the newest <see cref="KeepPerUser"/> of each user are kept. 2.14 named its backups to the second
+/// (<c>yyyyMMddHHmmss</c>); those are the snapshots from before 2.15's writer, so they are never pruned.
 /// </summary>
 public static class ShortcutsBackup
 {
@@ -13,15 +14,12 @@ public static class ShortcutsBackup
     private const string Suffix = "_shortcuts.vdf";
     private const string TimestampFormat = "yyyyMMddHHmmssfff";
 
-    /// <summary>Second-precision names from earlier 2.15 builds are still recognised.</summary>
-    private static readonly int[] TimestampLengths = [14, 17];
-
     public static string FileName(string userId, DateTime timestamp) =>
         $"{userId}_{timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{Suffix}";
 
     /// <summary>
     /// The backup file names of <paramref name="userId"/> beyond the newest <paramref name="keep"/>.
-    /// Other users' backups and files that are not backups are never returned.
+    /// Other users' backups, 2.14's backups and files that are not backups are never returned.
     /// </summary>
     public static IReadOnlyList<string> ToPrune(IEnumerable<string> fileNames, string userId, int keep = KeepPerUser) =>
         [.. fileNames
@@ -32,7 +30,7 @@ public static class ShortcutsBackup
             .Skip(keep)
             .Select(backup => backup.Name)];
 
-    /// <summary>The timestamp padded to milliseconds, so names of both precisions sort together; null for other files.</summary>
+    /// <summary>The timestamp of a backup named by 2.15 (<see cref="FileName"/>); null for every other file.</summary>
     private static string? TimestampOf(string fileName, string userId)
     {
         var prefix = userId + "_";
@@ -42,8 +40,6 @@ public static class ShortcutsBackup
             return null;
 
         var timestamp = fileName[prefix.Length..^Suffix.Length];
-        return TimestampLengths.Contains(timestamp.Length) && timestamp.All(char.IsAsciiDigit)
-            ? timestamp.PadRight(TimestampFormat.Length, '0')
-            : null;
+        return timestamp.Length == TimestampFormat.Length && timestamp.All(char.IsAsciiDigit) ? timestamp : null;
     }
 }

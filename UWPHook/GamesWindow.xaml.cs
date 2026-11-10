@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using UWPHook.Presentation.Games;
 
@@ -16,10 +17,14 @@ namespace UWPHook
             _games = games;
             _settingsWindow = settingsWindow;
             DataContext = games;
+            Closing += Window_Closing;
 
             // Auto refresh on open
             games.LoadCommand.Execute(null);
         }
+
+        /// <summary>The ViewModel decides whether the window may close (not while exporting) and tells the user why not.</summary>
+        private void Window_Closing(object? sender, CancelEventArgs e) => e.Cancel = !_games.ConfirmClose();
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e) => _settingsWindow().ShowDialog();
 

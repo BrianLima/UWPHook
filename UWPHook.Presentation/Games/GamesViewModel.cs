@@ -27,6 +27,7 @@ public sealed class GamesViewModel : ObservableObject
     private readonly ILog log;
     private readonly Func<string> uwpHookExe;
     private bool isBusy;
+    private bool isExporting;
     private string status = PressLoadStatus;
     private bool includeSystemApps = true;
 
@@ -116,6 +117,7 @@ public sealed class GamesViewModel : ObservableObject
     private async Task<ExportSummary?> ExportedAsync(ExportRequest request)
     {
         IsBusy = true;
+        isExporting = true;
         try
         {
             var summary = await Task.Run(() => exporter.ExportAsync(request));
@@ -129,12 +131,22 @@ public sealed class GamesViewModel : ObservableObject
         }
         finally
         {
+            isExporting = false;
             IsBusy = false;
         }
     }
 
-    /// <summary>Whether the window may close now; when it may not, tells the user why.</summary>
-    public bool ConfirmClose() => true;
+    /// <summary>
+    /// Whether the window may close now; when it may not, tells the user why. Not while exporting (I1): closing the
+    /// app would end the export while Steam may be closed, and Steam would not be started again. Loading may be cut short.
+    /// </summary>
+    public bool ConfirmClose()
+    {
+        if (!isExporting) return true;
+
+        dialogs.Show(MessageSeverity.Information, StillExporting);
+        return false;
+    }
 
     /// <summary>
     /// The first time only: offers to set up SteamGridDB. True when the user wants Settings opened. A key the user
