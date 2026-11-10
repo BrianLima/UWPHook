@@ -22,7 +22,6 @@ namespace UWPHook.Infrastructure
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(levelSwitch)
                 .WriteTo.File(path: loggerFilePath, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10485760, retainedFileCountLimit: 5)
-                .WriteTo.Console()
                 .CreateLogger();
 
             // Switch to Info first so the chosen level is announced in the log, then to the chosen level.
