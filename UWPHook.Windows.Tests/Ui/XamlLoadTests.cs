@@ -1,8 +1,11 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using UWPHook.Core.Catalog;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Steam;
 using UWPHook.Presentation.Games;
@@ -219,6 +222,82 @@ public sealed class XamlLoadTests
         Assert.Equal(Assert.NotNull(windowColor), Assert.NotNull(overlayColor));
     }
 
+    // The icon column: the same columns as before, in the same order, with the icon as a thumbnail instead of two
+    // text columns (the picked file and the logo folder).
+    [Fact]
+    public void GamesWindow_Columns_AreSelectedIconNameExecutableAumid_WithOnlyTheNameEditable()
+    {
+        var (headers, iconColumn, readOnly) = UiThread.Run(() =>
+        {
+            var window = NewGamesWindow();
+            LayOut(window);
+            var columns = Assert.IsType<DataGrid>(window.FindName("listGames")).Columns;
+            return (columns.Select(column => column.Header as string).ToList(),
+                columns.Single(column => column.Header as string == "Icon").GetType(),
+                columns.Where(column => column.ReadLocalValue(DataGridColumn.IsReadOnlyProperty) is true).Select(column => column.Header as string).ToList());
+        });
+
+        Assert.Equal(new[] { "Selected", "Icon", "Name", "Executable", "Aumid" }, headers);
+        Assert.Equal(typeof(DataGridTemplateColumn), iconColumn);
+        Assert.Equal(new[] { "Icon", "Executable", "Aumid" }, readOnly);
+    }
+
+    // The Icon column's cell, made from its template as the grid makes it for a row (the grid of a window that was
+    // never shown did not realize its rows on CI). Review minor 5: shown at 32 DIPs from a 64-pixel decode.
+    [Fact]
+    public void GamesWindow_IconCell_ShowsTheThumbnail_WithTheLogoFolderAsItsTooltip()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "UWPHook.Windows.Tests", Guid.NewGuid().ToString("N"));
+        var png = TestImages.Write(Path.Combine(folder, "Square150x150Logo.png"), 150, 150, System.Drawing.Imaging.ImageFormat.Png);
+        try
+        {
+            var (decoded, shown, tooltip) = UiThread.Run(() =>
+            {
+                var (cell, image) = IconCell(new AppRow(Halo(folder)) { Icon = png });
+                return ((image.Source as BitmapSource)?.PixelWidth, (cell.Width, cell.Height), cell.ToolTip);
+            });
+
+            Assert.Equal(IconThumbnails.DecodeSize, decoded);
+            Assert.Equal((32.0, 32.0), shown);
+            Assert.Equal(folder, tooltip);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    // Review minor 6: an app without a logo folder (#56) gets no (empty) tooltip.
+    [Fact]
+    public void GamesWindow_IconCell_WithoutALogoFolder_HasNoTooltip()
+    {
+        var (tooltip, source) = UiThread.Run(() =>
+        {
+            var (cell, image) = IconCell(new AppRow(Halo("")));
+            return (cell.ToolTip, image.Source);
+        });
+
+        Assert.Null(tooltip);
+        Assert.Null(source);
+    }
+
+    private static XboxApp Halo(string iconFolder) =>
+        new("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", @"C:\Games\Halo", DateTimeOffset.UnixEpoch)
+        {
+            IconFolder = iconFolder,
+        };
+
+    /// <summary>The Icon column's cell for <paramref name="row"/>, bound. Call on the UI thread.</summary>
+    private static (Border Cell, Image Image) IconCell(AppRow row)
+    {
+        var list = Assert.IsType<DataGrid>(NewGamesWindow().FindName("listGames"));
+        var column = Assert.IsType<DataGridTemplateColumn>(list.Columns.Single(column => column.Header as string == "Icon"));
+        var cell = Assert.IsType<Border>(column.CellTemplate.LoadContent());
+        cell.DataContext = row;
+        cell.Dispatcher.Invoke(DispatcherPriority.DataBind, new Action(() => { }));
+        return (cell, Assert.IsType<Image>(cell.Child));
+    }
+
     [Fact]
     public void NoWindow_LoadsMaterialDesign()
     {
@@ -243,7 +322,7 @@ public sealed class XamlLoadTests
     {
         // Already offered, so nothing opens Settings as a dialog.
         var settings = new FakeSettings(AppSettings.Defaults with { OfferedSteamGridDb = true });
-        var games = new GamesViewModel(catalog ?? new FakeCatalog(), new FakeExporter(ExportSummary.NothingSelected()), settings,
+        var games = new GamesViewModel(catalog ?? new FakeCatalog(), new FakeIconPicker(), new FakeExporter(ExportSummary.NothingSelected()), settings,
             new FakeDialogs(), new RecordingLog(), () => @"C:\Users\me\AppData\Local\UWPHook\UWPHook.exe");
         return new GamesWindow(games, NewSettingsWindow);
     }

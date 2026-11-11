@@ -36,6 +36,9 @@ public static class LogExtensions
     public static void Debug(this ILog log, string template, params object?[] values) =>
         log.Write(LogLevel.Debug, null, template, values);
 
+    public static void Debug(this ILog log, Exception exception, string template, params object?[] values) =>
+        log.Write(LogLevel.Debug, exception, template, values);
+
     public static void Information(this ILog log, string template, params object?[] values) =>
         log.Write(LogLevel.Information, null, template, values);
 

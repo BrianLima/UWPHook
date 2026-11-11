@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using UWPHook.Core.Artwork;
 using UWPHook.Core.Catalog;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Diagnostics;
@@ -121,4 +123,25 @@ public sealed class RecordingLog : ILog
 
     public void Write(LogLevel level, Exception? exception, string template, params object?[] values) =>
         Entries.Add((level, exception, template));
+}
+
+/// <summary>
+/// Picks the icon <see cref="Icons"/> maps the folder to (none for other folders), throws for the folders in
+/// <see cref="Failing"/>, and first waits for <see cref="Gate"/> when it is set. Called off the test's thread.
+/// (System.IO is spelled out: the WPF test project links this file and leaves it out of its implicit usings.)
+/// </summary>
+public sealed class FakeIconPicker : IIconPicker
+{
+    public Dictionary<string, string> Icons { get; } = [];
+    public HashSet<string> Failing { get; } = [];
+    public TaskCompletionSource? Gate { get; set; }
+    public ConcurrentQueue<string> Asked { get; } = new();
+
+    public string? Pick(string folder)
+    {
+        Asked.Enqueue(folder);
+        Gate?.Task.Wait();
+        if (Failing.Contains(folder)) throw new System.IO.IOException("Access to the path is denied: " + folder);
+        return Icons.GetValueOrDefault(folder);
+    }
 }

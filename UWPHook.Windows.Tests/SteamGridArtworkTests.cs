@@ -6,6 +6,7 @@ using UWPHook.Core.Steam;
 using UWPHook.Core.Tests.Artwork.SteamGridDb;
 using UWPHook.Core.Tests.Diagnostics;
 using UWPHook.Infrastructure;
+using FakeIconPicker = UWPHook.Presentation.Tests.FakeIconPicker;
 using Xunit;
 
 namespace UWPHook.Windows.Tests;
@@ -20,7 +21,7 @@ public sealed class SteamGridArtworkTests : IDisposable
     private int _keyRejections;
 
     /// <summary>The icon the app's logo folder offers; tests set it instead of drawing real images.</summary>
-    private readonly Dictionary<string, string> _iconsInFolders = new();
+    private readonly FakeIconPicker _icons = new();
 
     public void Dispose()
     {
@@ -37,8 +38,7 @@ public sealed class SteamGridArtworkTests : IDisposable
     private string TempGridOf(string aumid) => Path.Combine(TempRoot, aumid);
 
     private SteamGridArtwork Artwork(SteamGridDbService? sgdb = null) =>
-        new(sgdb ?? new SteamGridDbService(() => AppSettings.Defaults), TempRoot, IconsFolder, () => _keyRejections++, _log,
-            folder => _iconsInFolders.GetValueOrDefault(folder, ""));
+        new(sgdb ?? new SteamGridDbService(() => AppSettings.Defaults), TempRoot, IconsFolder, _icons, () => _keyRejections++, _log);
 
     private static SteamGridDbService WithKey(HttpMessageHandler handler) =>
         new(() => AppSettings.Defaults with { SteamGridDbApiKey = "key" }, handler);
@@ -53,7 +53,7 @@ public sealed class SteamGridArtworkTests : IDisposable
 
     private ExportApp App(string? icon = null)
     {
-        if (icon is not null) _iconsInFolders[LogoFolder] = icon;
+        if (icon is not null) _icons.Icons[LogoFolder] = icon;
         return new("Halo", Aumid, "halo.exe", LogoFolder);
     }
 
@@ -102,6 +102,34 @@ public sealed class SteamGridArtworkTests : IDisposable
 
         Assert.Equal(Path.Combine(IconsFolder, Aumid + ".png"), icon);
         Assert.Equal("icon", File.ReadAllText(icon));
+    }
+
+    // The games list already picked the icon it shows: the shortcut gets that same file, without picking again.
+    [Fact]
+    public void IconFor_UsesTheIconTheListPicked_WithoutPickingAgain()
+    {
+        var shown = Path.Combine(LogoFolder, "Square150x150Logo.png");
+        WriteFile(shown, "shown");
+
+        var icon = Artwork().IconFor(App() with { Icon = shown });
+
+        Assert.Equal(Path.Combine(IconsFolder, Aumid + ".png"), icon);
+        Assert.Equal("shown", File.ReadAllText(icon));
+        Assert.Empty(_icons.Asked);
+    }
+
+    // Review minor 2: the app updated between loading the list and exporting, and the file the list showed is gone.
+    [Fact]
+    public void IconFor_WhenTheIconTheListPickedIsGone_PicksAgain()
+    {
+        var current = Path.Combine(LogoFolder, "Square310x310Logo.png");
+        WriteFile(current, "current");
+        WriteFile(Path.Combine(TempGridOf(Aumid), "appid_logo.png"), "downloaded");
+
+        var icon = Artwork().IconFor(App(current) with { Icon = Path.Combine(LogoFolder, "Square150x150Logo.png") });
+
+        Assert.Equal(Path.Combine(IconsFolder, Aumid + ".png"), icon);
+        Assert.Equal("current", File.ReadAllText(icon));
     }
 
     [Fact]
