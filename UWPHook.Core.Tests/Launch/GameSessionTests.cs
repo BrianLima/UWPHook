@@ -74,6 +74,19 @@ public class GameSessionTests
         Assert.All(_processes.Queries, family => Assert.Equal(Family, family));
     }
 
+    // A shortcut exported without an executable: the session still tracks the package family.
+    [Fact]
+    public async Task Run_WithNoExecutable_StillWatchesThePackageFamily()
+    {
+        _processes.Alive(Family, from: 0, until: 30);
+
+        var outcome = await Drive(NewSession().RunAsync(Request with { Executable = "" }, Poll, Grace, Ct));
+
+        Assert.Equal(SessionOutcome.Ended, outcome);
+        AssertEndedAround(TimeSpan.FromSeconds(30) + Grace);
+        Assert.All(_processes.Queries, family => Assert.Equal(Family, family));
+    }
+
     [Fact]
     public async Task Run_ActivatesTheRequestOnce()
     {

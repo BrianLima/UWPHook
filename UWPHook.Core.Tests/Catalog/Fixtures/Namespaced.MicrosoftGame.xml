@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A config with a default namespace: every element is in it, the attributes are not. -->
+<Game configVersion="1" xmlns="http://schemas.example.com/gdk/MicrosoftGame" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Identity Name="Fabrikam.Wasteland" Publisher="CN=Fabrikam" Version="1.0.173.0" />
+  <ExecutableList>
+    <Executable Name="Wasteland.exe" TargetDeviceFamily="PC" Id="Game" />
+  </ExecutableList>
+  <ShellVisuals DefaultDisplayName="Wasteland" PublisherDisplayName="Fabrikam" Square150x150Logo="Logo.png" />
+</Game>

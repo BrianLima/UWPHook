@@ -1,4 +1,5 @@
 using UWPHook.Core.Launch;
+using UWPHook.Core.Steam;
 using Xunit;
 
 namespace UWPHook.Core.Tests.Launch;
@@ -7,6 +8,7 @@ public class LaunchRequestTests
 {
     private const string Exe = "C:\\x\\UWPHook.exe";
     private const string Forza = "Microsoft.Forza_8wekyb3d8bbwe!App";
+    private const string Fallout = "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76";
 
     [Fact]
     public void Parse_StandardArgs()
@@ -42,6 +44,18 @@ public class LaunchRequestTests
         Assert.Equal(Forza, request.Aumid);
         Assert.Equal("", request.Executable);
         Assert.Equal("", request.ExtraArguments);
+    }
+
+    // What Steam passes for a shortcut exported without an executable (LaunchOptions = "<AUMID>").
+    [Fact]
+    public void Parse_TheLaunchOptionsOfAShortcutWithoutAnExecutable()
+    {
+        var options = ShortcutSpec.ForApp("Fallout 76", Fallout, "", Exe, "", []).LaunchOptions;
+
+        var request = Parse([Exe, .. options.Split(' ', StringSplitOptions.RemoveEmptyEntries)]);
+
+        Assert.Equal(new LaunchRequest(Fallout, "", ""), request);
+        Assert.Equal("BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc", request.PackageFamilyName);
     }
 
     [Theory]

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A config without an ExecutableList at all. -->
+<Game configVersion="1">
+  <Identity Name="Fabrikam.NoList" Publisher="CN=Fabrikam" Version="1.0.0.0" />
+  <ShellVisuals DefaultDisplayName="No List" PublisherDisplayName="Fabrikam" Square150x150Logo="Logo.png" />
+</Game>

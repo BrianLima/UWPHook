@@ -1,3 +1,5 @@
+using UWPHook.Core.Diagnostics;
+
 namespace UWPHook.Core.Catalog;
 
 /// <summary>Turns one installed package into the apps UWPHook can add to Steam.</summary>
@@ -9,7 +11,7 @@ public static class CatalogEntryBuilder
     /// application's, the package's display name and finally the package identity name. AUMIDs are unique (case-insensitive).
     /// </summary>
     /// <param name="files">Where to look for the declared logo among the package's folders; without it, the first folder is used.</param>
-    public static IEnumerable<XboxApp> Build(PackageSnapshot package, IFolderFiles? files = null)
+    public static IEnumerable<XboxApp> Build(PackageSnapshot package, IFolderFiles? files = null, ILog? log = null)
     {
         var logoFiles = files ?? NoFiles.Instance;
         IReadOnlyList<ManifestApplication> applications =

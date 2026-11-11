@@ -27,6 +27,28 @@ public class MicrosoftGameConfigTests
     }
 
     [Fact]
+    public void TryReadExecutable_ReadsAConfigWithADefaultNamespace()
+    {
+        Assert.True(MicrosoftGameConfig.TryReadExecutable(Fixture.Read("Namespaced.MicrosoftGame.xml"), out var exe));
+        Assert.Equal("Wasteland.exe", exe);
+    }
+
+    // Element and attribute names in another case, a namespace-prefixed Name attribute, and a DOCTYPE (ignored, never processed).
+    [Fact]
+    public void TryReadExecutable_ToleratesOtherCasePrefixedAttributesAndADoctype()
+    {
+        Assert.True(MicrosoftGameConfig.TryReadExecutable(Fixture.Read("CaseVariant.MicrosoftGame.xml"), out var exe));
+        Assert.Equal(@"Bin\Wasteland.exe", exe);
+    }
+
+    [Fact]
+    public void TryReadExecutable_FailsWithoutAnExecutableList()
+    {
+        Assert.False(MicrosoftGameConfig.TryReadExecutable(Fixture.Read("NoExecutableList.MicrosoftGame.xml"), out var exe));
+        Assert.Equal("", exe);
+    }
+
+    [Fact]
     public void TryReadExecutable_FailsForTheMalformedFixture() =>
         Assert.False(MicrosoftGameConfig.TryReadExecutable(Fixture.Read("Malformed.xml"), out _));
 
