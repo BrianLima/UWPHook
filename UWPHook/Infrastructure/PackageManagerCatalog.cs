@@ -1,5 +1,3 @@
-using System.IO;
-using Serilog;
 using UWPHook.Core.Catalog;
 using UWPHook.Core.Diagnostics;
 using Windows.ApplicationModel;
@@ -21,7 +19,11 @@ namespace UWPHook.Infrastructure
             var reads = new PackageRead[packages.Count];
 
             await Parallel.ForEachAsync(Enumerable.Range(0, packages.Count), ct, async (index, token) =>
-                reads[index] = await PackageRead.AttemptAsync(FamilyNameOf(packages[index]), () => true, () => AppsOf(packages[index], includeSystem, token), _log));
+                reads[index] = await PackageRead.AttemptAsync(
+                    FamilyNameOf(packages[index]),
+                    () => IsCandidate(packages[index], includeSystem),
+                    () => AppsOf(packages[index], token),
+                    _log));
 
             var apps = reads
                 .SelectMany(read => read.Apps)
@@ -33,11 +35,8 @@ namespace UWPHook.Infrastructure
         }
 
         /// <summary>The package's apps; it throws when the package can't be read (<see cref="PackageRead"/> skips it then).</summary>
-        private async Task<IReadOnlyList<XboxApp>> AppsOf(Package package, bool includeSystem, CancellationToken ct)
+        private async Task<IReadOnlyList<XboxApp>> AppsOf(Package package, CancellationToken ct)
         {
-            if (!IsCandidate(package, includeSystem))
-                return [];
-
             var snapshot = await SnapshotOf(package, ct);
             return snapshot is null ? [] : CatalogEntryBuilder.Build(snapshot, DiskFolderFiles.Instance, _log);
         }
@@ -74,7 +73,7 @@ namespace UWPHook.Infrastructure
         }
 
         // Resolving a package's display name can fail on its own; the entry and manifest names may still work.
-        private static string? DisplayNameOf(Package package)
+        private string? DisplayNameOf(Package package)
         {
             try
             {
@@ -82,31 +81,21 @@ namespace UWPHook.Infrastructure
             }
             catch (Exception e)
             {
-                Log.Debug(e, "No display name for package {Package}", FullNameOf(package));
+                _log.Write(LogLevel.Debug, e, "No display name for package {FamilyName}", FamilyNameOf(package));
                 return null;
             }
         }
 
-        private static string FamilyNameOf(Package package)
+        // For log lines only: a package whose identity can't be read is still logged, as "(unknown package)".
+        private string FamilyNameOf(Package package)
         {
             try
             {
                 return package.Id.FamilyName;
             }
-            catch
+            catch (Exception e)
             {
-                return "(unknown package)";
-            }
-        }
-
-        private static string FullNameOf(Package package)
-        {
-            try
-            {
-                return package.Id.FullName;
-            }
-            catch
-            {
+                _log.Write(LogLevel.Debug, e, "A package's family name could not be read");
                 return "(unknown package)";
             }
         }

@@ -7,6 +7,8 @@ public interface ITextFiles
     bool Exists(string path);
 
     /// <summary>The whole file as text.</summary>
-    /// <exception cref="Exception">Any I/O or access error reading it.</exception>
+    /// <exception cref="IOException">The file could not be read (missing, locked, a disk error).</exception>
+    /// <exception cref="UnauthorizedAccessException">Access to the file is denied.</exception>
+    /// <exception cref="System.Security.SecurityException">The caller may not read it.</exception>
     Task<string> ReadAllTextAsync(string path, CancellationToken ct);
 }

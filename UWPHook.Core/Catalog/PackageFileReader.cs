@@ -1,11 +1,12 @@
+using System.Security;
 using UWPHook.Core.Diagnostics;
 
 namespace UWPHook.Core.Catalog;
 
 /// <summary>
 /// Reads one of a package's files (its AppxManifest.xml, its MicrosoftGame.config) from the package's folders,
-/// preferred folder first. A copy that exists but can't be read is logged and treated as missing, so one locked or
-/// unreadable file never costs the whole package its place in the list.
+/// preferred folder first. A copy that exists but can't be read (an I/O, access or security failure) is logged and
+/// treated as missing, so one locked or unreadable file never costs the whole package its place in the list.
 /// </summary>
 public sealed class PackageFileReader(ITextFiles files, ILog log)
 {
@@ -28,7 +29,7 @@ public sealed class PackageFileReader(ITextFiles files, ILog log)
         {
             return await files.ReadAllTextAsync(path, ct);
         }
-        catch (Exception e) when (e is not OperationCanceledException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or SecurityException)
         {
             log.Warning(e, "Package {FamilyName}: {Path} could not be read, so it is treated as missing", familyName, path);
             return null;
