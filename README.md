@@ -73,7 +73,9 @@ Special thanks to @FusRoDah061 for implementing the base feature!
   - The Steam client stopped reading a shortcut's tags; it shows *collections*, which it keeps in `<Steam folder>\userdata\{userid}\config\cloudstorage\cloud-storage-namespace-1.json`. Since 2.15, the Settings box "Add games to Steam collections" (comma separated, for example `READY TO PLAY,XBOX`) adds every exported game to the collections with those names, and creates a collection that doesn't exist yet. Export your games again to get them into the collections.
   - UWPHook only ever adds its own games to collections. It never removes a game from a collection, and never renames or deletes one, so after changing the names in Settings, tidy the old collections up in Steam.
   - Before changing that file, UWPHook backs it up to `%AppData%\Briano\UWPHook\backups` as `{userid}_{yyyyMMddHHmmssfff}_collections.json` (the newest 20 per account are kept). To restore one, close Steam and copy it over the file above.
-  - If the export message says the games "could not be added to your Steam collections", the file was missing (start Steam once and sign in) or could not be read; the games themselves were exported, and `application.log` has the reason.
+  - "Remove UWPHook shortcuts" removes the shortcuts only. The collections UWPHook created stay (delete them in Steam if you don't want them).
+  - A game you removed by hand from a *dynamic* collection is not added to it again.
+  - If the export message says an account "has no Steam collections yet", that account has no such file: start Steam, sign in with it once, and export again. If it says the games "could not be added to your Steam collections", the file could not be read or written; `application.log` has the reason. Either way the games themselves were exported.
 - **The app list is empty or says "Error trying to get installed apps"**
   - UWPHook lists your apps through Windows' own package manager (the apps that have a Start menu entry). Check `application.log` (see below) for the error; a package that can't be read is skipped and logged there.
 - **My Windows display language changed, or the language option is gone**

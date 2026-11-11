@@ -92,7 +92,8 @@ internal static class ShortcutEntry
     private static KVObject MergedTags(KVObject? existing, IReadOnlyList<string> wanted)
     {
         var merged = KVObject.ListCollection();
-        var names = new HashSet<string>(StringComparer.Ordinal);
+        // Ignoring case, as collections are matched: "XBOX" after "Xbox" is the same tag, kept as it was spelled.
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var next = 0;
         if (existing is not null && existing.ValueType == KVValueType.Collection)
         {

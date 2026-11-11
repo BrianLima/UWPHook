@@ -85,7 +85,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     public IReadOnlyList<string> CollectionsMissingUsers { get; init; } = [];
 
     /// <summary>The same outcome, noting the accounts that have no Steam collections file (the shortcuts were written).</summary>
-    public ExportSummary WithoutCollections(IReadOnlyList<string> users) => this;
+    public ExportSummary WithoutCollections(IReadOnlyList<string> users) => this with { CollectionsMissingUsers = users };
 
     /// <summary>The same outcome, noting the accounts whose collections could not be updated (the shortcuts were written).</summary>
     public ExportSummary WithCollectionsSkipped(IReadOnlyList<string> users) => this with { CollectionsSkippedUsers = users };
@@ -128,9 +128,15 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
         ? ""
         : $" Artwork could not be copied for Steam account(s) {string.Join(", ", ArtworkFailedUsers)}; details are in application.log.";
 
-    private string CollectionsNote() => CollectionsSkippedUsers.Count == 0
+    private string CollectionsNote() => SkippedCollectionsNote() + MissingCollectionsNote();
+
+    private string SkippedCollectionsNote() => CollectionsSkippedUsers.Count == 0
         ? ""
         : $" They could not be added to your Steam collections for Steam account(s) {string.Join(", ", CollectionsSkippedUsers)}; details are in application.log.";
+
+    private string MissingCollectionsNote() => CollectionsMissingUsers.Count == 0
+        ? ""
+        : $" Steam account(s) {string.Join(", ", CollectionsMissingUsers)} have no Steam collections yet, so the games were not added to collections there.";
 
     private string SteamSentence() => (Status, Steam) switch
     {

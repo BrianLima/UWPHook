@@ -8,8 +8,9 @@ namespace UWPHook.Core.Steam;
 /// <summary>
 /// The collections the Steam client keeps in <c>userdata/&lt;id&gt;/config/cloudstorage/cloud-storage-namespace-N.json</c>
 /// (since the September 2025 client; before that they were in a LevelDB). Steam must be closed: it rewrites the file.
-/// The file is backed up before it is replaced, atomically, and a file that is missing, unreadable or unwritable is
-/// left exactly as it is: that is <see cref="CollectionsOutcome.Skipped"/>, with the reason in the log.
+/// The file is backed up before it is replaced, atomically. An account without the file is
+/// <see cref="CollectionsOutcome.NotFound"/>; a file that is unreadable or unwritable is left exactly as it is, which
+/// is <see cref="CollectionsOutcome.Skipped"/>, with the reason in the log.
 /// </summary>
 public sealed partial class CloudStorageCollections(ShortcutsBackupFolder backups, TimeProvider time, ILog log) : ISteamCollections
 {
@@ -36,10 +37,11 @@ public sealed partial class CloudStorageCollections(ShortcutsBackupFolder backup
         var path = CollectionsPath(Path.Combine(userFolder, "config", "cloudstorage"));
         if (path is null)
         {
-            log.Warning(
+            // Usual for an account that has not signed in since Steam began keeping this file: not a warning.
+            log.Information(
                 "No Steam collections file (config\\cloudstorage\\cloud-storage-namespace-1.json) for {User}; the shortcuts were not added to collections",
                 userFolder);
-            return CollectionsOutcome.Skipped;
+            return CollectionsOutcome.NotFound;
         }
 
         var file = CollectionsFile.Parse(File.ReadAllBytes(path));

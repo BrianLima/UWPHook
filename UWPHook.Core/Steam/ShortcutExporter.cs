@@ -77,7 +77,8 @@ public sealed class ShortcutExporter(
         return ExportSummary.ForUsers(writes!.Written, writes.Failed, stopped)
             .WithArtworkDownloadFailures(artworkFailed)
             .WithArtworkFailures(writes.ArtworkFailed)
-            .WithCollectionsSkipped(writes.CollectionsSkipped);
+            .WithCollectionsSkipped(writes.CollectionsSkipped)
+            .WithoutCollections(writes.CollectionsMissing);
     }
 
     /// <summary>
@@ -98,7 +99,11 @@ public sealed class ShortcutExporter(
     }
 
     private sealed record AccountWrites(
-        int Written, int Failed, IReadOnlyList<string> ArtworkFailed, IReadOnlyList<string> CollectionsSkipped);
+        int Written,
+        int Failed,
+        IReadOnlyList<string> ArtworkFailed,
+        IReadOnlyList<string> CollectionsSkipped,
+        IReadOnlyList<string> CollectionsMissing);
 
     /// <summary>
     /// Writes the shortcuts to each account, then, for the ones that were written, adds them to the collections
@@ -129,12 +134,21 @@ public sealed class ShortcutExporter(
             .Select(account => Path.GetFileName(account.Folder))
             .ToList();
 
-        var collectionsSkipped = gridIdsByFolder
-            .Where(account => collections.AddShortcuts(account.Folder, tags, [.. account.GridIds.Values]) == CollectionsOutcome.Skipped)
-            .Select(account => Path.GetFileName(account.Folder))
+        var collectionOutcomes = gridIdsByFolder
+            .Select(account => (
+                User: Path.GetFileName(account.Folder),
+                Outcome: collections.AddShortcuts(account.Folder, tags, [.. account.GridIds.Values])))
             .ToList();
 
-        return new AccountWrites(gridIdsByFolder.Count, folders.Count - gridIdsByFolder.Count, artworkFailed, collectionsSkipped);
+        return new AccountWrites(
+            gridIdsByFolder.Count,
+            folders.Count - gridIdsByFolder.Count,
+            artworkFailed,
+            UsersWith(CollectionsOutcome.Skipped),
+            UsersWith(CollectionsOutcome.NotFound));
+
+        List<string> UsersWith(CollectionsOutcome outcome) =>
+            [.. collectionOutcomes.Where(account => account.Outcome == outcome).Select(account => account.User)];
     }
 
     /// <summary>The shortcuts are already written, so failed artwork is a note in the summary (R33), not a failed export.</summary>

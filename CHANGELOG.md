@@ -19,7 +19,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - Search no longer resets the list's sort order, and "Select all/none" and a "Show system apps" option were added to the main window.
 - A per-user installer (`UWPHook-win-x64-Setup.exe`), built with [Velopack](https://velopack.io). It installs to `%LocalAppData%\UWPHook` without asking for administrator rights. A portable zip is still available.
 - Builds for ARM64 PCs (`win-arm64`) alongside x64.
-- Exported games are added to Steam collections. The Steam client no longer reads the tags UWPHook wrote into `shortcuts.vdf`, so the tags from Settings did nothing; the setting is now called "Add games to Steam collections", and each exported game is added to the collections with those names in Steam's own collections file (`userdata\{userid}\config\cloudstorage\cloud-storage-namespace-1.json`), creating a collection that doesn't exist. UWPHook only adds its own games: it never removes a game from a collection and never renames or deletes one. The file is backed up first (`{userid}_{timestamp}_collections.json` in the backups folder, newest 20 per account), and if it is missing or unreadable the export still succeeds and says the collections were skipped.
+- Exported games are added to Steam collections. The Steam client no longer reads the tags UWPHook wrote into `shortcuts.vdf`, so the tags from Settings did nothing; the setting is now called "Add games to Steam collections", and each exported game is added to the collections with those names in Steam's own collections file (`userdata\{userid}\config\cloudstorage\cloud-storage-namespace-1.json`), creating a collection that doesn't exist. UWPHook only adds its own games: it never removes a game from a collection and never renames or deletes one. The file is backed up first (`{userid}_{timestamp}_collections.json` in the backups folder, newest 20 per account), and if it is missing or unreadable the export still succeeds and says so.
 - A global error handler. Unexpected errors are written to `application.log` and shown in a message box, and the app stays open instead of closing silently.
 
 ### Changed
@@ -36,13 +36,11 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 - Moddable Xbox games installed to an `XboxGames` folder are found, and their playtime tracked, from the folder they run from (Windows 10 1903 and later).
 - Games are started with Windows' activation manager running out of process, as Microsoft recommends for an app started only to launch another. UWPHook hands it the right to bring the game to the foreground.
 
-### Fixed
-- Exporting a game again no longer drops tags that were already on its Steam shortcut; the tags from Settings are added to them.
-
 ### Removed
 - The per-game language option. Windows only applies a display-language change after you sign out, so it never worked when launching a game. If a previous version left your Windows display language changed, set it back in Settings > Time & language > Language & region.
 
 ### Fixed
+- Exporting a game again no longer drops tags that were already on its Steam shortcut; the tags from Settings are added to them.
 - **The app list is empty, or shows "Error trying to get installed apps"** (the Appx module could not load in the bundled PowerShell 7): #141 #149 #155 #164 #171 #178 #181 (also #132).
 - **"Value does not fall within the expected range" when launching from Steam**, and games not starting when UWPHook is in a folder with spaces: #157 #160 #168.
   - Shortcuts now quote their `Exe` and `Start In` paths.

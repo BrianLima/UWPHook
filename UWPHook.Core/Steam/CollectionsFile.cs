@@ -112,6 +112,12 @@ public sealed class CollectionsFile
 
         var key = KeyPrefix + ManagedIdFor(name);
         var ours = all.FirstOrDefault(item => item.Key == key);
+        if (ours is { CanBeRewritten: false })
+        {
+            // Appending would leave two items with one key; better to leave the file alone.
+            throw new JsonException($"The entry {key} is not a record that can be rewritten.");
+        }
+
         if (ours is not null) return ours.BecomeCollection(name);
 
         var created = Item.New(key).BecomeCollection(name);
@@ -144,7 +150,8 @@ public sealed class CollectionsFile
 
     /// <summary>
     /// One <c>[key, record]</c> item at <see cref="Start"/>..<see cref="End"/> of the file. <see cref="Key"/> is
-    /// null for an item that is not a collection entry; such an item is never changed.
+    /// null for an item that is not a collection entry; such an item is never changed. Neither is a collection
+    /// entry whose record can't be read (<see cref="CanBeRewritten"/> is false).
     /// </summary>
     private sealed class Item
     {
@@ -166,20 +173,28 @@ public sealed class CollectionsFile
 
         public string? Key { get; }
 
+        /// <summary>Whether the record under <see cref="Key"/> was read: only then can the item be written again.</summary>
+        public bool CanBeRewritten => _record is not null;
+
         /// <summary>The item's new text, once it has changed.</summary>
         public byte[]? Rewritten { get; private set; }
 
-        public static Item New(string key) => new(0, 0, key, null, null);
+        /// <summary>A new entry, with a record in Steam's order of properties; the timestamp and value are filled in when it is written.</summary>
+        public static Item New(string key) => new(0, 0, key, new JsonObject { ["key"] = key, ["timestamp"] = 0, ["value"] = "" }, null);
 
         public static Item Read(byte[] file, int start, int end)
         {
+            if (JsonNode.Parse(new ReadOnlySpan<byte>(file, start, end - start)) is not JsonArray { Count: 2 } pair
+                || pair[0] is not JsonValue keyNode
+                || !keyNode.TryGetValue<string>(out var key)
+                || !key.StartsWith(KeyPrefix, StringComparison.Ordinal))
+            {
+                return new Item(start, end, null, null, null);
+            }
+
             try
             {
-                if (JsonNode.Parse(new ReadOnlySpan<byte>(file, start, end - start)) is JsonArray { Count: 2 } pair
-                    && pair[0] is JsonValue keyNode
-                    && keyNode.TryGetValue<string>(out var key)
-                    && key.StartsWith(KeyPrefix, StringComparison.Ordinal)
-                    && pair[1] is JsonObject record)
+                if (pair[1] is JsonObject record)
                 {
                     pair.Clear();
                     return new Item(start, end, key, record, LiveCollection(record));
@@ -190,7 +205,7 @@ public sealed class CollectionsFile
                 // A record with the same property twice: not an entry this code should rewrite.
             }
 
-            return new Item(start, end, null, null, null);
+            return new Item(start, end, key, null, null);
         }
 
         /// <summary>
@@ -218,9 +233,7 @@ public sealed class CollectionsFile
         {
             if (_collection is not null) return this;
 
-            // Steam's order of a record's properties; the timestamp and value are filled in when it is written.
-            _record ??= new JsonObject { ["key"] = Key, ["timestamp"] = 0, ["value"] = "" };
-            _record.Remove("is_deleted");
+            _record!.Remove("is_deleted");
             _record["key"] = Key;
             _record["conflictResolutionMethod"] = "custom";
             _record["strMethodId"] = "union-collections";
