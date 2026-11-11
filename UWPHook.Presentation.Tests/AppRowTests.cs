@@ -18,4 +18,19 @@ public sealed class AppRowTests
         Assert.Equal("", row.Executable);
         Assert.Equal("", row.ToExportApp().Executable);
     }
+
+    // The grid shows the icon as soon as it is picked, after the row is listed.
+    [Fact]
+    public void SettingTheIcon_TellsTheGrid()
+    {
+        var row = new AppRow(new XboxApp("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe",
+            @"C:\Games\Halo", DateTimeOffset.UnixEpoch));
+        var changed = new List<string?>();
+        row.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        row.Icon = @"C:\Games\Halo\logo.png";
+
+        Assert.Equal(new[] { nameof(AppRow.Icon) }, changed);
+        Assert.Equal(@"C:\Games\Halo\logo.png", row.ToExportApp().Icon);
+    }
 }

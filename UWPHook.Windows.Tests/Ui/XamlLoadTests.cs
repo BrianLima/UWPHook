@@ -1,8 +1,11 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using UWPHook.Core.Catalog;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Steam;
 using UWPHook.Presentation.Games;
@@ -219,6 +222,62 @@ public sealed class XamlLoadTests
         Assert.Equal(Assert.NotNull(windowColor), Assert.NotNull(overlayColor));
     }
 
+    // The icon column: the same columns as before, in the same order, with the icon as a thumbnail instead of two
+    // text columns (the picked file and the logo folder).
+    [Fact]
+    public void GamesWindow_Columns_AreSelectedIconNameExecutableAumid_WithOnlyTheNameEditable()
+    {
+        var (headers, iconColumn, readOnly) = UiThread.Run(() =>
+        {
+            var window = NewGamesWindow();
+            LayOut(window);
+            var columns = Assert.IsType<DataGrid>(window.FindName("listGames")).Columns;
+            return (columns.Select(column => column.Header as string).ToList(),
+                columns.Single(column => column.Header as string == "Icon").GetType(),
+                columns.Where(column => column.ReadLocalValue(DataGridColumn.IsReadOnlyProperty) is true).Select(column => column.Header as string).ToList());
+        });
+
+        Assert.Equal(new[] { "Selected", "Icon", "Name", "Executable", "Aumid" }, headers);
+        Assert.Equal(typeof(DataGridTemplateColumn), iconColumn);
+        Assert.Equal(new[] { "Icon", "Executable", "Aumid" }, readOnly);
+    }
+
+    [Fact]
+    public void GamesWindow_IconCell_ShowsTheThumbnail_WithTheLogoFolderAsItsTooltip()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "UWPHook.Windows.Tests", Guid.NewGuid().ToString("N"));
+        var png = TestImages.Write(Path.Combine(folder, "Square150x150Logo.png"), 150, 150, System.Drawing.Imaging.ImageFormat.Png);
+        try
+        {
+            var (width, tooltip) = UiThread.Run(() =>
+            {
+                var gate = new TaskCompletionSource();
+                var window = NewGamesWindow(new FakeCatalog { Gate = gate }); // the load waits, so only the row below is listed
+                var games = (GamesViewModel)window.DataContext;
+                var row = new AppRow(new XboxApp("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", folder,
+                    DateTimeOffset.UnixEpoch)) { Icon = png };
+                games.Apps.Replace([row]);
+                LayOut(window);
+                var list = Assert.IsType<DataGrid>(window.FindName("listGames"));
+                var image = Assert.Single(Descendants(list).OfType<Image>(), image => image.Name == "iconThumbnail");
+                var result = ((image.Source as BitmapSource)?.PixelWidth, Tooltip(image, list));
+                gate.SetResult();
+                return result;
+            });
+
+            Assert.Equal(IconThumbnailConverter.Size, width);
+            Assert.Equal(folder, tooltip);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    /// <summary>The nearest tooltip on <paramref name="element"/> or its ancestors, up to <paramref name="root"/>.</summary>
+    private static object? Tooltip(FrameworkElement element, FrameworkElement root) =>
+        AncestorsUpTo(root, element).Select(ancestor => ancestor.ToolTip).FirstOrDefault(tip => tip is not null);
+
     [Fact]
     public void NoWindow_LoadsMaterialDesign()
     {
@@ -243,7 +302,7 @@ public sealed class XamlLoadTests
     {
         // Already offered, so nothing opens Settings as a dialog.
         var settings = new FakeSettings(AppSettings.Defaults with { OfferedSteamGridDb = true });
-        var games = new GamesViewModel(catalog ?? new FakeCatalog(), new FakeExporter(ExportSummary.NothingSelected()), settings,
+        var games = new GamesViewModel(catalog ?? new FakeCatalog(), new FakeIconPicker(), new FakeExporter(ExportSummary.NothingSelected()), settings,
             new FakeDialogs(), new RecordingLog(), () => @"C:\Users\me\AppData\Local\UWPHook\UWPHook.exe");
         return new GamesWindow(games, NewSettingsWindow);
     }

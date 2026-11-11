@@ -1,4 +1,5 @@
 using System.Net.Http;
+using UWPHook.Core.Artwork;
 using UWPHook.Core.Diagnostics;
 using UWPHook.Core.Steam;
 
@@ -23,10 +24,10 @@ namespace UWPHook.Infrastructure
 
         /// <param name="tempRoot">Where the downloads go, one folder per app; deleted by <see cref="CleanUp"/>.</param>
         /// <param name="iconsFolder"><c>%AppData%\Briano\UWPHook\icons</c>.</param>
+        /// <param name="icons">Picks the icon in an app's logo folder: the games list's picker, so both show the same one.</param>
         /// <param name="onKeyRejected">Called once per export when SteamGridDB rejects the API key.</param>
-        /// <param name="iconIn">Picks the icon in an app's logo folder; <see cref="SquareIcons.WidestIn"/> by default.</param>
-        public SteamGridArtwork(SteamGridDbService sgdb, string tempRoot, string iconsFolder, Action onKeyRejected, ILog log,
-            Func<string, string>? iconIn = null, HttpClient? images = null)
+        public SteamGridArtwork(SteamGridDbService sgdb, string tempRoot, string iconsFolder, IIconPicker icons, Action onKeyRejected, ILog log,
+            HttpClient? images = null)
         {
             _sgdb = sgdb;
             _log = log;
@@ -34,7 +35,7 @@ namespace UWPHook.Infrastructure
             _temp = new TempGridFolder(tempRoot, log);
             _downloader = new ArtworkDownloader(sgdb, _temp, images ?? imageClient, log);
             _grids = new GridInstaller(_temp, log);
-            _icons = new IconPersister(iconsFolder, _temp, iconIn ?? (folder => SquareIcons.WidestIn(folder)), log);
+            _icons = new IconPersister(iconsFolder, _temp, icons, log);
         }
 
         /// <summary>

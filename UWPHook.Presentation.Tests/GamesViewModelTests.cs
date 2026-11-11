@@ -16,6 +16,7 @@ public sealed class GamesViewModelTests
     private static readonly XboxApp Calculator = App("Calculator", "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App", "calc.exe");
 
     private readonly FakeCatalog _catalog = new(Halo, Forza, Calculator);
+    private readonly FakeIconPicker _icons = new();
     private readonly FakeExporter _exporter = new(ExportSummary.ForUsers(1, 0, StopOutcome.NotRunning));
     private readonly FakeSettings _settings = new(AppSettings.Defaults with { Tags = "XBOX, GAME PASS" });
     private readonly FakeDialogs _dialogs = new();
@@ -25,7 +26,7 @@ public sealed class GamesViewModelTests
     private static XboxApp App(string name, string aumid, string exe) =>
         new(aumid, aumid.Split('!')[0], name, exe, @"C:\Apps\" + name, DateTimeOffset.UnixEpoch) { IconFolder = @"C:\Apps\" + name + @"\Assets" };
 
-    private GamesViewModel ViewModel() => new(_catalog, _exporter, _settings, _dialogs, _log, () =>
+    private GamesViewModel ViewModel() => new(_catalog, _icons, _exporter, _settings, _dialogs, _log, () =>
     {
         _exeLookups++;
         return UwpHookExe;
@@ -131,6 +132,95 @@ public sealed class GamesViewModelTests
         Assert.True(games.IsIdle);
         Assert.Equal(GamesViewModel.LoadedStatus, games.Status);
         Assert.Empty(games.Apps.All);
+    }
+
+    // Icons: picked after the list is shown, off the UI thread, by the same rule as the export's.
+
+    private const string HaloIcon = @"C:\Apps\Halo\Assets\Square150x150Logo.png";
+    private const string ForzaIcon = @"C:\Apps\forza Horizon\Assets\Square310x310Logo.png";
+
+    private static AppRow Row(GamesViewModel games, string name) => Assert.Single(games.Apps.All, row => row.Name == name);
+
+    [Fact]
+    public async Task Load_GivesEachRowTheIconPickedInItsLogoFolder()
+    {
+        _icons.Icons[Halo.IconFolder] = HaloIcon;
+        _icons.Icons[Forza.IconFolder] = ForzaIcon;
+
+        var games = await Loaded();
+        await games.IconsLoaded;
+
+        Assert.Equal(HaloIcon, Row(games, "Halo").Icon);
+        Assert.Equal(ForzaIcon, Row(games, "forza Horizon").Icon);
+        Assert.Null(Row(games, "Calculator").Icon);
+        Assert.Equal(new[] { Calculator.IconFolder, Forza.IconFolder, Halo.IconFolder }, _icons.Asked.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public async Task Load_ShowsTheList_BeforeTheIconsArrive()
+    {
+        _icons.Icons[Halo.IconFolder] = HaloIcon;
+        _icons.Gate = new TaskCompletionSource();
+
+        var games = await Loaded();
+
+        Assert.Equal(new[] { "Calculator", "forza Horizon", "Halo" }, Names(games.Apps.Visible));
+        Assert.True(games.IsIdle);
+        Assert.Null(Row(games, "Halo").Icon);
+
+        var changed = new List<string?>();
+        Row(games, "Halo").PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        _icons.Gate.SetResult();
+        await games.IconsLoaded;
+
+        Assert.Equal(HaloIcon, Row(games, "Halo").Icon);
+        Assert.Equal(new[] { nameof(AppRow.Icon) }, changed);
+    }
+
+    [Fact]
+    public async Task Load_Again_CancelsTheIconsOfTheFirstLoad()
+    {
+        _icons.Icons[Halo.IconFolder] = HaloIcon;
+        _icons.Gate = new TaskCompletionSource();
+        var games = await Loaded();
+        var firstRows = games.Apps.All.ToList();
+        var firstPass = games.IconsLoaded;
+
+        await games.LoadCommand.ExecuteAsync(null);
+        _icons.Gate.SetResult();
+        await firstPass;
+        await games.IconsLoaded;
+
+        Assert.All(firstRows, row => Assert.Null(row.Icon));
+        Assert.Equal(HaloIcon, Row(games, "Halo").Icon);
+    }
+
+    [Fact]
+    public async Task Load_WhenPickingAnIconThrows_LeavesThatRowWithout_AndLogsItAtDebug()
+    {
+        _icons.Icons[Forza.IconFolder] = ForzaIcon;
+        _icons.Failing.Add(Halo.IconFolder);
+
+        var games = await Loaded();
+        await games.IconsLoaded;
+
+        Assert.Null(Row(games, "Halo").Icon);
+        Assert.Equal(ForzaIcon, Row(games, "forza Horizon").Icon);
+        var logged = Assert.Single(_log.Entries, entry => entry.Exception is IOException);
+        Assert.Equal(LogLevel.Debug, logged.Level);
+        Assert.Empty(_dialogs.Errors);
+    }
+
+    [Fact]
+    public async Task Export_SendsTheIconTheListShows()
+    {
+        _icons.Icons[Halo.IconFolder] = HaloIcon;
+        var games = await LoadedWithSelected("Halo", "Calculator");
+        await games.IconsLoaded;
+
+        await games.ExportCommand.ExecuteAsync(null);
+
+        Assert.Equal(new[] { null, HaloIcon }, Assert.Single(_exporter.Requests).Apps.Select(app => app.Icon));
     }
 
     // Search and selection
@@ -289,7 +379,7 @@ public sealed class GamesViewModelTests
     public async Task Export_ShowsTheSummary_WithItsSeverity(ExportSummary summary, MessageSeverity expected)
     {
         var exporter = new FakeExporter(summary);
-        var games = new GamesViewModel(_catalog, exporter, _settings, _dialogs, _log, () => UwpHookExe);
+        var games = new GamesViewModel(_catalog, _icons, exporter, _settings, _dialogs, _log, () => UwpHookExe);
         await games.LoadCommand.ExecuteAsync(null);
 
         await games.ExportCommand.ExecuteAsync(null);

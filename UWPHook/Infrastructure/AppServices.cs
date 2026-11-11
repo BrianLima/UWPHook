@@ -36,15 +36,17 @@ namespace UWPHook.Infrastructure
         {
             var dialogs = new WpfDialogs(dispatcher);
             var steam = new SteamLibrary(new WindowsSteamRegistry(), _log);
+            // One picker for the list and the export, so the icon a game shows is the one its shortcut gets.
+            var icons = new SquareIconPicker(_log);
             var backups = new ShortcutsBackupFolder(Path.Combine(AppDataFolder, "backups"), TimeProvider.System, _log);
-            var artwork = new SteamGridArtwork(new SteamGridDbService(() => Settings.Current), TempGridFolder, Path.Combine(AppDataFolder, "icons"),
+            var artwork = new SteamGridArtwork(new SteamGridDbService(() => Settings.Current), TempGridFolder, Path.Combine(AppDataFolder, "icons"), icons,
                 () => dialogs.Show(MessageSeverity.Warning, SteamGridDbService.InvalidKeyMessage), _log);
             // One restarter for both, so an export and a removal never stop, write and start Steam at the same time.
             var restarter = NewSteamRestarter(steam);
             var exporter = new ShortcutExporter(steam, restarter, backups, artwork, new CloudStorageCollections(backups, TimeProvider.System, _log), _log);
             var remover = new ShortcutRemover(steam, restarter, backups, _log);
 
-            var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), exporter, Settings, dialogs, _log, StableExePath);
+            var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), icons, exporter, Settings, dialogs, _log, StableExePath);
             return new UWPHook.GamesWindow(games, () => new SettingsWindow(new SettingsViewModel(Settings, steam, remover, dialogs, new AppHost(), _log)));
         }
 

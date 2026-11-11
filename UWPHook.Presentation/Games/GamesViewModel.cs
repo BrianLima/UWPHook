@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using UWPHook.Core.Artwork;
 using UWPHook.Core.Catalog;
 using UWPHook.Core.Configuration;
 using UWPHook.Core.Diagnostics;
@@ -31,7 +32,7 @@ public sealed class GamesViewModel : ObservableObject
     private string status = PressLoadStatus;
     private bool includeSystemApps = true;
 
-    public GamesViewModel(IAppCatalog catalog, IShortcutExporter exporter, ISettingsService settings, IDialogService dialogs, ILog log, Func<string> uwpHookExe)
+    public GamesViewModel(IAppCatalog catalog, IIconPicker icons, IShortcutExporter exporter, ISettingsService settings, IDialogService dialogs, ILog log, Func<string> uwpHookExe)
     {
         this.catalog = catalog;
         this.exporter = exporter;
@@ -78,6 +79,9 @@ public sealed class GamesViewModel : ObservableObject
     }
 
     public bool IsIdle => !IsBusy;
+
+    /// <summary>The icon pass of the latest load (stub).</summary>
+    public Task IconsLoaded => Task.CompletedTask;
 
     private async Task LoadAsync()
     {
