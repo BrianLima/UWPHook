@@ -91,14 +91,56 @@ public sealed class CloudStorageCollectionsTests : IDisposable
     }
 
     [Fact]
-    public void AddShortcuts_WithoutACollectionsFile_IsSkipped_AndCreatesNothing()
+    // An account folder from before Steam kept this file (or one that never signed in here) is nothing to warn about.
+    public void AddShortcuts_WithoutACollectionsFile_IsNotFound_CreatesNothing_AndOnlyInforms()
     {
         var outcome = Collections().AddShortcuts(UserFolder, ["XBOX"], [Halo]);
 
-        Assert.Equal(CollectionsOutcome.Skipped, outcome);
+        Assert.Equal(CollectionsOutcome.NotFound, outcome);
         Assert.False(Directory.Exists(CloudStorage));
         Assert.Empty(Backups());
-        Assert.Single(_log.At(LogLevel.Warning));
+        Assert.Single(_log.At(LogLevel.Information));
+        Assert.Empty(_log.At(LogLevel.Warning));
+        Assert.Empty(_log.At(LogLevel.Error));
+    }
+
+    [Fact]
+    public void AddShortcuts_WithACloudStorageFolderButNoNamespaceFile_IsNotFound()
+    {
+        Seed(Path.Combine(CloudStorage, "cloud-storage-namespaces.json"), "[]");
+
+        Assert.Equal(CollectionsOutcome.NotFound, Collections().AddShortcuts(UserFolder, ["XBOX"], [Halo]));
+        Assert.Equal(new[] { "cloud-storage-namespaces.json" }, CloudStorageFiles());
+    }
+
+    // The write itself fails (here: something is in the way of the temporary file): Steam's file stays as it was.
+    [Fact]
+    public void AddShortcuts_WhenTheWriteFails_IsSkipped_AndLeavesTheFileAlone()
+    {
+        Seed(Namespace(1), Fixture());
+        Directory.CreateDirectory(Namespace(1) + ".uwphook.tmp");
+
+        var outcome = Collections().AddShortcuts(UserFolder, ["XBOX"], [Halo]);
+
+        Assert.Equal(CollectionsOutcome.Skipped, outcome);
+        Assert.Equal(Fixture(), File.ReadAllBytes(Namespace(1)));
+        Assert.Single(_log.At(LogLevel.Error));
+        // The copy from before the attempt is there all the same.
+        Assert.Equal(Fixture(), File.ReadAllBytes(Assert.Single(Backups())));
+    }
+
+    // UWPHook's own entry is there but is not a record it can rewrite: a second item with the same key must not be added.
+    [Fact]
+    public void AddShortcuts_WhenUwpHooksOwnEntryCannotBeRead_IsSkipped_AndLeavesTheFileAlone()
+    {
+        var content = "[[\"user-collections." + CollectionsFile.ManagedIdFor("XBOX") + "\",123]]";
+        Seed(Namespace(1), content);
+
+        var outcome = Collections().AddShortcuts(UserFolder, ["XBOX"], [Halo]);
+
+        Assert.Equal(CollectionsOutcome.Skipped, outcome);
+        Assert.Equal(content, File.ReadAllText(Namespace(1)));
+        Assert.Empty(Backups());
     }
 
     [Theory]

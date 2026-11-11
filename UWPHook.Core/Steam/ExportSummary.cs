@@ -78,6 +78,15 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     /// </summary>
     public IReadOnlyList<string> CollectionsSkippedUsers { get; init; } = [];
 
+    /// <summary>
+    /// The Steam accounts whose shortcuts were written but that have no collections file, so there was nothing to
+    /// add the games to. Common for an account that has not signed in for a long time: a note, not a warning.
+    /// </summary>
+    public IReadOnlyList<string> CollectionsMissingUsers { get; init; } = [];
+
+    /// <summary>The same outcome, noting the accounts that have no Steam collections file (the shortcuts were written).</summary>
+    public ExportSummary WithoutCollections(IReadOnlyList<string> users) => this;
+
     /// <summary>The same outcome, noting the accounts whose collections could not be updated (the shortcuts were written).</summary>
     public ExportSummary WithCollectionsSkipped(IReadOnlyList<string> users) => this with { CollectionsSkippedUsers = users };
 

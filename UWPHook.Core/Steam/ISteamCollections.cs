@@ -9,7 +9,13 @@ public enum CollectionsOutcome
     /// <summary>The shortcuts were added, after a backup of the file.</summary>
     Updated,
 
-    /// <summary>The account's collections could not be found, read or written. Nothing was changed; the log says why.</summary>
+    /// <summary>
+    /// The account has no collections file (it never signed in on a Steam client that keeps one). Nothing was
+    /// changed. Expected for an old account folder, so it is worth a note, not a warning.
+    /// </summary>
+    NotFound,
+
+    /// <summary>The account's collections could not be read or written. Nothing was changed; the log says why.</summary>
     Skipped,
 }
 

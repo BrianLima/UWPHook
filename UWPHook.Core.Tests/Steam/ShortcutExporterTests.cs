@@ -490,6 +490,33 @@ public sealed class ShortcutExporterTests : IDisposable
     }
 
     [Fact]
+    public async Task Export_WhenAnAccountHasNoCollectionsFile_SaysSo_WithoutWarning()
+    {
+        _collections = new FakeCollections { MissingFor = Bob.FolderIn(Install) };
+
+        var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { "222" }, summary.CollectionsMissingUsers);
+        Assert.Empty(summary.CollectionsSkippedUsers);
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+    }
+
+    // The user answered No: Steam keeps running, and its collections file is as off-limits as shortcuts.vdf.
+    [Fact]
+    public async Task Export_WhenSteamIsLeftRunning_DoesNotTouchTheCollections()
+    {
+        var collections = new FakeCollections();
+        _collections = collections;
+        var request = Request(Halo) with { MayCloseSteam = () => false };
+
+        var summary = await Exporter(new FakeSteamProcess(running: true), Alice).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.SteamLeftOpen, summary.Status);
+        Assert.Empty(collections.Calls);
+    }
+
+    [Fact]
     public async Task Export_DoesNotTouchTheCollections_OfAnAccountWhoseShortcutsFailed()
     {
         var collections = new FakeCollections();
@@ -523,10 +550,12 @@ public sealed class ShortcutExporterTests : IDisposable
     {
         public List<(string UserFolder, IReadOnlyList<string> Names, IReadOnlyCollection<uint> AppIds)> Calls { get; } = [];
         public string? SkipFor { get; set; }
+        public string? MissingFor { get; set; }
 
         public CollectionsOutcome AddShortcuts(string userFolder, IReadOnlyList<string> collectionNames, IReadOnlyCollection<uint> appIds)
         {
             Calls.Add((userFolder, collectionNames, appIds));
+            if (userFolder == MissingFor) return CollectionsOutcome.NotFound;
             return userFolder == SkipFor ? CollectionsOutcome.Skipped : CollectionsOutcome.Updated;
         }
     }

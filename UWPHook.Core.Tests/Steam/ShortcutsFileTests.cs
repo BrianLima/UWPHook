@@ -234,6 +234,22 @@ public class ShortcutsFileTests
             BinaryVdf.Parse(Save(file))["0"]["tags"].Flatten());
     }
 
+    // Collections are matched ignoring case, and so are tags: "XBOX" in Settings after "Xbox" is one tag, spelled as it was.
+    [Fact]
+    public void Apply_DoesNotAddATagTheEntryHasInAnotherCase()
+    {
+        var file = Load(BinaryVdf.Document("shortcuts", root => root.Object("0", entry => entry
+            .Int("appid", -1111)
+            .String("AppName", "Old Name")
+            .String("Exe", UwpHookExe)
+            .String("LaunchOptions", "Pfn_abc!App old.exe")
+            .Object("tags", tags => tags.String("0", "XBOX").String("1", "uwp")))));
+
+        file.Apply(new MergeResult([new MergedShortcut(-1111, Spec, 0)]));
+
+        Assert.Equal(new[] { "0=XBOX (String)", "1=uwp (String)" }, BinaryVdf.Parse(Save(file))["0"]["tags"].Flatten());
+    }
+
     [Fact]
     public void Apply_UpdatesEntryMissingFields_ByAddingThem()
     {

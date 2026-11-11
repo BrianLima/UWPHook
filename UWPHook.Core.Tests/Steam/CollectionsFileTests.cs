@@ -256,6 +256,44 @@ public class CollectionsFileTests
         Assert.Equal(Now.ToUnixTimeSeconds(), revived.Timestamp);
     }
 
+    // The user renamed a collection UWPHook made: it is still UWPHook's (same key), so the games go there,
+    // under the user's name for it, and no second item with that key is added.
+    [Fact]
+    public void Add_ForACollectionOfOursThatWasRenamed_UsesIt_AndKeepsTheNewName()
+    {
+        var original = FileWith((CollectionsFile.ManagedIdFor("XBOX"), "Console", [7]));
+
+        var item = Assert.Single(CollectionsJson.Read(Added(original, ["XBOX"], Halo)));
+
+        Assert.Equal("Console", item.Name);
+        Assert.Equal(new uint[] { 7, Halo }, item.Added);
+    }
+
+    // UWPHook's own key on an item it cannot rewrite (not a record, or a record with a property twice):
+    // appending a second item with the same key would be worse than doing nothing.
+    [Theory]
+    [InlineData("123")]
+    [InlineData("\"text\"")]
+    [InlineData("{\"key\":\"a\",\"key\":\"b\",\"is_deleted\":true}")]
+    public void Add_WhenOurOwnEntryCannotBeRewritten_Throws(string record)
+    {
+        var file = CollectionsFile.Parse(Utf8("[[\"user-collections." + CollectionsFile.ManagedIdFor("XBOX") + "\"," + record + "]]"));
+
+        Assert.ThrowsAny<JsonException>(() => file.Add(["XBOX"], [Halo], Now));
+    }
+
+    // Two collections with the same name: the first in the file gets the games.
+    [Fact]
+    public void Add_WhenTwoCollectionsHaveTheName_UsesTheFirst()
+    {
+        var original = FileWith(("uc-aaaaaaaaaaaa", "XBOX", []), ("uc-bbbbbbbbbbbb", "XBOX", []));
+
+        var items = CollectionsJson.Read(Added(original, ["XBOX"], Halo));
+
+        Assert.Equal(new[] { Halo }, items[0].Added);
+        Assert.Empty(items[1].Added);
+    }
+
     [Fact]
     public void Add_NeverTouchesSomeoneElsesDeletedCollection()
     {
@@ -287,7 +325,8 @@ public class CollectionsFileTests
 
         var closing = text.LastIndexOf(']');
         Assert.StartsWith(text[..closing].TrimEnd(), Text(changed), StringComparison.Ordinal);
-        Assert.EndsWith("]\r\n", Text(changed), StringComparison.Ordinal);
+        // The new item follows the last one directly; the line break before the closing bracket stays.
+        Assert.EndsWith("}]\r\n]\r\n", Text(changed), StringComparison.Ordinal);
         Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, changed[..3]);
         Assert.Equal(new[] { null, "Other", "XBOX" }, CollectionsJson.Read(changed[3..]).Select(item => item.Name));
     }

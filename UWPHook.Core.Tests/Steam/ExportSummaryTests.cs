@@ -94,6 +94,27 @@ public class ExportSummaryTests
         Assert.EndsWith("Steam has been restarted.", summary.Message);
     }
 
+    // An account without a collections file (an old account folder) is common: said, but not as a warning.
+    [Fact]
+    public void WithoutCollections_AddsANoteNamingTheUsers_AsInformation()
+    {
+        var summary = ExportSummary.ForUsers(written: 2, failed: 0, StopOutcome.Stopped).WithoutCollections(["456"]);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+        Assert.StartsWith("Your apps were successfully exported!", summary.Message);
+        Assert.Contains("Steam account(s) 456 have no Steam collections yet, so the games were not added to collections there.", summary.Message);
+        Assert.EndsWith("Steam has been restarted.", summary.Message);
+    }
+
+    [Fact]
+    public void WithoutCollections_WithNone_ChangesNothing()
+    {
+        var summary = ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning);
+
+        Assert.Equal(summary.Message, summary.WithoutCollections([]).Message);
+    }
+
     [Fact]
     public void WithCollectionsSkipped_WithNoneSkipped_ChangesNothing()
     {
