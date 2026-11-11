@@ -12,7 +12,7 @@ public sealed record ShortcutSpec(
     /// <summary>
     /// A shortcut that launches <paramref name="aumid"/> through UWPHook, following the launch contract
     /// <c>Exe = "&lt;UWPHook.exe&gt;"</c>, <c>StartDir = "&lt;its dir&gt;"</c>, <c>LaunchOptions = &lt;AUMID&gt; &lt;executable&gt;</c>
-    /// (the executable in quotes when it contains spaces).
+    /// (the executable in quotes when it contains spaces), or the AUMID alone when the executable is not known.
     /// </summary>
     public static ShortcutSpec ForApp(
         string appName,
@@ -25,7 +25,7 @@ public sealed record ShortcutSpec(
             appName,
             ShortcutPaths.Quote(uwpHookExePath),
             ShortcutPaths.Quote(ShortcutPaths.Directory(ShortcutPaths.Unquote(uwpHookExePath))),
-            $"{aumid} {LaunchArgument(executable)}",
+            string.IsNullOrWhiteSpace(executable) ? aumid : $"{aumid} {LaunchArgument(executable)}",
             icon,
             tags);
 

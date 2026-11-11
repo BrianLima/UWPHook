@@ -1,6 +1,7 @@
 using System.IO;
 using Serilog;
 using UWPHook.Core.Catalog;
+using UWPHook.Core.Diagnostics;
 using Windows.ApplicationModel;
 using Windows.Management.Deployment;
 
@@ -10,55 +11,36 @@ namespace UWPHook.Infrastructure
     /// Lists the current user's installed apps through the WinRT <see cref="PackageManager"/>.
     /// This class only reads Windows; deciding what becomes an app is <see cref="CatalogEntryBuilder"/>'s job.
     /// </summary>
-    internal sealed class PackageManagerCatalog(WindowsPackageLocations locations) : IAppCatalog
+    internal sealed class PackageManagerCatalog(WindowsPackageLocations locations, ILog? log = null) : IAppCatalog
     {
+        private readonly ILog _log = log ?? SerilogLog.Instance;
+
         public async Task<IReadOnlyList<XboxApp>> GetInstalledAppsAsync(bool includeSystem, CancellationToken ct)
         {
             var packages = new PackageManager().FindPackagesForUser(string.Empty).ToList();
-            var appsByPackage = new IReadOnlyList<XboxApp>[packages.Count];
+            var reads = new PackageRead[packages.Count];
 
             await Parallel.ForEachAsync(Enumerable.Range(0, packages.Count), ct, async (index, token) =>
-                appsByPackage[index] = await AppsOf(packages[index], includeSystem, token));
+                reads[index] = await PackageRead.AttemptAsync(FamilyNameOf(packages[index]), () => AppsOf(packages[index], includeSystem, token), _log));
 
-            return appsByPackage
-                .SelectMany(apps => apps)
+            var apps = reads
+                .SelectMany(read => read.Apps)
                 .DistinctBy(app => app.Aumid, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+
+            CatalogSummary.Of(reads, apps).WriteTo(_log);
+            return apps;
         }
 
-        /// <summary>One broken package must not break the whole list, so its errors are logged and it is skipped.</summary>
+        /// <summary>The package's apps; it throws when the package can't be read (<see cref="PackageRead"/> skips it then).</summary>
         private async Task<IReadOnlyList<XboxApp>> AppsOf(Package package, bool includeSystem, CancellationToken ct)
         {
-            try
-            {
-                if (!IsCandidate(package, includeSystem))
-                    return [];
-
-                var snapshot = await SnapshotOf(package, ct);
-                if (snapshot is null)
-                    return [];
-
-                var apps = CatalogEntryBuilder.Build(snapshot, DiskFolderFiles.Instance).ToList();
-                if (apps.Count == 0)
-                    LogNoAppsBuilt(snapshot);
-
-                return apps;
-            }
-            catch (Exception e) when (e is not OperationCanceledException)
-            {
-                Log.Warning(e, "Skipping package {Package}: it could not be read", FullNameOf(package));
+            if (!IsCandidate(package, includeSystem))
                 return [];
-            }
-        }
 
-        // Helps diagnose "my game is missing" reports: it has Start-menu entries, but none became an app.
-        private static void LogNoAppsBuilt(PackageSnapshot snapshot) =>
-            Log.Debug(
-                "Package {FamilyName} has {EntryCount} app list entries but yielded no apps (manifest readable: {ManifestReadable}, MicrosoftGame.config: {HasGameConfig})",
-                snapshot.FamilyName,
-                snapshot.Entries.Count,
-                snapshot.ManifestXml is not null && AppxManifest.ReadApplications(snapshot.ManifestXml).Count > 0,
-                snapshot.MicrosoftGameConfigXml is not null);
+            var snapshot = await SnapshotOf(package, ct);
+            return snapshot is null ? [] : CatalogEntryBuilder.Build(snapshot, DiskFolderFiles.Instance, _log);
+        }
 
         private static bool IsCandidate(Package package, bool includeSystem) =>
             !package.IsFramework
@@ -78,6 +60,7 @@ namespace UWPHook.Infrastructure
                 return null;
 
             var folders = locations.Of(package);
+            var files = new PackageFileReader(DiskTextFiles.Instance, _log);
             return new PackageSnapshot(
                 package.Id.FamilyName,
                 package.Id.Name,
@@ -85,8 +68,8 @@ namespace UWPHook.Infrastructure
                 folders.Preferred,
                 package.InstalledDate,
                 entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
-                await ReadFirstExisting(folders, "AppxManifest.xml", ct),
-                await ReadFirstExisting(folders, "MicrosoftGame.config", ct),
+                await files.ReadFirstAsync(package.Id.FamilyName, folders.All, "AppxManifest.xml", ct),
+                await files.ReadFirstAsync(package.Id.FamilyName, folders.All, "MicrosoftGame.config", ct),
                 folders.All);
         }
 
@@ -104,10 +87,16 @@ namespace UWPHook.Infrastructure
             }
         }
 
-        private static async Task<string?> ReadFirstExisting(PackageLocations folders, string fileName, CancellationToken ct)
+        private static string FamilyNameOf(Package package)
         {
-            var path = folders.All.Select(folder => Path.Combine(folder, fileName)).FirstOrDefault(File.Exists);
-            return path is null ? null : await File.ReadAllTextAsync(path, ct);
+            try
+            {
+                return package.Id.FamilyName;
+            }
+            catch
+            {
+                return "(unknown package)";
+            }
         }
 
         private static string FullNameOf(Package package)

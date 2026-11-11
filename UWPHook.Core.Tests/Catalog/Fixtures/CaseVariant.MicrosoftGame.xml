@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Element and attribute names in another case, a prefixed Name attribute, and a DOCTYPE. -->
-<!DOCTYPE game>
-<game configVersion="1" xmlns:gc="http://schemas.example.com/gdk/MicrosoftGame">
-  <executableList>
-    <EXECUTABLE gc:name="Bin\Wasteland.exe" TargetDeviceFamily="PC" Id="Game" />
-  </executableList>
-</game>

@@ -81,6 +81,22 @@ public class CatalogEntryBuilderTests
         Assert.Equal(Install, app.IconFolder);
     }
 
+    // Regression: Fallout 76's identifiers, as Brian's PC reports them; 2.15 lists it with Project76_GamePass.exe.
+    [Fact]
+    public void Build_ListsFallout76WithTheExecutableFromItsConfig()
+    {
+        const string family = "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc";
+        const string installed = @"C:\Program Files\WindowsApps\BethesdaSoftworks.Fallout76-PC_1.0.173.0_x64__3275kfvn8vcwc";
+        var package = new PackageSnapshot(family, "BethesdaSoftworks.Fallout76-PC", "Fallout 76", installed, Installed,
+            [Entry(family + "!Fallout76", "Fallout 76")],
+            Fixture.Read("Fallout76.AppxManifest.xml"), Fixture.Read("Fallout76.MicrosoftGame.xml"));
+
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(new XboxApp(family + "!Fallout76", family, "Fallout 76", "Project76_GamePass.exe", installed, Installed), app);
+        Assert.Empty(_log.Entries);
+    }
+
     [Fact]
     public void Build_TakesTheExecutableFromANamespacedConfig()
     {

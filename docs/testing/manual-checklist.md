@@ -177,6 +177,12 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] While "Remove UWPHook shortcuts" is running from Settings, try to close the main window from the taskbar: the app must stay open until the removal ends and Steam is started again. If it closes, report it (the main window does not yet check a removal in progress).
 - [ ] After deleting 2.14's `UWPHook` Start menu folder (upgrade step 3), 2.15's own Start menu entry is still there and starts 2.15.
 
+## Missing apps
+- [ ] Fallout 76 (if installed): it is listed as "Fallout 76" with Executable `Project76_GamePass.exe`; export it and launch it from Steam: it starts and Steam shows "Playing" until the game exits.
+- [ ] One other GDK game (installed to an `XboxGames` folder, manifest executable `GameLaunchHelper.exe`) and one plain UWP app (e.g. Calculator, with "Show system apps" ticked) are listed with their executables, and launch from Steam.
+- [ ] In Settings set the Log level to DEBUG, press Load: `application.log` has one "App list loaded: N packages read, N apps listed (N without an executable), N packages skipped" line per load, and any "Package <family name>: ..." warnings name the package and the reason. Note the counts here.
+- [ ] If any app is listed with an empty Executable cell: the cell is blank (not "null"); export it, and in `shortcuts.vdf` (or Steam's shortcut properties) its launch options are the AUMID alone, with no trailing space; launching it from Steam starts the app and Steam's "Playing" ends within the grace period after it closes.
+
 ## Manual-test fix wave 1
 - [ ] Finding 1: Settings at 100%, 125% and 150% display scaling, at its default size and dragged to its minimum width: no label, combo box value ("5 seconds", "Any"), tags or API key box is cut off or overlaps another control; with two or more Steam accounts each is on its own row as `PersonaName (AccountName)`, all ticked by default; the SteamGridDB key shows as dots until the eye button is pressed, and a key typed in either state is the one saved.
 - [ ] Finding 2: in the Windows dark theme, toggle "Show system apps" and press Load: the games list dims under the dark background with a progress bar and never flashes white; the same during an export.
