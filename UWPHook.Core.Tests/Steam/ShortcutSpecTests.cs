@@ -46,13 +46,16 @@ public class ShortcutSpecTests
     public void ForApp_LeavesAnExecutableWithoutSpacesUnquoted() =>
         Assert.EndsWith(" halo.exe", Spec().LaunchOptions);
 
-    // An app whose executable UWPHook couldn't work out: GameSession watches the whole package, so the AUMID is enough.
-    [Fact]
-    public void ForApp_WithNoExecutable_LaunchOptionsAreTheAumidAlone()
+    // An app whose executable UWPHook couldn't work out: GameSession watches the whole package, so the executable is
+    // only a placeholder, kept so that what follows it (arguments a user adds in Steam) stays the extra arguments.
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ForApp_WithNoExecutable_WritesAnEmptyQuotedPlaceholder(string executable)
     {
-        var spec = ShortcutSpec.ForApp("Fallout 76", "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76", "", UwpHookExe, "", []);
+        var spec = ShortcutSpec.ForApp("Fallout 76", "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76", executable, UwpHookExe, "", []);
 
-        Assert.Equal("BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76", spec.LaunchOptions);
+        Assert.Equal("BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76 \"\"", spec.LaunchOptions);
         Assert.Equal("BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76", spec.Aumid);
     }
 }

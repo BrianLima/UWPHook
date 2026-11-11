@@ -15,7 +15,8 @@ public class CatalogSummaryTests
     [Fact]
     public void Of_CountsPackagesAndApps()
     {
-        PackageRead[] packages = [new([Halo], false), new([Fallout], false), new([], false), new([], true)];
+        // Frameworks, resource packages and hidden system apps are not candidates: they are not counted as read.
+        PackageRead[] packages = [new([Halo], false), new([Fallout], false), new([], false), new([], true), PackageRead.NotACandidate, PackageRead.NotACandidate];
 
         var summary = CatalogSummary.Of(packages, [Halo, Fallout]);
 

@@ -41,6 +41,22 @@ public class ShortcutMergerTests
         Assert.Same(spec, merged.Spec);
     }
 
+    // A shortcut written with the AUMID alone (no executable) is updated in place, not duplicated.
+    [Fact]
+    public void Merge_UpdatesAnAumidOnlyEntryInPlace()
+    {
+        var existing = new ExistingShortcut(-456, "Game", "\"C:\\x y\\UWPHook.exe\"", Aumid);
+        var spec = ShortcutSpec.ForApp("Game", Aumid, "", UwpHookExe, "icon.png", ["UWP"]);
+
+        var result = ShortcutMerger.Merge([existing], [spec]);
+
+        var merged = Assert.Single(result.Shortcuts);
+        Assert.Equal(-456, merged.AppId);
+        Assert.Equal(0, merged.ExistingIndex);
+        Assert.Same(spec, merged.Spec);
+        Assert.Equal(Aumid + " \"\"", merged.Spec!.LaunchOptions);
+    }
+
     [Fact]
     public void Merge_LegacyEntryWithoutAppId_GetsSteamDerivedId()
     {

@@ -65,6 +65,28 @@ public class PackageFileReaderTests
         Assert.Single(_log.At(LogLevel.Warning));
     }
 
+    [Theory]
+    [InlineData(typeof(IOException))]
+    [InlineData(typeof(UnauthorizedAccessException))]
+    [InlineData(typeof(System.Security.SecurityException))]
+    public async Task ReadFirst_TreatsEveryKindOfReadFailureAsMissing(Type failure)
+    {
+        _files.Add(Installed + @"\MicrosoftGame.config", (Exception)Activator.CreateInstance(failure)!);
+
+        Assert.Null(await Read());
+        Assert.Single(_log.At(LogLevel.Warning));
+    }
+
+    // Only I/O failures are expected here; anything else is a bug and is not hidden.
+    [Fact]
+    public async Task ReadFirst_LetsOtherExceptionsThrough()
+    {
+        _files.Add(Installed + @"\MicrosoftGame.config", new InvalidOperationException("bug"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Read());
+        Assert.Empty(_log.Entries);
+    }
+
     [Fact]
     public async Task ReadFirst_LetsCancellationThrough()
     {

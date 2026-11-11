@@ -11,7 +11,9 @@ public sealed record PackageRead(IReadOnlyList<XboxApp> Apps, bool Skipped)
     /// Runs <paramref name="read"/>. One broken package must not break the whole list, so when it throws the package
     /// is skipped and the reason is logged at Warning with its family name. Cancellation is let through.
     /// </summary>
-    public static async Task<PackageRead> AttemptAsync(string familyName, Func<Task<IReadOnlyList<XboxApp>>> read, ILog log)
+    public static PackageRead NotACandidate { get; } = new([], Skipped: false);
+
+    public static async Task<PackageRead> AttemptAsync(string familyName, Func<bool> isCandidate, Func<Task<IReadOnlyList<XboxApp>>> read, ILog log)
     {
         try
         {

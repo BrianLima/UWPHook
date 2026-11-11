@@ -15,7 +15,7 @@ public class PackageReadTests
     [Fact]
     public async Task Attempt_ReturnsTheAppsRead()
     {
-        var read = await PackageRead.AttemptAsync(Family, () => Task.FromResult<IReadOnlyList<XboxApp>>([Fallout]), _log);
+        var read = await PackageRead.AttemptAsync(Family, () => true, () => Task.FromResult<IReadOnlyList<XboxApp>>([Fallout]), _log);
 
         Assert.Equal([Fallout], read.Apps);
         Assert.False(read.Skipped);
@@ -25,7 +25,7 @@ public class PackageReadTests
     [Fact]
     public async Task Attempt_SkipsAPackageThatThrows_AndWarnsWithItsFamilyName()
     {
-        var read = await PackageRead.AttemptAsync(Family, () => throw new InvalidOperationException("boom"), _log);
+        var read = await PackageRead.AttemptAsync(Family, () => true, () => throw new InvalidOperationException("boom"), _log);
 
         Assert.Empty(read.Apps);
         Assert.True(read.Skipped);
@@ -35,7 +35,25 @@ public class PackageReadTests
     }
 
     [Fact]
+    public async Task Attempt_DoesNotReadAPackageThatIsNotACandidate()
+    {
+        var read = await PackageRead.AttemptAsync(Family, () => false, () => throw new InvalidOperationException("read"), _log);
+
+        Assert.Same(PackageRead.NotACandidate, read);
+        Assert.Empty(_log.Entries);
+    }
+
+    [Fact]
+    public async Task Attempt_SkipsAPackageWhoseCandidacyCannotBeTold()
+    {
+        var read = await PackageRead.AttemptAsync(Family, () => throw new InvalidOperationException("no identity"), () => Task.FromResult<IReadOnlyList<XboxApp>>([Fallout]), _log);
+
+        Assert.True(read.Skipped);
+        Assert.Single(_log.At(LogLevel.Warning));
+    }
+
+    [Fact]
     public async Task Attempt_LetsCancellationThrough() =>
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            PackageRead.AttemptAsync(Family, () => throw new OperationCanceledException(), _log));
+            PackageRead.AttemptAsync(Family, () => true, () => throw new OperationCanceledException(), _log));
 }

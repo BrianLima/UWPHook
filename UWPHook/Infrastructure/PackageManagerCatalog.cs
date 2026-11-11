@@ -21,7 +21,7 @@ namespace UWPHook.Infrastructure
             var reads = new PackageRead[packages.Count];
 
             await Parallel.ForEachAsync(Enumerable.Range(0, packages.Count), ct, async (index, token) =>
-                reads[index] = await PackageRead.AttemptAsync(FamilyNameOf(packages[index]), () => AppsOf(packages[index], includeSystem, token), _log));
+                reads[index] = await PackageRead.AttemptAsync(FamilyNameOf(packages[index]), () => true, () => AppsOf(packages[index], includeSystem, token), _log));
 
             var apps = reads
                 .SelectMany(read => read.Apps)
