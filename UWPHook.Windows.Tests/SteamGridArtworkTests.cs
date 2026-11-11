@@ -6,7 +6,7 @@ using UWPHook.Core.Steam;
 using UWPHook.Core.Tests.Artwork.SteamGridDb;
 using UWPHook.Core.Tests.Diagnostics;
 using UWPHook.Infrastructure;
-using UWPHook.Presentation.Tests;
+using FakeIconPicker = UWPHook.Presentation.Tests.FakeIconPicker;
 using Xunit;
 
 namespace UWPHook.Windows.Tests;
