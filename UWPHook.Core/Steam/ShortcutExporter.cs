@@ -6,13 +6,15 @@ namespace UWPHook.Core.Steam;
 /// Exports the selected apps to every Steam account. Everything that can stop the export (nothing selected,
 /// no Steam, no account) is checked before Steam is touched; the artwork and icons are prepared once; then, if the
 /// user lets UWPHook close a running Steam, each account's shortcuts.vdf is backed up, merged and saved, and its
-/// artwork copied, while Steam is closed (M7).
+/// artwork copied, while Steam is closed (M7). The Steam client no longer reads a shortcut's tags, so in that same
+/// window the shortcuts are also added to the account's collections named after the tags.
 /// </summary>
 public sealed class ShortcutExporter(
     ISteamLocator steam,
     SteamRestarter restarter,
     ShortcutsBackupFolder backups,
     IArtworkInstaller artwork,
+    ISteamCollections collections,
     ILog log) : IShortcutExporter
 {
     /// <summary>What really happened; see <see cref="ExportSummary"/>. The artwork is cleaned up whatever the outcome.</summary>
@@ -61,7 +63,7 @@ public sealed class ShortcutExporter(
         AccountWrites? writes = null;
         var stopped = await restarter.WhileStoppedAsync(() =>
         {
-            writes = WriteEveryAccount(folders, wanted);
+            writes = WriteEveryAccount(folders, wanted, tags);
             return Task.CompletedTask;
         }, request.MayCloseSteam, ct).ConfigureAwait(false);
 
@@ -74,7 +76,9 @@ public sealed class ShortcutExporter(
         // Not running or stopped: the write ran.
         return ExportSummary.ForUsers(writes!.Written, writes.Failed, stopped)
             .WithArtworkDownloadFailures(artworkFailed)
-            .WithArtworkFailures(writes.ArtworkFailed);
+            .WithArtworkFailures(writes.ArtworkFailed)
+            .WithCollectionsSkipped(writes.CollectionsSkipped)
+            .WithoutCollections(writes.CollectionsMissing);
     }
 
     /// <summary>
@@ -94,10 +98,19 @@ public sealed class ShortcutExporter(
         }
     }
 
-    private sealed record AccountWrites(int Written, int Failed, IReadOnlyList<string> ArtworkFailed);
+    private sealed record AccountWrites(
+        int Written,
+        int Failed,
+        IReadOnlyList<string> ArtworkFailed,
+        IReadOnlyList<string> CollectionsSkipped,
+        IReadOnlyList<string> CollectionsMissing);
 
-    /// <summary>Writes the shortcuts to each account, then copies the artwork to the ones that were written.</summary>
-    private AccountWrites WriteEveryAccount(IReadOnlyList<string> folders, IReadOnlyList<ShortcutSpec> wanted)
+    /// <summary>
+    /// Writes the shortcuts to each account, then, for the ones that were written, adds them to the collections
+    /// named after the tags and copies the artwork.
+    /// </summary>
+    private AccountWrites WriteEveryAccount(
+        IReadOnlyList<string> folders, IReadOnlyList<ShortcutSpec> wanted, IReadOnlyList<string> tags)
     {
         var gridIdsByFolder = new List<(string Folder, IReadOnlyDictionary<string, uint> GridIds)>();
         foreach (var folder in folders)
@@ -121,7 +134,21 @@ public sealed class ShortcutExporter(
             .Select(account => Path.GetFileName(account.Folder))
             .ToList();
 
-        return new AccountWrites(gridIdsByFolder.Count, folders.Count - gridIdsByFolder.Count, artworkFailed);
+        var collectionOutcomes = gridIdsByFolder
+            .Select(account => (
+                User: Path.GetFileName(account.Folder),
+                Outcome: collections.AddShortcuts(account.Folder, tags, [.. account.GridIds.Values])))
+            .ToList();
+
+        return new AccountWrites(
+            gridIdsByFolder.Count,
+            folders.Count - gridIdsByFolder.Count,
+            artworkFailed,
+            UsersWith(CollectionsOutcome.Skipped),
+            UsersWith(CollectionsOutcome.NotFound));
+
+        List<string> UsersWith(CollectionsOutcome outcome) =>
+            [.. collectionOutcomes.Where(account => account.Outcome == outcome).Select(account => account.User)];
     }
 
     /// <summary>The shortcuts are already written, so failed artwork is a note in the summary (R33), not a failed export.</summary>

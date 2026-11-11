@@ -15,6 +15,7 @@ public sealed class ShortcutExporterTests : IDisposable
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 8, 12, 0, 0, TimeSpan.Zero));
     private readonly RecordingLog _log = new();
     private readonly FakeArtwork _artwork = new();
+    private ISteamCollections _collections = new FakeCollections();
 
     private static readonly ExportApp Halo = new("Halo", "Microsoft.Halo_8wekyb3d8bbwe!App", "MCC/Binaries/halo.exe", @"C:\Apps\halo.png");
     private static readonly ExportApp Forza = new("Forza", "Microsoft.Forza_8wekyb3d8bbwe!App", "forza.exe", "");
@@ -41,7 +42,7 @@ public sealed class ShortcutExporterTests : IDisposable
         // A zero timeout: a Steam that doesn't exit when asked is "still running" at once.
         var restarter = new SteamRestarter(steam, _time, timeout: TimeSpan.Zero, poll: TimeSpan.FromMilliseconds(500));
         return new ShortcutExporter(
-            new FakeSteamLocator(install, users), restarter, new ShortcutsBackupFolder(BackupFolder, _time, _log), _artwork, _log);
+            new FakeSteamLocator(install, users), restarter, new ShortcutsBackupFolder(BackupFolder, _time, _log), _artwork, _collections, _log);
     }
 
     private ShortcutExporter Exporter(ISteamProcess steam, params SteamUser[] users) => Exporter(steam, Install, users);
@@ -455,6 +456,108 @@ public sealed class ShortcutExporterTests : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(() => Exporter(steam, Alice).ExportAsync(Request(Halo), TestContext.Current.CancellationToken));
 
         Assert.Equal(1, _artwork.CleanUps);
+    }
+
+    // The Steam client reads collections, not a shortcut's tags: the written shortcuts go into the collections too.
+    [Fact]
+    public async Task Export_AddsTheWrittenShortcuts_ToTheCollectionsNamedAfterTheTags_OfEachAccount()
+    {
+        var collections = new FakeCollections();
+        _collections = collections;
+
+        await Exporter(NotRunning(), Alice, Bob).ExportAsync(Request(" READY TO PLAY ,XBOX", Halo, Forza), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { Alice.FolderIn(Install), Bob.FolderIn(Install) }, collections.Calls.Select(call => call.UserFolder));
+        var alice = collections.Calls[0];
+        Assert.Equal(new[] { "READY TO PLAY", "XBOX" }, alice.Names);
+        var written = Written(Alice).Children.Select(shortcut => unchecked((uint)(int)shortcut["appid"].Value));
+        Assert.Equal(written.Order(), alice.AppIds.Order());
+        Assert.Equal(2, alice.AppIds.Count);
+    }
+
+    [Fact]
+    public async Task Export_WhenAnAccountsCollectionsWereSkipped_StillSucceeds_AndSaysSo()
+    {
+        _collections = new FakeCollections { SkipFor = Bob.FolderIn(Install) };
+
+        var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(2, summary.UsersWritten);
+        Assert.Equal(new[] { "222" }, summary.CollectionsSkippedUsers);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.Single(Written(Bob).Children);
+    }
+
+    [Fact]
+    public async Task Export_WhenAnAccountHasNoCollectionsFile_SaysSo_WithoutWarning()
+    {
+        _collections = new FakeCollections { MissingFor = Bob.FolderIn(Install) };
+
+        var summary = await Exporter(NotRunning(), Alice, Bob).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { "222" }, summary.CollectionsMissingUsers);
+        Assert.Empty(summary.CollectionsSkippedUsers);
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+    }
+
+    // The user answered No: Steam keeps running, and its collections file is as off-limits as shortcuts.vdf.
+    [Fact]
+    public async Task Export_WhenSteamIsLeftRunning_DoesNotTouchTheCollections()
+    {
+        var collections = new FakeCollections();
+        _collections = collections;
+        var request = Request(Halo) with { MayCloseSteam = () => false };
+
+        var summary = await Exporter(new FakeSteamProcess(running: true), Alice).ExportAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.SteamLeftOpen, summary.Status);
+        Assert.Empty(collections.Calls);
+    }
+
+    [Fact]
+    public async Task Export_DoesNotTouchTheCollections_OfAnAccountWhoseShortcutsFailed()
+    {
+        var collections = new FakeCollections();
+        _collections = collections;
+        Directory.CreateDirectory(Bob.FolderIn(Install));
+        Corrupt(Bob);
+
+        await Exporter(NotRunning(), Alice, Bob).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { Alice.FolderIn(Install) }, collections.Calls.Select(call => call.UserFolder));
+    }
+
+    // The whole way, with Steam's real file format: the exported shortcut ends up in the user's existing "XBOX" collection.
+    [Fact]
+    public async Task Export_PutsTheShortcut_InTheAccountsExistingSteamCollection()
+    {
+        _collections = new CloudStorageCollections(new ShortcutsBackupFolder(BackupFolder, _time, _log), _time, _log);
+        var cloudStorage = Path.Combine(Alice.FolderIn(Install), "config", "cloudstorage");
+        Directory.CreateDirectory(cloudStorage);
+        var collectionsPath = Path.Combine(cloudStorage, "cloud-storage-namespace-1.json");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Steam", "Fixtures", "cloud-storage-namespace-1.json"), collectionsPath);
+
+        var summary = await Exporter(NotRunning(), Alice).ExportAsync(Request("XBOX", Halo), TestContext.Current.CancellationToken);
+
+        Assert.Empty(summary.CollectionsSkippedUsers);
+        var appId = unchecked((uint)(int)Assert.Single(Written(Alice).Children)["appid"].Value);
+        Assert.Contains(appId, CollectionsJson.Read(File.ReadAllBytes(collectionsPath)).Single(collection => collection.Name == "XBOX").Added);
+    }
+
+    private sealed class FakeCollections : ISteamCollections
+    {
+        public List<(string UserFolder, IReadOnlyList<string> Names, IReadOnlyCollection<uint> AppIds)> Calls { get; } = [];
+        public string? SkipFor { get; set; }
+        public string? MissingFor { get; set; }
+
+        public CollectionsOutcome AddShortcuts(string userFolder, IReadOnlyList<string> collectionNames, IReadOnlyCollection<uint> appIds)
+        {
+            Calls.Add((userFolder, collectionNames, appIds));
+            if (userFolder == MissingFor) return CollectionsOutcome.NotFound;
+            return userFolder == SkipFor ? CollectionsOutcome.Skipped : CollectionsOutcome.Updated;
+        }
     }
 
     private sealed class FakeArtwork : IArtworkInstaller

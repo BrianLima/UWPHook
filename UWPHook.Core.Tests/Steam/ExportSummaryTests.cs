@@ -81,6 +81,49 @@ public class ExportSummaryTests
         Assert.Contains("Steam has been restarted.", summary.Message);
     }
 
+    // The shortcuts are in Steam, but not in the collections the setting names: the user is told, the export stands.
+    [Fact]
+    public void WithCollectionsSkipped_AddsANoteNamingTheUsers_AndKeepsTheStatus()
+    {
+        var summary = ExportSummary.ForUsers(written: 2, failed: 0, StopOutcome.Stopped).WithCollectionsSkipped(["123", "456"]);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.StartsWith("Your apps were successfully exported!", summary.Message);
+        Assert.Contains("They could not be added to your Steam collections for Steam account(s) 123, 456; details are in application.log.", summary.Message);
+        Assert.EndsWith("Steam has been restarted.", summary.Message);
+    }
+
+    // An account without a collections file (an old account folder) is common: said, but not as a warning.
+    [Fact]
+    public void WithoutCollections_AddsANoteNamingTheUsers_AsInformation()
+    {
+        var summary = ExportSummary.ForUsers(written: 2, failed: 0, StopOutcome.Stopped).WithoutCollections(["456"]);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(MessageSeverity.Information, summary.Severity);
+        Assert.StartsWith("Your apps were successfully exported!", summary.Message);
+        Assert.Contains("Steam account(s) 456 have no Steam collections yet, so the games were not added to collections there.", summary.Message);
+        Assert.EndsWith("Steam has been restarted.", summary.Message);
+    }
+
+    [Fact]
+    public void WithoutCollections_WithNone_ChangesNothing()
+    {
+        var summary = ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning);
+
+        Assert.Equal(summary.Message, summary.WithoutCollections([]).Message);
+    }
+
+    [Fact]
+    public void WithCollectionsSkipped_WithNoneSkipped_ChangesNothing()
+    {
+        var summary = ExportSummary.ForUsers(written: 1, failed: 0, StopOutcome.NotRunning);
+
+        Assert.Equal(summary.Message, summary.WithCollectionsSkipped([]).Message);
+        Assert.Equal(MessageSeverity.Information, summary.WithCollectionsSkipped([]).Severity);
+    }
+
     // Review m3: an app whose artwork could not be downloaded is a note too (R33: artwork is optional).
     [Fact]
     public void WithArtworkDownloadFailures_AddsANoteNamingTheApps_AndKeepsTheStatus()
