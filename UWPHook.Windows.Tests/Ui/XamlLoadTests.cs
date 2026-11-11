@@ -243,7 +243,7 @@ public sealed class XamlLoadTests
     }
 
     // The Icon column's cell, made from its template as the grid makes it for a row (the grid of a window that was
-    // never shown did not realize its rows on CI).
+    // never shown did not realize its rows on CI). Review minor 5: shown at 32 DIPs from a 64-pixel decode.
     [Fact]
     public void GamesWindow_IconCell_ShowsTheThumbnail_WithTheLogoFolderAsItsTooltip()
     {
@@ -251,26 +251,51 @@ public sealed class XamlLoadTests
         var png = TestImages.Write(Path.Combine(folder, "Square150x150Logo.png"), 150, 150, System.Drawing.Imaging.ImageFormat.Png);
         try
         {
-            var (width, tooltip) = UiThread.Run(() =>
+            var (decoded, shown, tooltip) = UiThread.Run(() =>
             {
-                var window = NewGamesWindow();
-                var list = Assert.IsType<DataGrid>(window.FindName("listGames"));
-                var column = Assert.IsType<DataGridTemplateColumn>(list.Columns.Single(column => column.Header as string == "Icon"));
-                var cell = Assert.IsType<Border>(column.CellTemplate.LoadContent());
-                cell.DataContext = new AppRow(new XboxApp("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", folder,
-                    DateTimeOffset.UnixEpoch)) { Icon = png };
-                cell.Dispatcher.Invoke(DispatcherPriority.DataBind, new Action(() => { }));
-                var image = Assert.IsType<Image>(cell.Child);
-                return ((image.Source as BitmapSource)?.PixelWidth, cell.ToolTip);
+                var (cell, image) = IconCell(new AppRow(Halo(folder)) { Icon = png });
+                return ((image.Source as BitmapSource)?.PixelWidth, (cell.Width, cell.Height), cell.ToolTip);
             });
 
-            Assert.Equal(IconThumbnailConverter.Size, width);
+            Assert.Equal(IconThumbnails.DecodeSize, decoded);
+            Assert.Equal((32.0, 32.0), shown);
             Assert.Equal(folder, tooltip);
         }
         finally
         {
             Directory.Delete(folder, recursive: true);
         }
+    }
+
+    // Review minor 6: an app without a logo folder (#56) gets no (empty) tooltip.
+    [Fact]
+    public void GamesWindow_IconCell_WithoutALogoFolder_HasNoTooltip()
+    {
+        var (tooltip, source) = UiThread.Run(() =>
+        {
+            var (cell, image) = IconCell(new AppRow(Halo("")));
+            return (cell.ToolTip, image.Source);
+        });
+
+        Assert.Null(tooltip);
+        Assert.Null(source);
+    }
+
+    private static XboxApp Halo(string iconFolder) =>
+        new("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", @"C:\Games\Halo", DateTimeOffset.UnixEpoch)
+        {
+            IconFolder = iconFolder,
+        };
+
+    /// <summary>The Icon column's cell for <paramref name="row"/>, bound. Call on the UI thread.</summary>
+    private static (Border Cell, Image Image) IconCell(AppRow row)
+    {
+        var list = Assert.IsType<DataGrid>(NewGamesWindow().FindName("listGames"));
+        var column = Assert.IsType<DataGridTemplateColumn>(list.Columns.Single(column => column.Header as string == "Icon"));
+        var cell = Assert.IsType<Border>(column.CellTemplate.LoadContent());
+        cell.DataContext = row;
+        cell.Dispatcher.Invoke(DispatcherPriority.DataBind, new Action(() => { }));
+        return (cell, Assert.IsType<Image>(cell.Child));
     }
 
     [Fact]

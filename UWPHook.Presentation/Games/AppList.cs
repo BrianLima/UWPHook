@@ -28,6 +28,9 @@ public sealed class AppList : ObservableObject
 
     public IEnumerable<AppRow> Selected => All.Where(row => row.Selected);
 
+    /// <summary>Every row, the ones the filter shows first (stub).</summary>
+    public IReadOnlyList<AppRow> VisibleFirst() => [.. All];
+
     public void Replace(IEnumerable<AppRow> rows)
     {
         All.Clear();

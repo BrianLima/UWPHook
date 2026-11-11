@@ -8,7 +8,8 @@ namespace UWPHook.Presentation.Games;
 /// set on its row back on the thread that started the pass: awaiting returns to its SynchronizationContext, which is
 /// WPF's dispatcher when the window starts it, so the grid updates as the icons come in.
 /// </summary>
-internal sealed class RowIcons(IIconPicker picker, ILog log)
+/// <param name="atOnce">How many icons are picked at once; <see cref="AtOnce"/> but in tests.</param>
+internal sealed class RowIcons(IIconPicker picker, ILog log, int atOnce = RowIcons.AtOnce)
 {
     /// <summary>At most this many icons are picked at once: picking reads image files, and a large library has hundreds.</summary>
     public const int AtOnce = 4;
@@ -16,7 +17,7 @@ internal sealed class RowIcons(IIconPicker picker, ILog log)
     /// <summary>Never throws. Once <paramref name="ct"/> is cancelled no more icons are picked or set.</summary>
     public async Task SetAllAsync(IReadOnlyList<AppRow> rows, CancellationToken ct)
     {
-        using var slots = new SemaphoreSlim(AtOnce);
+        using var slots = new SemaphoreSlim(atOnce);
         await Task.WhenAll(rows.Select(row => SetAsync(row, slots, ct)));
     }
 

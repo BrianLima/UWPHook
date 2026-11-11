@@ -211,6 +211,17 @@ public sealed class GamesViewModelTests
         Assert.Empty(_dialogs.Errors);
     }
 
+    // Review minor 7: with hundreds of apps, the icons of the rows on screen come first.
+    [Fact]
+    public async Task VisibleFirst_ListsTheFilteredRowsFirst_ThenTheRest_EachInListOrder()
+    {
+        var games = await Loaded();
+
+        games.Apps.Filter = "h";
+
+        Assert.Equal(new[] { "forza Horizon", "Halo", "Calculator" }, Names(games.Apps.VisibleFirst()));
+    }
+
     [Fact]
     public async Task Export_SendsTheIconTheListShows()
     {

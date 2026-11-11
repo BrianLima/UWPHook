@@ -118,6 +118,20 @@ public sealed class SteamGridArtworkTests : IDisposable
         Assert.Empty(_icons.Asked);
     }
 
+    // Review minor 2: the app updated between loading the list and exporting, and the file the list showed is gone.
+    [Fact]
+    public void IconFor_WhenTheIconTheListPickedIsGone_PicksAgain()
+    {
+        var current = Path.Combine(LogoFolder, "Square310x310Logo.png");
+        WriteFile(current, "current");
+        WriteFile(Path.Combine(TempGridOf(Aumid), "appid_logo.png"), "downloaded");
+
+        var icon = Artwork().IconFor(App(current) with { Icon = Path.Combine(LogoFolder, "Square150x150Logo.png") });
+
+        Assert.Equal(Path.Combine(IconsFolder, Aumid + ".png"), icon);
+        Assert.Equal("current", File.ReadAllText(icon));
+    }
+
     [Fact]
     public void IconFor_WithoutAnAppIcon_UsesTheDownloadedLogo()
     {
