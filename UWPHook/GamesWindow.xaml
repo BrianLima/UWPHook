@@ -63,7 +63,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Width="32" Height="32" Margin="4,2" Background="Transparent" ToolTip="{Binding IconPath}">
-                                <Image x:Name="iconThumbnail" Source="{Binding Icon, Converter={StaticResource IconThumbnail}}" Stretch="Uniform"/>
+                                <Image Source="{Binding Icon, Converter={StaticResource IconThumbnail}}" Stretch="Uniform"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

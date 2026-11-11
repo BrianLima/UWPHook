@@ -153,7 +153,7 @@ public sealed class GamesViewModelTests
         Assert.Equal(HaloIcon, Row(games, "Halo").Icon);
         Assert.Equal(ForzaIcon, Row(games, "forza Horizon").Icon);
         Assert.Null(Row(games, "Calculator").Icon);
-        Assert.Equal(new[] { Calculator.IconFolder, Forza.IconFolder, Halo.IconFolder }, _icons.Asked.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { Calculator.IconFolder, Forza.IconFolder, Halo.IconFolder }.Order(StringComparer.Ordinal), _icons.Asked.Order(StringComparer.Ordinal));
     }
 
     [Fact]

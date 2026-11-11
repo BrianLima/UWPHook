@@ -242,6 +242,8 @@ public sealed class XamlLoadTests
         Assert.Equal(new[] { "Icon", "Executable", "Aumid" }, readOnly);
     }
 
+    // The Icon column's cell, made from its template as the grid makes it for a row (the grid of a window that was
+    // never shown did not realize its rows on CI).
     [Fact]
     public void GamesWindow_IconCell_ShowsTheThumbnail_WithTheLogoFolderAsItsTooltip()
     {
@@ -251,18 +253,15 @@ public sealed class XamlLoadTests
         {
             var (width, tooltip) = UiThread.Run(() =>
             {
-                var gate = new TaskCompletionSource();
-                var window = NewGamesWindow(new FakeCatalog { Gate = gate }); // the load waits, so only the row below is listed
-                var games = (GamesViewModel)window.DataContext;
-                var row = new AppRow(new XboxApp("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", folder,
-                    DateTimeOffset.UnixEpoch)) { Icon = png };
-                games.Apps.Replace([row]);
-                LayOut(window);
+                var window = NewGamesWindow();
                 var list = Assert.IsType<DataGrid>(window.FindName("listGames"));
-                var image = Assert.Single(Descendants(list).OfType<Image>(), image => image.Name == "iconThumbnail");
-                var result = ((image.Source as BitmapSource)?.PixelWidth, Tooltip(image, list));
-                gate.SetResult();
-                return result;
+                var column = Assert.IsType<DataGridTemplateColumn>(list.Columns.Single(column => column.Header as string == "Icon"));
+                var cell = Assert.IsType<Border>(column.CellTemplate.LoadContent());
+                cell.DataContext = new AppRow(new XboxApp("Microsoft.Halo_8wekyb3d8bbwe!App", "Microsoft.Halo_8wekyb3d8bbwe", "Halo", "halo.exe", folder,
+                    DateTimeOffset.UnixEpoch)) { Icon = png };
+                cell.Dispatcher.Invoke(DispatcherPriority.DataBind, new Action(() => { }));
+                var image = Assert.IsType<Image>(cell.Child);
+                return ((image.Source as BitmapSource)?.PixelWidth, cell.ToolTip);
             });
 
             Assert.Equal(IconThumbnailConverter.Size, width);
@@ -273,10 +272,6 @@ public sealed class XamlLoadTests
             Directory.Delete(folder, recursive: true);
         }
     }
-
-    /// <summary>The nearest tooltip on <paramref name="element"/> or its ancestors, up to <paramref name="root"/>.</summary>
-    private static object? Tooltip(FrameworkElement element, FrameworkElement root) =>
-        AncestorsUpTo(root, element).Select(ancestor => ancestor.ToolTip).FirstOrDefault(tip => tip is not null);
 
     [Fact]
     public void NoWindow_LoadsMaterialDesign()
