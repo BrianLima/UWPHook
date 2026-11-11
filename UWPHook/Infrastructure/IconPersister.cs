@@ -13,13 +13,15 @@ namespace UWPHook.Infrastructure
     internal sealed class IconPersister(string iconsFolder, TempGridFolder temp, IIconPicker icons, ILog log)
     {
         /// <summary>
-        /// The app's own icon (the one the games list picked and shows, else picked now), else the SteamGridDB logo
-        /// downloaded for it, copied to the icons folder. When neither can be copied, the app's own icon path (possibly
-        /// empty) is kept.
+        /// The icon the games list picked and shows, else the app's widest square logo picked now (also when the list's
+        /// file is gone, e.g. the app updated since), else the SteamGridDB logo downloaded for it, copied to the icons
+        /// folder. When none can be copied, the app's own icon path (possibly empty) is kept.
         /// </summary>
         public string IconFor(ExportApp app)
         {
-            string own = app.Icon ?? icons.Pick(app.IconFolder) ?? "";
+            if (TryPersist(app.Aumid, app.Icon) is { } shown) return shown;
+
+            string own = icons.Pick(app.IconFolder) ?? "";
             return TryPersist(app.Aumid, own) ?? TryPersist(app.Aumid, temp.DownloadedLogo(app.Aumid)) ?? own;
         }
 

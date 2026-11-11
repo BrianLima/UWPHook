@@ -112,7 +112,7 @@ public sealed class GamesViewModel : ObservableObject
             Status = LoadedStatus;
         }
 
-        IconsLoaded = rowIcons.SetAllAsync([.. Apps.All], icons);
+        IconsLoaded = rowIcons.SetAllAsync(Apps.VisibleFirst(), icons);
     }
 
     /// <summary>Stops the previous load's icons, which may still be coming in for rows that are being replaced.</summary>

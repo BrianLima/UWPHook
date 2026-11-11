@@ -5,9 +5,9 @@ using UWPHook.Core.Steam;
 namespace UWPHook.Presentation.Games;
 
 /// <summary>
-/// One installed app in the games list. The grid shows a column per property, in this order (as 2.14 did), with the
-/// icon as a thumbnail whose tooltip is <see cref="IconPath"/>; <see cref="Executable"/> and <see cref="Aumid"/> are
-/// read-only, and the name can be edited before exporting.
+/// One installed app in the games list. The grid's columns, in order: <see cref="Selected"/>, <see cref="Icon"/> (a
+/// thumbnail, with <see cref="IconPath"/> as its tooltip rather than a column of its own), <see cref="Name"/> (which can
+/// be edited before exporting), and the read-only <see cref="Executable"/> and <see cref="Aumid"/>.
 /// </summary>
 public sealed class AppRow(XboxApp app) : ObservableObject
 {

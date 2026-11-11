@@ -53,7 +53,7 @@
             <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
             <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
         </Grid>
-        <!-- The columns of 2.14, in its order, but the icon is a thumbnail (its tooltip is the logo folder) instead of
+        <!-- The columns of 2.14, in its order, but the icon is a thumbnail (decoded at 64 px, shown at 32 DIPs; its tooltip is the logo folder) instead of
              two text columns. Only Selected and Name can be changed. -->
         <DataGrid x:Name="listGames" Grid.Row="1" Margin="10,40,10,10" ItemsSource="{Binding Apps.Visible}" CanUserSortColumns="True" CanUserAddRows="False"
                   AutoGenerateColumns="False" IsHitTestVisible="{Binding IsIdle}" IsReadOnly="{Binding IsBusy}">
@@ -62,7 +62,18 @@
                 <DataGridTemplateColumn Header="Icon" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Width="32" Height="32" Margin="4,2" Background="Transparent" ToolTip="{Binding IconPath}">
+                            <!-- The logo folder as the tooltip; none for an app without one (#56) rather than an empty box. -->
+                            <Border Width="32" Height="32" Margin="4,2" Background="Transparent">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="ToolTip" Value="{Binding IconPath}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IconPath}" Value="">
+                                                <Setter Property="ToolTip" Value="{x:Null}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Image Source="{Binding Icon, Converter={StaticResource IconThumbnail}}" Stretch="Uniform"/>
                             </Border>
                         </DataTemplate>
