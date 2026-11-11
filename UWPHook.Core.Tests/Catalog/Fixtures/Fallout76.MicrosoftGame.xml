@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shaped like Fallout 76's MicrosoftGame.config: one PC executable. -->
+<Game configVersion="1">
+  <Identity Name="BethesdaSoftworks.Fallout76-PC" Publisher="CN=Bethesda" Version="1.0.173.0" />
+  <ExecutableList>
+    <Executable Name="Project76_GamePass.exe" TargetDeviceFamily="PC" Id="Fallout76" />
+  </ExecutableList>
+  <ShellVisuals DefaultDisplayName="Fallout 76" PublisherDisplayName="Bethesda Softworks" Square150x150Logo="GraphicsLogo.png" />
+</Game>

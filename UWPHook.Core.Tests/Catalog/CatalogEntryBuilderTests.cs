@@ -1,4 +1,6 @@
 using UWPHook.Core.Catalog;
+using UWPHook.Core.Diagnostics;
+using UWPHook.Core.Tests.Diagnostics;
 using Xunit;
 
 namespace UWPHook.Core.Tests.Catalog;
@@ -20,8 +22,14 @@ public class CatalogEntryBuilderTests
 
     private static AppListEntrySnapshot Entry(string aumid, string? displayName) => new(aumid, displayName);
 
-    private static List<XboxApp> Build(PackageSnapshot package) =>
-        CatalogEntryBuilder.Build(package).ToList();
+    private const string Family = "Contoso.Game_8wekyb3d8bbwe";
+
+    private readonly RecordingLog _log = new();
+
+    private List<XboxApp> Build(PackageSnapshot package) =>
+        CatalogEntryBuilder.Build(package, log: _log).ToList();
+
+    private List<RecordingLog.Entry> Warnings => _log.At(LogLevel.Warning).ToList();
 
     [Fact]
     public void Build_MapsAClassicUwpApp()
@@ -47,12 +55,69 @@ public class CatalogEntryBuilderTests
     }
 
     [Fact]
-    public void Build_SkipsAGdkGameWithoutAConfig()
+    public void Build_ListsAGdkGameWithoutAConfig_WithNoExecutable()
     {
         var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
             [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")]);
 
-        Assert.Empty(Build(package));
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(("Star Harbor", ""), (app.DisplayName, app.Executable));
+    }
+
+    // Like Fallout 76: the manifest says GameLaunchHelper.exe and its MicrosoftGame.config can't be parsed.
+    [Theory]
+    [InlineData("Malformed.xml")]
+    [InlineData("NoExecutables.MicrosoftGame.xml")]
+    [InlineData("NoExecutableList.MicrosoftGame.xml")]
+    public void Build_ListsAGdkGameWhoseConfigNamesNoExecutable_WithNoExecutable(string configFixture)
+    {
+        var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")], configFixture);
+
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor", ""), (app.Aumid, app.DisplayName, app.Executable));
+        Assert.Equal(Install, app.IconFolder);
+    }
+
+    // Regression: Fallout 76's identifiers, as Brian's PC reports them; 2.15 lists it with Project76_GamePass.exe.
+    [Fact]
+    public void Build_ListsFallout76WithTheExecutableFromItsConfig()
+    {
+        const string family = "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc";
+        const string installed = @"C:\Program Files\WindowsApps\BethesdaSoftworks.Fallout76-PC_1.0.173.0_x64__3275kfvn8vcwc";
+        var package = new PackageSnapshot(family, "BethesdaSoftworks.Fallout76-PC", "Fallout 76", installed, Installed,
+            [Entry(family + "!Fallout76", "Fallout 76")],
+            Fixture.Read("Fallout76.AppxManifest.xml"), Fixture.Read("Fallout76.MicrosoftGame.xml"));
+
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(new XboxApp(family + "!Fallout76", family, "Fallout 76", "Project76_GamePass.exe", installed, Installed), app);
+        Assert.Empty(_log.Entries);
+    }
+
+    [Fact]
+    public void Build_TakesTheExecutableFromANamespacedConfig()
+    {
+        var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")], "Namespaced.MicrosoftGame.xml");
+
+        Assert.Equal("Wasteland.exe", Assert.Single(Build(package)).Executable);
+    }
+
+    [Fact]
+    public void Build_WarnsOncePerPackage_WhenAnExecutableCannotBeWorkedOut()
+    {
+        var package = Package("MultiApp.AppxManifest.xml", "Contoso Suite",
+            [Entry("Contoso.Suite_abc!Writer", "Contoso Writer"), Entry("Contoso.Suite_abc!Sheets", "Contoso Sheets")],
+            familyName: "Contoso.Suite_abc") with { ManifestXml = Fixture.Read("MultiApp.AppxManifest.xml").Replace("Writer.exe", "GameLaunchHelper.exe").Replace("Sheets.exe", "") };
+
+        Assert.Equal(2, Build(package).Count(app => app.Executable.Length == 0));
+
+        var warning = Assert.Single(Warnings);
+        Assert.Contains("Contoso.Suite_abc", warning.Values);
+        Assert.Contains("executable", warning.Template, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -122,11 +187,57 @@ public class CatalogEntryBuilderTests
         Assert.Equal(("Contoso Sheets", "Sheets.exe"), (app.DisplayName, app.Executable));
     }
 
+    [Fact]
+    public void Build_ListsAnEntryWithoutAMatchingManifestApplication_WithNoExecutable()
+    {
+        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe", [Entry("Contoso.Game_8wekyb3d8bbwe!Missing", "Solitaire Online")]);
+
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(
+            new XboxApp("Contoso.Game_8wekyb3d8bbwe!Missing", Family, "Solitaire Online", "", Install, Installed) { IconFolder = Install },
+            app);
+    }
+
     [Theory]
-    [InlineData("Contoso.Game_8wekyb3d8bbwe!Missing")]
+    [InlineData(null, "Solitaire Deluxe")]
+    [InlineData("ms-resource:AppDisplayName", "Solitaire Deluxe")]
+    public void Build_NamesAnEntryWithoutAManifestApplicationAfterThePackage(string? entryName, string expected)
+    {
+        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe", [Entry("Contoso.Game_8wekyb3d8bbwe!Missing", entryName)]);
+
+        Assert.Equal(expected, Assert.Single(Build(package)).DisplayName);
+    }
+
+    [Fact]
+    public void Build_WarnsOncePerPackage_WhenEntriesHaveNoManifestApplication()
+    {
+        var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!One", "One"), Entry("Contoso.Game_8wekyb3d8bbwe!Two", "Two")]);
+
+        Assert.Equal(2, Build(package).Count);
+
+        var warning = Assert.Single(Warnings);
+        Assert.Contains(Family, warning.Values);
+        Assert.Contains("AppxManifest", warning.Template, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_WarnsNothingWhenEveryEntryHasAnExecutable()
+    {
+        var package = Package("GdkGame.AppxManifest.xml", "Star Harbor",
+            [Entry("Contoso.Game_8wekyb3d8bbwe!Game", "Star Harbor")], "GdkGame.MicrosoftGame.xml");
+
+        Build(package);
+
+        Assert.Empty(_log.Entries);
+    }
+
+    // An AUMID without "!ApplicationId" can't be launched, so there is nothing to list.
+    [Theory]
     [InlineData("Contoso.Game_8wekyb3d8bbwe")]
     [InlineData("")]
-    public void Build_SkipsAnEntryWithoutAMatchingManifestApplication(string aumid)
+    public void Build_SkipsAnEntryWhoseAumidNamesNoApplication(string aumid)
     {
         var package = Package("UwpApp.AppxManifest.xml", "Solitaire Deluxe", [Entry(aumid, "Solitaire Deluxe")]);
 
@@ -163,13 +274,16 @@ public class CatalogEntryBuilderTests
     [Theory]
     [InlineData(null)]
     [InlineData("Malformed.xml")]
-    public void Build_ReturnsNothingWithoutAReadableManifest(string? manifestFixture)
+    public void Build_ListsTheEntriesOfAPackageWithoutAReadableManifest(string? manifestFixture)
     {
         var package = new PackageSnapshot("Contoso.Game_8wekyb3d8bbwe", "Contoso.Game", "Solitaire Deluxe", Install, Installed,
-            [Entry("Contoso.Game_8wekyb3d8bbwe!App", "Solitaire Deluxe")],
+            [Entry("Contoso.Game_8wekyb3d8bbwe!App", null)],
             manifestFixture is null ? null : Fixture.Read(manifestFixture), null);
 
-        Assert.Empty(Build(package));
+        var app = Assert.Single(Build(package));
+
+        Assert.Equal(("Solitaire Deluxe", "", Install), (app.DisplayName, app.Executable, app.IconFolder));
+        Assert.Contains(Family, Assert.Single(Warnings).Values);
     }
 
     // A moddable game: the logo is only in the installed folder, not in the effective one it runs from.

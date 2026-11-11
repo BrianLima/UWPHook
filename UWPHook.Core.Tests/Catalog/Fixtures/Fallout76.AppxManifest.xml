@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shaped like Fallout 76's (Game Pass, GDK): the manifest starts GameLaunchHelper.exe, MicrosoftGame.config names the game. -->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap rescap">
+  <Identity Name="BethesdaSoftworks.Fallout76-PC" Publisher="CN=Bethesda" Version="1.0.173.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Fallout 76</DisplayName>
+    <PublisherDisplayName>Bethesda Softworks</PublisherDisplayName>
+    <Logo>StoreLogo.png</Logo>
+  </Properties>
+  <Applications>
+    <Application Id="Fallout76" Executable="GameLaunchHelper.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Fallout 76" Description="Fallout 76" BackgroundColor="#000000"
+                          Square150x150Logo="GraphicsLogo.png" Square44x44Logo="SmallLogo.png" />
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

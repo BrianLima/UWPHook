@@ -8,7 +8,7 @@ public static class GameExecutable
     /// <summary>
     /// Returns the manifest's executable, unless it is blank or the GDK <c>GameLaunchHelper.exe</c> stub; then the
     /// executable comes from <paramref name="microsoftGameConfigXml"/>. Returns null when that config is missing or
-    /// unusable, which callers treat as "skip this app" (the 2.14 script's <c>continue</c>).
+    /// unusable; the app is then listed without an executable (2.14 skipped it).
     /// </summary>
     public static string? Resolve(ManifestApplication app, string? microsoftGameConfigXml)
     {

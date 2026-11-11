@@ -7,6 +7,7 @@ public class LaunchRequestTests
 {
     private const string Exe = "C:\\x\\UWPHook.exe";
     private const string Forza = "Microsoft.Forza_8wekyb3d8bbwe!App";
+    private const string Fallout = "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76";
 
     [Fact]
     public void Parse_StandardArgs()
@@ -42,6 +43,26 @@ public class LaunchRequestTests
         Assert.Equal(Forza, request.Aumid);
         Assert.Equal("", request.Executable);
         Assert.Equal("", request.ExtraArguments);
+    }
+
+    // What Windows hands UWPHook for a shortcut exported without an executable (LaunchOptions = <AUMID> ""):
+    // the empty quoted placeholder is one empty argument.
+    [Fact]
+    public void Parse_AnEmptyExecutablePlaceholder()
+    {
+        var request = Parse(Exe, Fallout, "");
+
+        Assert.Equal(new LaunchRequest(Fallout, "", ""), request);
+        Assert.Equal("BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc", request.PackageFamilyName);
+    }
+
+    // ... and with "-foo" appended by the user in Steam: it stays an extra argument.
+    [Fact]
+    public void Parse_AnEmptyExecutablePlaceholder_KeepsUserArgumentsAsExtra()
+    {
+        var request = Parse(Exe, Fallout, "", "-foo");
+
+        Assert.Equal(new LaunchRequest(Fallout, "", "-foo"), request);
     }
 
     [Theory]
