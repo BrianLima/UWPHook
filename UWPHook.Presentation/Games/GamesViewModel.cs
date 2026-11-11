@@ -10,7 +10,8 @@ namespace UWPHook.Presentation.Games;
 
 /// <summary>
 /// The games window: load the installed apps, search and select them, and export the selected ones to Steam,
-/// showing what really happened (<see cref="ExportSummary"/>). The list is locked while it loads or exports.
+/// showing what really happened (<see cref="ExportSummary"/>). The list is locked while it loads or exports; each
+/// app's icon is picked after the list is shown, by the same <see cref="IIconPicker"/> as the export's.
 /// </summary>
 /// <param name="uwpHookExe">The stable UWPHook.exe path; the exporter asks for it after its pre-checks.</param>
 public sealed class GamesViewModel : ObservableObject
@@ -22,6 +23,7 @@ public sealed class GamesViewModel : ObservableObject
     public const string StillExporting = "UWPHook is still exporting your games. Please wait until it finishes: it may have closed Steam, and it starts Steam again when it is done.";
 
     private readonly IAppCatalog catalog;
+    private readonly RowIcons rowIcons;
     private readonly IShortcutExporter exporter;
     private readonly ISettingsService settings;
     private readonly IDialogService dialogs;
@@ -31,10 +33,12 @@ public sealed class GamesViewModel : ObservableObject
     private bool isExporting;
     private string status = PressLoadStatus;
     private bool includeSystemApps = true;
+    private CancellationTokenSource iconPass = new();
 
     public GamesViewModel(IAppCatalog catalog, IIconPicker icons, IShortcutExporter exporter, ISettingsService settings, IDialogService dialogs, ILog log, Func<string> uwpHookExe)
     {
         this.catalog = catalog;
+        rowIcons = new RowIcons(icons, log);
         this.exporter = exporter;
         this.settings = settings;
         this.dialogs = dialogs;
@@ -80,11 +84,15 @@ public sealed class GamesViewModel : ObservableObject
 
     public bool IsIdle => !IsBusy;
 
-    /// <summary>The icon pass of the latest load (stub).</summary>
-    public Task IconsLoaded => Task.CompletedTask;
+    /// <summary>
+    /// The latest load's icons, which come in after its list is shown (<see cref="AppRow.Icon"/>). Never faults; it
+    /// ends early when another load starts.
+    /// </summary>
+    public Task IconsLoaded { get; private set; } = Task.CompletedTask;
 
     private async Task LoadAsync()
     {
+        var icons = NewIconPass();
         IsBusy = true;
         Status = LoadingStatus;
         Apps.Replace([]);
@@ -103,6 +111,17 @@ public sealed class GamesViewModel : ObservableObject
             IsBusy = false;
             Status = LoadedStatus;
         }
+
+        IconsLoaded = rowIcons.SetAllAsync([.. Apps.All], icons);
+    }
+
+    /// <summary>Stops the previous load's icons, which may still be coming in for rows that are being replaced.</summary>
+    private CancellationToken NewIconPass()
+    {
+        // Not disposed: the old pass may still be checking its token, and a source without timers holds nothing.
+        iconPass.Cancel();
+        iconPass = new CancellationTokenSource();
+        return iconPass.Token;
     }
 
     private async Task ExportAsync()

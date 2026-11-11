@@ -10,6 +10,7 @@
         Title="UWPHook" Height="600" Width="800" Icon="Resources/hook2.ico" Loaded="Window_Loaded">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
+        <local:IconThumbnailConverter x:Key="IconThumbnail"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -52,8 +53,26 @@
             <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
             <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
         </Grid>
+        <!-- The columns of 2.14, in its order, but the icon is a thumbnail (its tooltip is the logo folder) instead of
+             two text columns. Only Selected and Name can be changed. -->
         <DataGrid x:Name="listGames" Grid.Row="1" Margin="10,40,10,10" ItemsSource="{Binding Apps.Visible}" CanUserSortColumns="True" CanUserAddRows="False"
-                  IsHitTestVisible="{Binding IsIdle}" IsReadOnly="{Binding IsBusy}"/>
+                  AutoGenerateColumns="False" IsHitTestVisible="{Binding IsIdle}" IsReadOnly="{Binding IsBusy}">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Selected" Binding="{Binding Selected}"/>
+                <DataGridTemplateColumn Header="Icon" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Width="32" Height="32" Margin="4,2" Background="Transparent" ToolTip="{Binding IconPath}">
+                                <Image x:Name="iconThumbnail" Source="{Binding Icon, Converter={StaticResource IconThumbnail}}" Stretch="Uniform"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Executable" Binding="{Binding Executable, Mode=OneWay}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Aumid" Binding="{Binding Aumid, Mode=OneWay}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
         <!-- While busy: the list shows through the window's own (theme) background, and can't be clicked. -->
         <Border x:Name="busyOverlay" Grid.Row="1" Margin="10,40,10,10" Background="{DynamicResource ApplicationBackgroundBrush}" Opacity="0.7"
                 Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>

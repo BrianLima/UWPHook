@@ -16,6 +16,7 @@ A stabilization release: the app list loads again, existing shortcuts launch aga
 ### Added
 - Settings → "Remove UWPHook shortcuts" removes only the shortcuts UWPHook created, from the chosen Steam accounts, after backing up `shortcuts.vdf`. Shortcuts from Steam and other tools are kept.
 - Settings lets you choose which Steam accounts export and remove use, listed by their Steam name (#76). All accounts are used by default.
+- The games list shows each app's icon: the same image the exported Steam shortcut gets (the largest square logo in the app's folder), with that folder as its tooltip. The list appears first and the icons fill in shortly after, so loading is not slowed down. It replaces the two text columns `Icon` (empty since 2.15's rewrite) and `IconPath`.
 - Search no longer resets the list's sort order, and "Select all/none" and a "Show system apps" option were added to the main window.
 - A per-user installer (`UWPHook-win-x64-Setup.exe`), built with [Velopack](https://velopack.io). It installs to `%LocalAppData%\UWPHook` without asking for administrator rights. A portable zip is still available.
 - Builds for ARM64 PCs (`win-arm64`) alongside x64.
