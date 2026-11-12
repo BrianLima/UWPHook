@@ -44,11 +44,14 @@ public sealed class ShortcutsFile
 
         buffer.Position = 0;
         var document = Serializer().Deserialize(buffer);
-        List<KVObject> entries = [.. document.Root.Select(pair => pair.Value)];
-        if (entries.Any(entry => entry.ValueType != KVValueType.Collection))
+        var strange = document.Root.FirstOrDefault(pair => pair.Value.ValueType != KVValueType.Collection);
+        if (strange is not null)
         {
-            throw new InvalidDataException("shortcuts.vdf holds something that is not a shortcut, so it is left as it is.");
+            throw new InvalidDataException(
+                $"shortcuts.vdf holds \"{strange.Name}\", which is not a shortcut, so the file is left as it is.");
         }
+
+        List<KVObject> entries = [.. document.Root.Select(pair => pair.Value)];
 
         return new ShortcutsFile(document.Name ?? DefaultRootName, entries);
     }

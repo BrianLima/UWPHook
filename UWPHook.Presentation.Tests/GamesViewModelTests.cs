@@ -382,11 +382,12 @@ public sealed class GamesViewModelTests
     }
 
     [Fact]
-    public void CloseSteamQuestion_SaysWhyAndThatSteamComesBack()
+    public void CloseSteamQuestion_SaysWhyAndWhenSteamComesBack()
     {
         Assert.Contains("Steam must be closed to write your shortcuts.", CloseSteamQuestion.Text);
         Assert.Contains("Close Steam now?", CloseSteamQuestion.Text);
-        Assert.Contains("started again afterwards", CloseSteamQuestion.Text);
+        Assert.Contains("starts it again as soon as it is done", CloseSteamQuestion.Text);
+        Assert.Contains("unless Steam takes more than a minute to close", CloseSteamQuestion.Text);
     }
 
     public static TheoryData<ExportSummary, MessageSeverity> Summaries => new()

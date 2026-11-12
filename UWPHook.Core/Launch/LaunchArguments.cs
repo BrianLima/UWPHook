@@ -5,7 +5,10 @@ namespace UWPHook.Core.Launch;
 /// </summary>
 public static class LaunchArguments
 {
-    /// <summary>Velopack starts the app with <c>--veloapp-*</c> arguments of its own (after an install, for example).</summary>
+    /// <summary>
+    /// Velopack starts the app with <c>--veloapp-*</c> arguments of its own (after an install, for example). Only the
+    /// valueless ones reach this: VelopackApp handles the hooks that carry a value and exits before the app runs.
+    /// </summary>
     private const string VelopackPrefix = "--veloapp";
 
     /// <summary>
