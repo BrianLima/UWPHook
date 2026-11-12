@@ -222,6 +222,26 @@ public sealed class ShortcutExporterTests : IDisposable
         Assert.Equal(first, File.ReadAllBytes(backup));
     }
 
+    // Exporting again updates UWPHook's shortcuts where they are, also the one of an app without an executable
+    // (launch options <AUMID> ""): same appids, so Steam keeps their artwork and playtime, and no duplicates.
+    [Fact]
+    public async Task Export_Again_UpdatesTheSameShortcuts_AndAddsNone()
+    {
+        var noExecutable = new ExportApp("Fallout 76", "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76", "", "");
+        await Exporter(NotRunning(), Alice).ExportAsync(Request(Halo, noExecutable), TestContext.Current.CancellationToken);
+        var first = Written(Alice).Children;
+        _time.Advance(TimeSpan.FromSeconds(1));
+
+        var summary = await Exporter(NotRunning(), Alice)
+            .ExportAsync(Request(Halo with { Name = "Halo: MCC" }, noExecutable), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        var second = Written(Alice).Children;
+        Assert.Equal(new[] { "Halo: MCC", "Fallout 76" }, second.Select(entry => (string)entry["AppName"].Value));
+        Assert.Equal(first.Select(entry => (int)entry["appid"].Value), second.Select(entry => (int)entry["appid"].Value));
+        Assert.Equal(noExecutable.Aumid + " \"\"", second[1]["LaunchOptions"].Value);
+    }
+
     [Fact]
     public async Task Export_GivesTheArtworkEachAccountsAppIds()
     {

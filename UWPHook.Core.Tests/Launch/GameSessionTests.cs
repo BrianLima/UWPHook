@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Time.Testing;
 using UWPHook.Core.Launch;
+using UWPHook.Core.Tests.Time;
 using Xunit;
 
 namespace UWPHook.Core.Tests.Launch;
@@ -13,9 +14,14 @@ public class GameSessionTests
 
     private readonly FakeTimeProvider _time = new();
     private readonly FakeActivator _activator = new();
+    private readonly SteppedTime _stepped;
     private readonly FakePackageProcesses _processes;
 
-    public GameSessionTests() => _processes = new FakePackageProcesses(_time);
+    public GameSessionTests()
+    {
+        _stepped = new SteppedTime(_time);
+        _processes = new FakePackageProcesses(_time);
+    }
 
     [Fact]
     public async Task Run_LauncherExitsWhileGameRuns_EndsOnlyAfterTheGameExitsPlusGrace()
@@ -63,27 +69,19 @@ public class GameSessionTests
         AssertEndedAround(Grace);
     }
 
-    [Fact]
-    public async Task Run_WatchesThePackageFamilyOfTheAumid()
+    // The session watches the package family, whatever executable the shortcut names: a shortcut exported without
+    // one (the second row) is tracked the same way.
+    [Theory]
+    [InlineData("MCC\\Binaries\\Win64\\MCC-Win64-Shipping.exe")]
+    [InlineData("")]
+    public async Task Run_WatchesThePackageFamilyOfTheAumid(string executable)
     {
         _processes.Alive(Family, from: 0, until: 5);
 
-        await Drive(NewSession().RunAsync(Request, Poll, Grace, Ct));
-
-        Assert.NotEmpty(_processes.Queries);
-        Assert.All(_processes.Queries, family => Assert.Equal(Family, family));
-    }
-
-    // A shortcut exported without an executable: the session still tracks the package family.
-    [Fact]
-    public async Task Run_WithNoExecutable_StillWatchesThePackageFamily()
-    {
-        _processes.Alive(Family, from: 0, until: 30);
-
-        var outcome = await Drive(NewSession().RunAsync(Request with { Executable = "" }, Poll, Grace, Ct));
+        var outcome = await Drive(NewSession().RunAsync(Request with { Executable = executable }, Poll, Grace, Ct));
 
         Assert.Equal(SessionOutcome.Ended, outcome);
-        AssertEndedAround(TimeSpan.FromSeconds(30) + Grace);
+        Assert.NotEmpty(_processes.Queries);
         Assert.All(_processes.Queries, family => Assert.Equal(Family, family));
     }
 
@@ -103,12 +101,15 @@ public class GameSessionTests
         _processes.Alive(Family, from: 0, until: 6000);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
 
-        var session = NewSession().RunAsync(Request, Poll, Grace, cts.Token);
-        _time.Advance(Poll * 3);
-        await Task.Delay(1, Ct);
-        cts.Cancel();
+        _processes.OnLook = looks =>
+        {
+            if (looks == 4) cts.Cancel();
+        };
 
-        Assert.Equal(SessionOutcome.Cancelled, await session.WaitAsync(TimeSpan.FromSeconds(5), Ct));
+        var outcome = await Drive(NewSession().RunAsync(Request, Poll, Grace, cts.Token));
+
+        Assert.Equal(SessionOutcome.Cancelled, outcome);
+        Assert.Equal(4, _processes.Queries.Count);
     }
 
     [Fact]
@@ -179,7 +180,7 @@ public class GameSessionTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private GameSession NewSession(Action<Exception>? onWatcherError = null) =>
-        new(_activator, _processes, _time) { OnWatcherError = onWatcherError ?? (_ => { }) };
+        new(_activator, _processes, _stepped) { OnWatcherError = onWatcherError ?? (_ => { }) };
 
     private void AssertEndedAround(TimeSpan expected)
     {
@@ -188,20 +189,8 @@ public class GameSessionTests
             $"session ended at {elapsed}, expected about {expected}");
     }
 
-    /// <summary>
-    /// Moves the fake clock forward one poll at a time until the session finishes.
-    /// The iteration cap and the real-time guard stop a looping bug from hanging the run.
-    /// </summary>
-    private async Task<SessionOutcome> Drive(Task<SessionOutcome> session)
-    {
-        for (var i = 0; i < 2000 && !session.IsCompleted; i++)
-        {
-            _time.Advance(Poll);
-            await Task.Delay(1, Ct);
-        }
-
-        return await session.WaitAsync(TimeSpan.FromSeconds(5), Ct);
-    }
+    /// <summary>Moves the fake clock one poll forward each time the session waits for its next look, until it finishes.</summary>
+    private Task<SessionOutcome> Drive(Task<SessionOutcome> session) => _stepped.RunAsync(session, Poll, Ct);
 
     private sealed class FakeActivator : IAppActivator
     {
@@ -224,6 +213,10 @@ public class GameSessionTests
         private readonly List<(TimeSpan From, TimeSpan Until, bool OddSecondsOnly)> _failures = [];
 
         public List<string> Queries { get; } = [];
+
+        /// <summary>Called on every look with how many there have been, so a test can act at a known moment.</summary>
+        public Action<int> OnLook { get; set; } = _ => { };
+
         public TimeSpan Elapsed => time.GetUtcNow() - _start;
 
         public void Alive(string family, int from, int until) =>
@@ -239,6 +232,7 @@ public class GameSessionTests
         public bool AnyAlive(string packageFamilyName)
         {
             Queries.Add(packageFamilyName);
+            OnLook(Queries.Count);
             var now = Elapsed;
             if (_failures.Any(f => f.From <= now && now < f.Until && (!f.OddSecondsOnly || (int)now.TotalSeconds % 2 == 1)))
                 throw new InvalidOperationException($"watcher failed at {now}");

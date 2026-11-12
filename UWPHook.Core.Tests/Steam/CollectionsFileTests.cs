@@ -371,6 +371,31 @@ public class CollectionsFileTests
         Assert.StartsWith(odd[..^1], changed, StringComparison.Ordinal);
     }
 
+    // Steam never writes a collection with a property twice. If one is there, nothing is added to any collection:
+    // which of the two values counts is a guess, and the file is left for Steam to sort out.
+    [Fact]
+    public void Add_WhenACollectionsValueRepeatsAProperty_Throws()
+    {
+        var file = CollectionsFile.Parse(Utf8(
+            """[["user-collections.uc-odd",{"key":"user-collections.uc-odd","timestamp":1700000000,"value":"{\"id\":\"uc-odd\",\"name\":\"Odd\",\"added\":[1],\"added\":[2]}"}]]"""));
+
+        Assert.ThrowsAny<Exception>(() => file.Add(["Odd"], [Halo], Now));
+        Assert.ThrowsAny<Exception>(() => file.Add(["XBOX"], [Halo], Now));
+    }
+
+    // "Xbox, XBOX" in Settings is one name: the games go into one collection, the one spelled like the first.
+    [Fact]
+    public void Add_TwoNamesDifferingOnlyInCase_UpdatesOneCollection()
+    {
+        var original = FileWith(("uc-aaaaaaaaaaaa", "XBOX", []), ("uc-bbbbbbbbbbbb", "Xbox", []));
+
+        var items = CollectionsJson.Read(Added(original, ["Xbox", "XBOX"], Halo));
+
+        Assert.Equal(2, items.Count);
+        Assert.Empty(items.Named("XBOX").Added);
+        Assert.Equal(new[] { Halo }, items.Named("Xbox").Added);
+    }
+
     // A collection whose "added" is not a list can't be added to safely, and making a second "Odd" would be worse.
     [Fact]
     public void Add_ToACollectionWhoseAddedIsNotAList_Throws()

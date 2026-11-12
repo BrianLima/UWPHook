@@ -23,9 +23,19 @@ public class ComActivatorTests
     public void CreateManager_GivesTheActivationManager() =>
         Assert.NotNull(ComActivator.CreateManager());
 
-    // Manual-test finding 4: the out-of-process manager gets this process's foreground rights before it activates.
-    // Whether Windows grants them depends on the session (a CI runner may refuse); it must never throw.
+    // The out-of-process manager gets this process's foreground rights before it activates. Whether Windows grants
+    // them depends on the session (a CI runner may refuse), so this is a smoke test only: the call reaches Windows
+    // and comes back with an answer instead of throwing. What the answer means is checked below.
     [Fact]
-    public void AllowSetForeground_OnTheActivationManager_DoesNotThrow() =>
-        ComActivator.AllowSetForeground(ComActivator.CreateManager());
+    public void AllowSetForeground_OnTheActivationManager_IsASmokeTest_ThatItAnswersWithoutThrowing() =>
+        _ = ComActivator.AllowSetForeground(ComActivator.CreateManager());
+
+    // S_OK and S_FALSE are successes; E_ACCESSDENIED and E_FAIL are refusals, which the launch survives.
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(-2147024891, false)]
+    [InlineData(-2147467259, false)]
+    public void ForegroundAccepted_IsTrueForASuccessHresult_AndFalseForAFailure(int hresult, bool accepted) =>
+        Assert.Equal(accepted, ComActivator.ForegroundAccepted(hresult));
 }

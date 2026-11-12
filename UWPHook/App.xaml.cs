@@ -23,7 +23,7 @@ namespace UWPHook
             // Decided before anything else can fail: a launch from Steam has no window to close, so it
             // must shut down explicitly, also when startup itself throws.
             var args = Environment.GetCommandLineArgs();
-            var isLaunch = HasLaunchArguments(args);
+            var isLaunch = LaunchArguments.AreFromSteam(args);
             if (isLaunch) ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             try
@@ -82,13 +82,6 @@ namespace UWPHook
                 Shutdown();
             }
         }
-
-        /// <summary>
-        /// Arguments other than Velopack's own (--veloapp-*) mean Steam meant to launch something.
-        /// Index 0 is UWPHook itself.
-        /// </summary>
-        private static bool HasLaunchArguments(string[] args) =>
-            args.Skip(1).Any(arg => !arg.StartsWith("--veloapp", StringComparison.OrdinalIgnoreCase));
 
         private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {

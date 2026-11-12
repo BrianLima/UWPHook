@@ -145,6 +145,19 @@ public sealed class ShortcutRemoverTests : IDisposable
     }
 
     [Fact]
+    public async Task Remove_WhileSteamRuns_WhenItCannotBeStartedAgain_SaysToStartIt()
+    {
+        Seed(Alice, Mixed);
+        var steam = new FakeSteamProcess(running: true) { StartFails = true };
+
+        var summary = await Remover(steam, Alice).RemoveAsync(SteamAccountChoice.All, Yes, TestContext.Current.CancellationToken);
+
+        Assert.Equal((RemoveStatus.Removed, StopOutcome.NotStartedAgain), (summary.Status, summary.Steam));
+        Assert.EndsWith("Steam could not be started again; start it yourself.", summary.Message);
+        Assert.Equal(ForeignOnly, File.ReadAllBytes(ShortcutsOf(Alice)));
+    }
+
+    [Fact]
     public async Task Remove_WhileSteamRuns_StopsItRemovesAndStartsItAgain()
     {
         Seed(Alice, Mixed);

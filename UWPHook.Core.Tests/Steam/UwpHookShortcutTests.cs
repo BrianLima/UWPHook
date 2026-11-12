@@ -10,6 +10,8 @@ public class UwpHookShortcutTests
     [InlineData("   Pfn_abc!App game.exe", "Pfn_abc!App")]
     [InlineData("\"Pfn_abc!App\" game.exe", "Pfn_abc!App")]
     [InlineData("Pfn_abc!App", "Pfn_abc!App")]
+    [InlineData("Pfn_abc!App \"\"", "Pfn_abc!App")]
+    [InlineData("Pfn_abc!App \"\" -windowed", "Pfn_abc!App")]
     [InlineData("", "")]
     [InlineData("   ", "")]
     public void AumidOf_IsTheFirstSpaceSeparatedToken(string launchOptions, string expected) =>
@@ -34,6 +36,7 @@ public class UwpHookShortcutTests
     [Theory]
     [InlineData("\"C:\\x y\\UWPHook.exe\"", "Pfn_abc!App game.exe")]
     [InlineData("C:\\x y\\UWPHook.exe", "Pfn_abc!App")]
+    [InlineData("\"C:\\x y\\UWPHook.exe\"", "Pfn_abc!App \"\"")]
     public void IsCreatedByUwpHook_NeedsUwpHookExeAndAnAumid(string exe, string launchOptions) =>
         Assert.True(UwpHookShortcut.IsCreatedByUwpHook(new ExistingShortcut(1, "Game", exe, launchOptions)));
 

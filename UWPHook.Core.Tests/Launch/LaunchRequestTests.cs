@@ -65,6 +65,15 @@ public class LaunchRequestTests
         Assert.Equal(new LaunchRequest(Fallout, "", "-foo"), request);
     }
 
+    // An unquoted UWPHook path that Windows split on its spaces, in front of a shortcut without an executable.
+    [Fact]
+    public void Parse_SplitUnquotedExePath_WithAnEmptyPlaceholder()
+    {
+        var request = Parse("C:\\Program", "Files", "(x86)\\Briano\\UWPHook\\UWPHook.exe", Fallout, "", "-foo");
+
+        Assert.Equal(new LaunchRequest(Fallout, "", "-foo"), request);
+    }
+
     // Windows strips the quotes of -mod "C:\My Mods"; passed on without them the game would get two arguments.
     [Fact]
     public void Parse_KeepsAnExtraArgumentWithSpacesAsOneArgument()

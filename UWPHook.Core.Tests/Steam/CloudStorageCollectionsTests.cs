@@ -146,6 +146,7 @@ public sealed class CloudStorageCollectionsTests : IDisposable
     [Theory]
     [InlineData("\0\0\0\0\0\0\0\0\0\0")]
     [InlineData("{\"not\":\"the array\"}")]
+    [InlineData("x")]
     [InlineData("[[\"user-collections.x\",{")]
     public void AddShortcuts_WhenTheFileCannotBeRead_IsSkipped_AndLeavesItAlone(string content)
     {
@@ -172,6 +173,29 @@ public sealed class CloudStorageCollectionsTests : IDisposable
         Assert.Equal(CollectionsOutcome.Skipped, outcome);
         Assert.Equal(Fixture(), File.ReadAllBytes(Namespace(1)));
         Assert.Equal(new[] { "cloud-storage-namespace-1.json" }, CloudStorageFiles());
+    }
+
+    [Fact]
+    public void AddShortcuts_KeepsOnlyTheNewestTwentyCollectionsBackups()
+    {
+        Seed(Namespace(1), Fixture());
+        Directory.CreateDirectory(BackupFolder);
+        var start = new DateTime(2020, 1, 1);
+        for (var i = 0; i < 25; i++)
+        {
+            File.WriteAllBytes(Path.Combine(BackupFolder, ShortcutsBackup.FileName("12345", start.AddMinutes(i), ShortcutsBackup.CollectionsSuffix)), [1]);
+        }
+        var shortcutsBackup = Path.Combine(BackupFolder, ShortcutsBackup.FileName("12345", start));
+        File.WriteAllBytes(shortcutsBackup, [2]);
+
+        var outcome = Collections().AddShortcuts(UserFolder, ["XBOX"], [Halo]);
+
+        Assert.Equal(CollectionsOutcome.Updated, outcome);
+        var kept = Backups().Where(path => path.EndsWith(ShortcutsBackup.CollectionsSuffix, StringComparison.Ordinal)).ToList();
+        Assert.Equal(20, kept.Count);
+        Assert.Contains(kept, path => File.ReadAllBytes(path).SequenceEqual(Fixture())); // the new backup is kept
+        Assert.DoesNotContain(kept, path => Path.GetFileName(path) == ShortcutsBackup.FileName("12345", start, ShortcutsBackup.CollectionsSuffix)); // the oldest went
+        Assert.True(File.Exists(shortcutsBackup), "the backups of shortcuts.vdf are counted on their own");
     }
 
     // Steam keeps other files there: its list of namespaces and, per namespace, the keys it still has to upload.

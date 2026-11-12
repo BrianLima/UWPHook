@@ -165,6 +165,34 @@ public sealed class SteamUserShortcutsTests : IDisposable
         Assert.Equal(corrupt, File.ReadAllBytes(ShortcutsPath));
     }
 
+    // Without a backup there is no write.
+    [Fact]
+    public void Export_WhenTheBackupFails_ThrowsAndLeavesTheFileUntouched()
+    {
+        SeedShortcuts(Seed);
+        BlockTheBackupFolder();
+
+        Assert.ThrowsAny<IOException>(() => Shortcuts().Export([Wanted]));
+
+        Assert.Equal(Seed, File.ReadAllBytes(ShortcutsPath));
+        Assert.Equal(new[] { ShortcutsPath }, Directory.GetFiles(Path.GetDirectoryName(ShortcutsPath)!));
+    }
+
+    [Fact]
+    public void RemoveUwpHookShortcuts_WhenTheBackupFails_RemovesNothing()
+    {
+        SeedShortcuts(Seed);
+        BlockTheBackupFolder();
+
+        Assert.ThrowsAny<IOException>(() => Shortcuts().RemoveUwpHookShortcuts());
+
+        Assert.Equal(Seed, File.ReadAllBytes(ShortcutsPath));
+        Assert.Equal(new[] { ShortcutsPath }, Directory.GetFiles(Path.GetDirectoryName(ShortcutsPath)!));
+    }
+
+    /// <summary>A file where the backups folder should be, so no backup can be made.</summary>
+    private void BlockTheBackupFolder() => File.WriteAllText(_backupFolder, "not a folder");
+
     [Fact]
     public void RemoveUwpHookShortcuts_RemovesOnlyUwpHookEntries_AndBacksUp()
     {

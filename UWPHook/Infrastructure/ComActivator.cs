@@ -57,9 +57,12 @@ namespace UWPHook.Infrastructure
         /// other windows. Best effort: a failure is logged (Debug) and the launch goes on.
         /// </summary>
         /// <returns>Whether Windows accepted it.</returns>
-        internal static bool AllowSetForeground(IApplicationActivationManager manager)
+        internal static bool AllowSetForeground(IApplicationActivationManager manager) =>
+            ForegroundAccepted(CoAllowSetForegroundWindow(manager, IntPtr.Zero));
+
+        /// <summary>Whether <paramref name="hresult"/>, Windows' answer to the hand-over, is a success; a refusal is logged (Debug).</summary>
+        internal static bool ForegroundAccepted(int hresult)
         {
-            var hresult = CoAllowSetForegroundWindow(manager, IntPtr.Zero);
             if (hresult >= 0) return true;
 
             Log.Debug("CoAllowSetForegroundWindow failed with HRESULT 0x{HResult:X8}; the app may start behind other windows", hresult);

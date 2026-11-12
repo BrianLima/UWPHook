@@ -57,6 +57,22 @@ public class ShortcutMergerTests
         Assert.Equal(Aumid + " \"\"", merged.Spec!.LaunchOptions);
     }
 
+    // The shape 2.15 writes for an app without an executable: <AUMID> "". Exporting again must find it.
+    [Fact]
+    public void Merge_UpdatesAPlaceholderEntryInPlace_KeepingAppId()
+    {
+        var existing = new ExistingShortcut(-789, "Game", "\"C:\\x y\\UWPHook.exe\"", Aumid + " \"\"");
+        var spec = ShortcutSpec.ForApp("Game (renamed)", Aumid, "", UwpHookExe, "icon.png", ["UWP"]);
+
+        var result = ShortcutMerger.Merge([existing], [spec]);
+
+        var merged = Assert.Single(result.Shortcuts);
+        Assert.Equal(-789, merged.AppId);
+        Assert.Equal(0, merged.ExistingIndex);
+        Assert.Same(spec, merged.Spec);
+        Assert.Empty(result.UntouchedDuplicateIndexes);
+    }
+
     [Fact]
     public void Merge_LegacyEntryWithoutAppId_GetsSteamDerivedId()
     {
