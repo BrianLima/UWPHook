@@ -161,7 +161,7 @@ public sealed class GamesViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Whether the window may close now; when it may not, tells the user why. Not while exporting (I1): closing the
+    /// Whether the window may close now; when it may not, tells the user why. Not while exporting: closing the
     /// app would end the export while Steam may be closed, and Steam would not be started again. Loading may be cut short.
     /// </summary>
     public bool ConfirmClose()

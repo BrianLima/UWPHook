@@ -4,8 +4,9 @@ namespace UWPHook.Core.Steam;
 
 /// <summary>
 /// The Steam install and its accounts. The folder is HKCU <c>SteamPath</c> (kept current by the Steam client),
-/// else the installer's HKLM <c>InstallPath</c> from whichever registry view has an existing folder (I5).
-/// The accounts are the numeric <c>userdata</c> folders (M6), named from <c>config\loginusers.vdf</c> when it has them.
+/// else the installer's HKLM <c>InstallPath</c> from whichever registry view has an existing folder
+/// (the installer's path goes stale when Steam is moved).
+/// The accounts are the numeric <c>userdata</c> folders (Steam's <c>0</c> folder and others are not accounts), named from <c>config\loginusers.vdf</c> when it has them.
 /// </summary>
 /// <param name="folderExists">Whether a folder exists: a registry candidate, or <c>userdata</c> (injectable for tests).</param>
 /// <param name="fileExists">Whether a file exists: steam.exe, or <c>loginusers.vdf</c> (injectable for tests).</param>
