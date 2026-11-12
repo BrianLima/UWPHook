@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # GitHubActions logger: each failed test becomes an error annotation.
+      # TRX logger: feeds the summary step below.
+      - name: Test
+        run: >-
+          dotnet test UWPHook.Core.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      - name: Summarize tests
+        if: always()
+        shell: bash
+        run: bash .github/scripts/summarize-trx.sh "Test summary" TestResults
+
+      # The ViewModels (no WPF), so they run here on Linux too.
+      - name: Presentation tests
+        if: always()
+        run: >-
+          dotnet test UWPHook.Presentation.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory PresentationTestResults
+
+      - name: Summarize presentation tests
+        if: always()
+        shell: bash
+        run: bash .github/scripts/summarize-trx.sh "Presentation test summary" PresentationTestResults
+
+  app:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build UWPHook.slnx -c Release "-flp:warningsonly;logfile=build-warnings.log"
+
+      # GitHub shows at most 10 warning annotations per step, so also report the full count.
+      - name: Summarize build warnings
+        shell: pwsh
+        run: |
+          $warnings = @(Get-Content build-warnings.log | Where-Object { $_ -match 'warning [A-Z]+[0-9]+' } | Sort-Object -Unique)
+          $byCode = $warnings | ForEach-Object { [regex]::Match($_, 'warning ([A-Z]+[0-9]+)').Groups[1].Value } |
+            Group-Object | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
+          Write-Output "::notice title=build warnings::$($warnings.Count) unique warnings ($($byCode -join ', '))"
+
+      # Integration tests of real Windows behaviour (COM activation, Appx, ...).
+      - name: Windows tests
+        run: >-
+          dotnet test UWPHook.Windows.Tests -c Release
+          --logger GitHubActions
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      - name: Summarize Windows tests
+        if: always()
+        shell: bash
+        run: bash .github/scripts/summarize-trx.sh "Windows test summary" TestResults
+
+      - name: Publish win-x64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64 -o publish/win-x64
+
+      - name: Publish win-arm64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-arm64 -o publish/win-arm64
+
+      - name: Summarize publish output
+        shell: pwsh
+        run: |
+          foreach ($rid in 'win-x64', 'win-arm64') {
+            $files = Get-ChildItem "publish/$rid" -File | ForEach-Object { "$($_.Name) ($([math]::Round($_.Length / 1MB, 1)) MB)" }
+            Write-Output "::notice title=publish $rid::$($files -join ', ')"
+          }
+
+      # Build the release packaging here too, so the installer can be tested from a branch:
+      # release.yml only runs on a tag, and its manual run needs the workflow on the default branch.
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version 1.2.161
+
+      - name: Pack with Velopack
+        shell: pwsh
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $files = .github/scripts/pack-release.ps1 -Version $version
+          Write-Output "::notice title=velopack pack::upload: $($files -join ', ')"
+          $all = Get-ChildItem releases/win-x64 -File | ForEach-Object Name
+          Write-Output "::notice title=velopack output win-x64::$($all -join ', ')"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-win-x64
+          path: publish/win-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-win-arm64
+          path: publish/win-arm64
+
+      # Setup.exe, the portable zip and the update feed, exactly as release.yml would upload them.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-installers
+          path: releases/upload

@@ -1,0 +1,92 @@
+name: Release
+
+# Pushing a tag v<version> (e.g. v2.15.0) builds both runtimes, packs them with Velopack and
+# uploads everything to a DRAFT GitHub Release; a maintainer reviews it and publishes it by hand.
+# Running it manually (workflow_dispatch) builds and packs the version in Directory.Build.props
+# and only keeps the files as a workflow artifact: no release, no tag.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  VPK_VERSION: 1.2.161 # keep in step with the Velopack package in Directory.Packages.props
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # The version lives only in Directory.Build.props; a tag must match it.
+      # The tag name reaches the script through env, never inlined into it.
+      - name: Resolve version
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($env:EVENT_NAME -eq 'push') {
+            $tagVersion = $env:TAG.Substring(1)
+            if ($tagVersion -ne $version) {
+              Write-Output "::error title=version mismatch::tag $env:TAG does not match <Version>$version</Version> in Directory.Build.props"
+              exit 1
+            }
+          }
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      # Every test project, so the job that builds the release artifacts proves them.
+      - name: Test Core
+        run: dotnet test UWPHook.Core.Tests -c Release
+
+      - name: Test Presentation
+        run: dotnet test UWPHook.Presentation.Tests -c Release
+
+      - name: Test Windows
+        run: dotnet test UWPHook.Windows.Tests -c Release
+
+      - name: Publish win-x64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64 -o publish/win-x64
+
+      - name: Publish win-arm64
+        run: dotnet publish UWPHook/UWPHook.csproj -c Release -r win-arm64 -o publish/win-arm64
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version ${{ env.VPK_VERSION }}
+
+      - name: Pack with Velopack
+        shell: pwsh
+        env:
+          DOTNET_ROLL_FORWARD: Major # vpk may target an older .NET than the SDK in global.json
+        run: .github/scripts/pack-release.ps1 -Version $env:VERSION
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-${{ env.VERSION }}-release
+          path: releases/upload
+
+      - name: Create draft GitHub Release
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          $files = Get-ChildItem releases/upload -File | ForEach-Object { $_.FullName }
+          gh release create $env:TAG $files `
+            --draft `
+            --verify-tag `
+            --title "UWPHook $env:VERSION" `
+            --notes "See [CHANGELOG.md](https://github.com/$env:REPOSITORY/blob/$env:TAG/CHANGELOG.md). Download UWPHook-win-x64-Setup.exe (or the Portable zip) for most PCs, the win-arm64 files for ARM PCs. SHA-256 sums are in SHA256SUMS.txt."

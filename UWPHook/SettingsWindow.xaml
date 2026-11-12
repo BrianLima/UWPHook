@@ -3,171 +3,211 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:UWPHook"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
         mc:Ignorable="d"
-        TextElement.FontWeight="Medium"
-        TextElement.FontSize="14"
-        FontFamily="Segoe UI Light"
-        Title="Settings" Height="750" Width="800" Icon="Resources/hook2.ico">
+        Title="{Binding Title}" Height="750" Width="800" MinWidth="700" MinHeight="480" Icon="Resources/hook2.ico">
+    <!-- Layout: a label column sized to its longest label, an input column taking the rest, and the About column on
+         the right. The page scrolls vertically, so nothing is cut off on a small or highly scaled screen. -->
     <Window.Resources>
-        <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
-            <Setter Property="LayoutTransform">
-                <Setter.Value>
-                    <ScaleTransform ScaleX="0.7" ScaleY="0.7" />
-                </Setter.Value>
-            </Setter>
+        <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,4"/>
         </Style>
     </Window.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="27*"/>
-            <ColumnDefinition Width="17*"/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
-            <RowDefinition Height="179*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" Mode="PrimaryMid" VerticalAlignment="Top" Height="80" Grid.ColumnSpan="2" Margin="0,0,-0.4,0"/>
+        <Border Style="{StaticResource HeaderBand}"/>
         <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Grid Margin="10,10,10,10" Grid.RowSpan="1" Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="44*"/>
-                <RowDefinition Height="30"/>
-                <RowDefinition Height="40*"/>
-                <RowDefinition Height="40*"/>
-                <RowDefinition Height="40*"/>
-                <RowDefinition Height="40*"/>
-                <RowDefinition Height="40*"/>
-                <RowDefinition Height="80"/>
-                <RowDefinition Height="50*"/>
-                <RowDefinition Height="50*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="62*"/>
-                <ColumnDefinition Width="167*"/>
-                <ColumnDefinition Width="124*"/>
-                <ColumnDefinition Width="113*"/>
-            </Grid.ColumnDefinitions>
-            <!-- Settings Section -->
-            <materialDesign:ColorZone Padding="16" Mode="PrimaryMid" VerticalAlignment="Top" Height="30" Grid.ColumnSpan="4" Grid.Row="0">
-                <Label  Content="Settings" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
-            </materialDesign:ColorZone>
-            <ToggleButton x:Name="language_toggle" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" RenderTransformOrigin="0.304,0.444" Grid.Row="1" Margin="5,3,6,4" />
-            <Label ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="label_cultures" Content="Set system language when launching an app*" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"/>
-            <ComboBox ToolTip="Some apps use the system language to choose what language to display, this setting will store your current language, change it so you can play in another language and then revert your system back to your default display language." x:Name="cultures_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="1"/>
-            <Label x:Name="label_seconds" ToolTip="If 0, UWPHook will not run in the background and will not update the in-game status" Content="Check if the launched app is running every" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"/>
-            <ComboBox x:Name="seconds_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" HorizontalAlignment="Right" Width="92" Grid.Row="2"/>
-            <ToggleButton x:Name="streaming_toggle" ToolTip="MaterialDesignSwitchToggleButton" IsChecked="False" Grid.Row="3" Margin="6,3,5,4" />
-            <Label ToolTip="This fixes Steam in-home Streaming, set this in the host computer." x:Name="label_streaming" Content="Enable streaming mode" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3"/>
-            <ToggleButton x:Name="change_resolution_toggle" ToolTip="Change host resolution on streaming mode" IsChecked="False" Grid.Row="4" Margin="5,3,6,3" />
-            <Label ToolTip="Change the host computer resolution on launch, return to previous after." x:Name="label_resolution" Content="Change host resolution to:" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="4"/>
-            <ComboBox x:Name="resolution_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right"/>
-            <Label ToolTip="Add these tags to exported games, use comma separated values" x:Name="label_tags" Content="Export with these tags:" Margin="0,0,8,0" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="5"/>
-            <TextBox x:Name="tags_textBox" Grid.Column="2" Height="32" Margin="0,0,10,0" Grid.Row="5" TextWrapping="Wrap" VerticalAlignment="Center" Grid.ColumnSpan="2" Width="220" HorizontalAlignment="Right"/>
-            <Label x:Name="label_logLevel" Content="Define log severity level" VerticalAlignment="Center" Height="29" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
-            <ComboBox x:Name="logLevel_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="3" Width="92" Grid.Row="6" SelectedIndex="0" HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="10,0,0,0">
-                <ComboBoxItem Content="ERROR"/>
-                <ComboBoxItem Content="DEBUG"/>
-                <ComboBoxItem Content="TRACE"/>
-            </ComboBox>
-            <!-- SteamGrid Section -->
-            <materialDesign:ColorZone Padding="16" Mode="PrimaryMid" VerticalAlignment="Top" Height="30" Grid.ColumnSpan="4" Grid.Row="7">
-                <Label Content="SteamGrid" HorizontalAlignment="Left" Margin="-10,-15,0,-17" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#DDFFFFFF"/>
-            </materialDesign:ColorZone>
-            <Button x:Name="key_Button" Content="{materialDesign:PackIcon Key}" ToolTip="Go to SteamGridDB.com to generate a new key" Grid.Row="8" Height="Auto" Click="key_Button_Click" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            <Label ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork." x:Name="label_apiKey" Content="Api Key" VerticalAlignment="Center" Height="29" Grid.Row="8" Grid.Column="1"/>
-            <TextBox x:Name="steamgriddb_api_key" Grid.Column="2" Height="32" Grid.Row="8" TextWrapping="Wrap" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,0,10,0" Width="220" HorizontalAlignment="Right"/>
-            <Label ToolTip="The main style of the artwork." x:Name="label_artworkStyle" Content="Artwork Style" VerticalAlignment="Center" Height="29" Grid.Row="9" Grid.Column="1"/>
-            <ComboBox x:Name="style_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="9" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                <ComboBoxItem Content="Any"/>
-                <ComboBoxItem Content="Alternate"/>
-                <ComboBoxItem Content="Blurred"/>
-                <ComboBoxItem Content="White Logo"/>
-                <ComboBoxItem Content="Material"/>
-                <ComboBoxItem Content="No Logo"/>
-            </ComboBox>
-            <Label ToolTip="Type of the artwork, animated, static or both." x:Name="label_artworkType" Content="Artwork Type" VerticalAlignment="Center" Height="29" Grid.Row="10" Grid.Column="1"/>
-            <ComboBox x:Name="type_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="10" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                <ComboBoxItem Content="Any"/>
-                <ComboBoxItem Content="Static"/>
-                <ComboBoxItem Content="Animated"/>
-            </ComboBox>
-            <Label ToolTip="Consider NSFW artwork?" x:Name="label_artworkNSFW" Content="Artwork nsfw" VerticalAlignment="Center" Height="29" Grid.Row="11" Grid.Column="1"/>
-            <ComboBox x:Name="nfsw_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="11" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                <ComboBoxItem Content="No"/>
-                <ComboBoxItem Content="Any"/>
-                <ComboBoxItem Content="Yes"/>
-            </ComboBox>
-            <Label ToolTip="Consider meme and humorous artwork?" x:Name="label_artworkHumor" Content="Artwork humorous" VerticalAlignment="Center" Height="29" Grid.Row="12" Grid.Column="1"/>
-            <ComboBox x:Name="humor_comboBox" Margin="0,0,10,0" VerticalAlignment="Center" Height="32" Grid.Column="2" Width="220" Grid.Row="12" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                <ComboBoxItem Content="No"/>
-                <ComboBoxItem Content="Any"/>
-                <ComboBoxItem Content="Yes"/>
-            </ComboBox>
-            <!-- Bottom Section -->
-            <Button x:Name="save_button" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Width="93" Click="saveButton_Click" Grid.Column="3" Grid.Row="13" Grid.ColumnSpan="1" Height="32" Margin="0,5,10,0"/>
-            <Button x:Name="update_button" Click="update_button_Click" Content="Check for updates" Margin="0,0,10,0" Grid.Row="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="165" Grid.ColumnSpan="2" Grid.Column="0" Height="32"/>
-            <Button x:Name="help_button" Click="help_button_Click" Content="Get help at our Reddit" Grid.Column="2" Grid.Row="14" VerticalAlignment="Center" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="165" Height="32" Margin="10,0,0,0"/>
-            <Button x:Name="clearAll_button" Click="clearAll_button_Click" Content="Debug: Clear shortcuts.vdf" Grid.Row="18" VerticalAlignment="Center" HorizontalAlignment="Center" Width="200" Grid.Column="1" Grid.ColumnSpan="2" Height="32"/>
-        </Grid>
-        <!-- Sidebar -->
-        <Grid Margin="10,10,10,10" Grid.Column="1" Grid.RowSpan="1" Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="290*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
-                <RowDefinition Height="150"/>
-                <RowDefinition Height="80"/>
-                <RowDefinition Height="40"/>
-                <RowDefinition Height="40"/>
-                <RowDefinition Height="40"/>
-                <RowDefinition Height="60*"/>
-            </Grid.RowDefinitions>
-            <materialDesign:ColorZone Padding="16" Mode="PrimaryMid" VerticalAlignment="Top" Height="30" Grid.ColumnSpan="3">
-                <Label  Content="About" HorizontalAlignment="Left" Margin="-10,-15,0,-17" VerticalAlignment="Top" FontFamily="Segoe UI Semibold" FontSize="14" Height="32" Foreground="#DDFFFFFF"/>
-            </materialDesign:ColorZone>
-            <Image x:Name="image2" Height="150" VerticalAlignment="Center" Source="Resources/briano.png" Stretch="UniformToFill" HorizontalAlignment="Center" Width="150" Grid.Column="0" Grid.Row="1"/>
-            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock" Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!" TextAlignment="Justify" VerticalAlignment="Center" Grid.ColumnSpan="1" Grid.RowSpan="1" Grid.Row="2" HorizontalAlignment="Center"/>
-            <materialDesign:Chip Content="Projects @ GitHub"                                  
-                                 IconBackground="{DynamicResource PrimaryHueDarkBrush}"
-                                 IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="0,0,0,0" Click="Chip1_Click" HorizontalAlignment="Center" Height="32" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Width="160">
-                <materialDesign:Chip.Icon>
-                    <materialDesign:PackIcon Kind="Github" Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark}"/>
-                </materialDesign:Chip.Icon>
-            </materialDesign:Chip>
-            <materialDesign:Chip Content="Paypal donate"                                  
-                                 IconBackground="{DynamicResource PrimaryHueDarkBrush}"
-                                 IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="0,0,0,0" Click="Chip2_Click" HorizontalAlignment="Center" Height="32" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Width="160">
-                <materialDesign:Chip.Icon>
-                    <materialDesign:PackIcon Kind="Coffee" Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark}"></materialDesign:PackIcon>
-                </materialDesign:Chip.Icon>
-            </materialDesign:Chip>
-            <materialDesign:Chip Content="@brianostorm"                                  
-                                 IconBackground="{DynamicResource PrimaryHueDarkBrush}"
-                                 IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}"
-                                 Margin="0,0,0,0" Click="Chip_Click" HorizontalAlignment="Center" Height="32" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Width="160">
-                <materialDesign:Chip.Icon>
-                    <materialDesign:PackIcon Kind="Twitter" Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark}" />
-                </materialDesign:Chip.Icon>
-            </materialDesign:Chip>
-            <TextBlock TextWrapping="WrapWithOverflow" x:Name="textBlock_Copy" Height="59" TextAlignment="Justify" Grid.Row="6" Grid.ColumnSpan="1" VerticalAlignment="Top" Margin="0,10,0,0"><Run Text="Special thanks to /r/Forza and /r/Steam communities at Reddit"/><Run Text=", and to all the "/><Hyperlink NavigateUri="https://github.com/BrianLima/UWPHook/graphs/contributors"> contributors </Hyperlink><Run Text=" who have dealt with my bad code"/><Run Text="."/><Run Text=" "/><Run Text=":)"/></TextBlock>
-        </Grid>
-        <Grid Margin="10,9.8,10.2,0.4" Grid.Row="2" Visibility="Hidden">
-            <Image HorizontalAlignment="Left" Height="111" VerticalAlignment="Top" Width="111" Source="Resources/square.png"/>
-            <TextBlock Margin="116,0,0,0" TextWrapping="Wrap" Text="Checkout OverFy, my new app, it add Spotify's now playing status into Rivatuner/MSI Afterburner overlay, Free and Open Source!" VerticalAlignment="Top" Height="63" TextAlignment="Justify" HorizontalAlignment="Left" Width="341"/>
-            <Button x:Name="update_button_Copy" Click="update_button_Click" Content="Get OverFy!" Margin="206,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="162"/>
-        </Grid>
+        <ScrollViewer x:Name="page" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="16,8,16,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="400"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Settings -->
+                <Grid x:Name="form">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*" MinWidth="160"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Style="{StaticResource SectionHeader}" Text="Settings" Grid.ColumnSpan="3" Margin="0,0,0,8"/>
+
+                    <!-- Steam user picker (#76): one account per row, all of them in view up to a few, then it scrolls. -->
+                    <TextBlock x:Name="label_accounts" Style="{StaticResource FieldLabel}" Grid.Row="1" VerticalAlignment="Top" Margin="0,10,0,4"
+                               Text="Steam accounts to use"
+                               ToolTip="UWPHook exports your games to, and removes its shortcuts from, the ticked Steam accounts."/>
+                    <ScrollViewer x:Name="accounts_scroller" Grid.Row="1" Grid.Column="2" Margin="0,4" MaxHeight="150"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="accounts_list" ItemsSource="{Binding Accounts.Rows}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsChosen}">
+                                        <WrapPanel>
+                                            <TextBlock Text="{Binding Label}" TextWrapping="Wrap"/>
+                                            <TextBlock Text=" (most recent)" Visibility="{Binding IsMostRecent, Converter={StaticResource VisibleWhenTrue}}"/>
+                                        </WrapPanel>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <TextBlock x:Name="label_seconds" Style="{StaticResource FieldLabel}" Grid.Row="2" Text="Check if the game is running every"
+                               ToolTip="How often UWPHook checks whether the launched app is still running, to keep Steam's in-game status"/>
+                    <ComboBox x:Name="seconds_comboBox" Grid.Row="2" Grid.Column="2" Width="160" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              ItemsSource="{Binding SecondsChoices}" SelectedIndex="{Binding Form.SecondsIndex}"/>
+
+                    <!-- The text is the check box's own content, so clicking it toggles the box. -->
+                    <CheckBox x:Name="streaming_toggle" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,4" Content="Enable streaming mode" IsChecked="{Binding Form.StreamMode}"
+                              ToolTip="This fixes Steam in-home Streaming, set this in the host computer."/>
+
+                    <TextBlock x:Name="label_tags" Style="{StaticResource FieldLabel}" Grid.Row="4" Text="Add games to Steam collections"
+                               ToolTip="Exported games are added to the Steam library collections with these names, separated by commas (a collection is created when it doesn't exist). Nothing is ever removed from a collection. Leave empty to not use collections."/>
+                    <TextBox x:Name="tags_textBox" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Margin="0,4"
+                             Text="{Binding Form.Tags, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock x:Name="label_logLevel" Style="{StaticResource FieldLabel}" Grid.Row="5" Text="Log level"
+                               ToolTip="How much UWPHook writes to application.log"/>
+                    <ComboBox x:Name="logLevel_comboBox" Grid.Row="5" Grid.Column="2" Width="160" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              SelectedIndex="{Binding Form.LogLevelIndex}">
+                        <ComboBoxItem Content="ERROR"/>
+                        <ComboBoxItem Content="DEBUG"/>
+                        <ComboBoxItem Content="TRACE"/>
+                    </ComboBox>
+
+                    <!-- SteamGridDB -->
+                    <TextBlock Style="{StaticResource SectionHeader}" Text="SteamGridDB" Grid.Row="6" Grid.ColumnSpan="3" Margin="0,16,0,8"/>
+
+                    <!-- The key is masked until the user asks to see it; the masked box is kept in step by the window. -->
+                    <TextBlock x:Name="label_apiKey" Style="{StaticResource FieldLabel}" Grid.Row="7" Text="API key"
+                               ToolTip="SteamGridDB API key used to download Steam's library artwork. Leave it blank if you don't want to download artwork."/>
+                    <Grid Grid.Row="7" Grid.Column="2" Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="apiKey_passwordBox" VerticalAlignment="Center"
+                                     Visibility="{Binding IsApiKeyMasked, Converter={StaticResource VisibleWhenTrue}}"/>
+                        <TextBox x:Name="steamgriddb_api_key" VerticalAlignment="Center"
+                                 Visibility="{Binding IsApiKeyShown, Converter={StaticResource VisibleWhenTrue}}"
+                                 Text="{Binding Form.SteamGridDbApiKey, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ToggleButton x:Name="apiKey_showToggle" Grid.Column="1" Width="40" Height="32" Padding="0" Margin="6,0,0,0" VerticalAlignment="Center"
+                                      IsChecked="{Binding IsApiKeyShown}" ToolTip="Show or hide the key">
+                            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE7B3;"/>
+                        </ToggleButton>
+                        <Button x:Name="key_Button" Grid.Column="2" Width="40" Height="32" Padding="0" Margin="6,0,0,0" VerticalAlignment="Center"
+                                Command="{Binding GetApiKeyCommand}" ToolTip="Go to SteamGridDB.com to generate a new key">
+                            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE8D7;"/>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock x:Name="label_artworkStyle" Style="{StaticResource FieldLabel}" Grid.Row="8" Text="Artwork style" ToolTip="The main style of the artwork."/>
+                    <ComboBox x:Name="style_comboBox" Grid.Row="8" Grid.Column="2" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              SelectedIndex="{Binding Form.StyleIndex}">
+                        <ComboBoxItem Content="Any"/>
+                        <ComboBoxItem Content="Alternate"/>
+                        <ComboBoxItem Content="Blurred"/>
+                        <ComboBoxItem Content="White Logo"/>
+                        <ComboBoxItem Content="Material"/>
+                        <ComboBoxItem Content="No Logo"/>
+                    </ComboBox>
+
+                    <TextBlock x:Name="label_artworkType" Style="{StaticResource FieldLabel}" Grid.Row="9" Text="Artwork type" ToolTip="Type of the artwork, animated, static or both."/>
+                    <ComboBox x:Name="type_comboBox" Grid.Row="9" Grid.Column="2" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              SelectedIndex="{Binding Form.TypeIndex}">
+                        <ComboBoxItem Content="Any"/>
+                        <ComboBoxItem Content="Static"/>
+                        <ComboBoxItem Content="Animated"/>
+                    </ComboBox>
+
+                    <TextBlock x:Name="label_artworkNSFW" Style="{StaticResource FieldLabel}" Grid.Row="10" Text="NSFW artwork" ToolTip="Consider NSFW artwork?"/>
+                    <ComboBox x:Name="nfsw_comboBox" Grid.Row="10" Grid.Column="2" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              SelectedIndex="{Binding Form.NsfwIndex}">
+                        <ComboBoxItem Content="No"/>
+                        <ComboBoxItem Content="Any"/>
+                        <ComboBoxItem Content="Yes"/>
+                    </ComboBox>
+
+                    <TextBlock x:Name="label_artworkHumor" Style="{StaticResource FieldLabel}" Grid.Row="11" Text="Humorous artwork" ToolTip="Consider meme and humorous artwork?"/>
+                    <ComboBox x:Name="humor_comboBox" Grid.Row="11" Grid.Column="2" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4"
+                              SelectedIndex="{Binding Form.HumorIndex}">
+                        <ComboBoxItem Content="No"/>
+                        <ComboBoxItem Content="Any"/>
+                        <ComboBoxItem Content="Yes"/>
+                    </ComboBox>
+
+                    <Button x:Name="save_button" Grid.Row="12" Grid.ColumnSpan="3" Content="Save" Style="{DynamicResource AccentButtonStyle}"
+                            HorizontalAlignment="Right" Width="120" Margin="0,16,0,0" Command="{Binding SaveCommand}"/>
+
+                    <WrapPanel Grid.Row="13" Grid.ColumnSpan="3" Margin="0,16,0,0">
+                        <Button x:Name="update_button" Content="Check for updates" Margin="0,0,8,8"
+                                Command="{Binding OpenLinkCommand}" CommandParameter="https://github.com/BrianLima/UWPHook/releases"/>
+                        <Button x:Name="help_button" Content="Get help at our Reddit" Margin="0,0,8,8"
+                                Command="{Binding OpenLinkCommand}" CommandParameter="https://reddit.com/r/UWPHook/"/>
+                        <Button x:Name="clearAll_button" Content="Remove UWPHook shortcuts" Margin="0,0,8,8" Command="{Binding RemoveShortcutsCommand}"
+                                ToolTip="Removes the shortcuts UWPHook added to Steam. Other non-Steam games are kept, and shortcuts.vdf is backed up first."/>
+                    </WrapPanel>
+                </Grid>
+
+                <!-- About -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource SectionHeader}" Text="About" Margin="0,0,0,8"/>
+                    <Image x:Name="image2" Width="150" Height="150" HorizontalAlignment="Center" Source="Resources/briano.png" Stretch="UniformToFill"/>
+                    <TextBlock x:Name="textBlock" TextWrapping="Wrap" Margin="0,8"
+                               Text="Developed by Brian Lima, @brianostorm, if you like my work cheer me up at my Twitter or pay me a coffee via Paypal, this way i can keep building amazing open-source tools for you!"/>
+                    <Button Command="{Binding OpenLinkCommand}" CommandParameter="http://github.com/brianlima" HorizontalAlignment="Stretch" Margin="0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE943;" Margin="0,0,8,0"/>
+                            <TextBlock Text="Projects @ GitHub" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding OpenLinkCommand}" CommandParameter="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=9YPV3FHEFRAUQ" HorizontalAlignment="Stretch" Margin="0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xEB51;" Margin="0,0,8,0"/>
+                            <TextBlock Text="Paypal donate" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding OpenLinkCommand}" CommandParameter="http://twitter.com/brianostorm" HorizontalAlignment="Stretch" Margin="0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE77B;" Margin="0,0,8,0"/>
+                            <TextBlock Text="@brianostorm" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock x:Name="textBlock_Copy" TextWrapping="Wrap" Margin="0,8,0,0"><Run Text="Special thanks to /r/Forza and /r/Steam communities at Reddit"/><Run Text=", and to all the "/><Hyperlink NavigateUri="https://github.com/BrianLima/UWPHook/graphs/contributors"> contributors </Hyperlink><Run Text=" who have dealt with my bad code"/><Run Text="."/><Run Text=" "/><Run Text=":)"/></TextBlock>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Window>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         IgnorableNamespaces="uap">
+  <Identity Name="Microsoft.SunriseBaseGame" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" Version="3.0.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>ms-resource:AppDisplayName</DisplayName>
+    <PublisherDisplayName>Microsoft Studios</PublisherDisplayName>
+    <Logo>StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="forza.exe" EntryPoint="Forza.App">
+      <uap:VisualElements DisplayName="ms-resource:AppDisplayName"
+                          Description="ms-resource:AppDescription"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Logo150.png"
+                          Square44x44Logo="Assets\Logo44.png" />
+    </Application>
+  </Applications>
+</Package>

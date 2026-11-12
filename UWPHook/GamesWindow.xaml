@@ -3,43 +3,91 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:UWPHook"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Background="{DynamicResource MaterialDesignPaper}"
-        TextElement.FontWeight="Medium"
-        TextElement.FontSize="14"
-        FontFamily="Segoe UI Light"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
         mc:Ignorable="d"
-        Title="UWPHook" Height="600" Width="800" Icon="/Resources/hook2.ico" Loaded="Window_Loaded">
-    <Grid x:Name="grid">
+        Title="UWPHook" Height="600" Width="800" Icon="Resources/hook2.ico" Loaded="Window_Loaded">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
+        <local:IconThumbnailConverter x:Key="IconThumbnail"/>
+    </Window.Resources>
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="28*"/>
             <RowDefinition Height="144*"/>
             <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
-        <materialDesign:ColorZone Padding="16" materialDesign:ShadowAssist.Darken="True" Mode="PrimaryMid" Height="80">
-            <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="172,-14,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
-        </materialDesign:ColorZone>
-        <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
-        <Button x:Name="settingsButton" Click="SettingsButton_Click"  Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                        Margin="0,6,10,0" HorizontalAlignment="Right"
-                        ToolTip="Settings/About" VerticalAlignment="Top">
-            <materialDesign:PackIcon Kind="Settings" Height="24" Width="24" />
-        </Button>
-        <Button Click="LoadButton_Click" Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                        Margin="0,51,10,0" HorizontalAlignment="Right"
-                        ToolTip="Load installed UWP Apps" VerticalAlignment="Top" Grid.RowSpan="2">
-            <materialDesign:PackIcon Kind="Reload" Height="24" Width="24" />
-        </Button>
-        <Grid Margin="10" Grid.Row="1">
-            <DataGrid x:Name="listGames" Margin="0,25,0,0" CanUserSortColumns="True" CanUserAddRows="False"
-                       materialDesign:DataGridAssist.CellPadding="4 2 2 2" materialDesign:DataGridAssist.ColumnHeaderPadding="4 2 2 2"/>
-            <Label x:Name="label" Content="Press 'Load installed apps' to get a list of installed titles." HorizontalAlignment="Left" Margin="0,-10,0,0" VerticalAlignment="Top"/>
+        <!-- Everything but the list is disabled while loading or exporting. The list is not: Fluent's DataGrid paints
+             itself white when disabled, which flashes in the dark theme. It is covered by busyOverlay instead. -->
+        <Grid x:Name="grid" Grid.RowSpan="3" IsEnabled="{Binding IsIdle}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28*"/>
+                <RowDefinition Height="144*"/>
+                <RowDefinition Height="19*"/>
+            </Grid.RowDefinitions>
+            <Border Style="{StaticResource HeaderBand}">
+                <Label x:Name="label1" Content="Welcome to UWPHook, the easier way to add UWP apps and XGP games and apps to Steam!" HorizontalAlignment="Left" Margin="188,2,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
+            </Border>
+            <Image x:Name="image" HorizontalAlignment="Left" Width="178" Height="80" VerticalAlignment="Top" Source="Resources/WhiteTransparent.png" Stretch="UniformToFill" ToolTip="Welcome to UWPHook, add your UWP apps and games to Steam!"/>
+            <Button x:Name="settingsButton" Click="SettingsButton_Click"
+                            Margin="0,6,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
+                            ToolTip="Settings/About" VerticalAlignment="Top">
+                <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE713;"/>
+            </Button>
+            <Button x:Name="reloadButton" Command="{Binding LoadCommand}"
+                            Margin="0,42,10,0" HorizontalAlignment="Right" Width="40" Height="32" Padding="0"
+                            ToolTip="Load installed UWP Apps" VerticalAlignment="Top" Grid.RowSpan="2">
+                <TextBlock Style="{StaticResource IconGlyph}" Text="&#xE72C;"/>
+            </Button>
+            <Grid Margin="10" Grid.Row="1">
+                <Label x:Name="label" Content="{Binding Status}" HorizontalAlignment="Left" Margin="0,-6,0,0" VerticalAlignment="Top"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-8,50,0">
+                    <CheckBox Content="Show system apps" IsChecked="{Binding IncludeSystemApps}" Command="{Binding LoadCommand}" VerticalAlignment="Center" Margin="0,0,10,0"
+                              ToolTip="List Windows' own apps too; changing it reloads the list"/>
+                    <Button Content="Select all" Command="{Binding SelectAllCommand}" Height="32" Margin="0,0,6,0" ToolTip="Select the apps the filter shows"/>
+                    <Button Content="Select none" Command="{Binding SelectNoneCommand}" Height="32" Margin="0,0,6,0" ToolTip="Clear the apps the filter shows"/>
+                </StackPanel>
+            </Grid>
+            <Button Content="Export selected apps to Steam" Command="{Binding ExportCommand}" Style="{DynamicResource AccentButtonStyle}" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
+            <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+            <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="32" Margin="50,13,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding Apps.Filter, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="271"/>
         </Grid>
-        <Button Content="Export selected apps to Steam" Click="ExportButton_Click" HorizontalAlignment="Right" Margin="0,0,10,10" Grid.Row="2" VerticalAlignment="Bottom" Width="227"/>
-        <ProgressBar Visibility="Collapsed" x:Name="progressBar" Margin="10,215,10,174" Grid.Row="1" IsIndeterminate="True" />
-        <Label Content="Filter:" HorizontalAlignment="Left" Margin="5,16,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="25" Margin="50,17,0,0" Grid.Row="2" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="271" TextChanged="textBox_TextChanged"/>
+        <!-- The columns of 2.14, in its order, but the icon is a thumbnail (decoded at 64 px, shown at 32 DIPs; its tooltip is the logo folder) instead of
+             two text columns. Only Selected and Name can be changed. -->
+        <DataGrid x:Name="listGames" Grid.Row="1" Margin="10,40,10,10" ItemsSource="{Binding Apps.Visible}" CanUserSortColumns="True" CanUserAddRows="False"
+                  AutoGenerateColumns="False" IsHitTestVisible="{Binding IsIdle}" IsReadOnly="{Binding IsBusy}">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Selected" Binding="{Binding Selected}"/>
+                <DataGridTemplateColumn Header="Icon" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <!-- The logo folder as the tooltip; none for an app without one (#56) rather than an empty box. -->
+                            <Border Width="32" Height="32" Margin="4,2" Background="Transparent">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="ToolTip" Value="{Binding IconPath}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IconPath}" Value="">
+                                                <Setter Property="ToolTip" Value="{x:Null}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Image Source="{Binding Icon, Converter={StaticResource IconThumbnail}}" Stretch="Uniform"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Executable" Binding="{Binding Executable, Mode=OneWay}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Aumid" Binding="{Binding Aumid, Mode=OneWay}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <!-- While busy: the list shows through the window's own (theme) background, and can't be clicked. -->
+        <Border x:Name="busyOverlay" Grid.Row="1" Margin="10,40,10,10" Background="{DynamicResource ApplicationBackgroundBrush}" Opacity="0.7"
+                Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>
+        <ProgressBar x:Name="progressBar" Grid.Row="1" Margin="10,40,10,10" IsIndeterminate="True" Width="300" VerticalAlignment="Center" HorizontalAlignment="Center"
+                     Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhenTrue}}"/>
     </Grid>
 </Window>

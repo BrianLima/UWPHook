@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Integration tests of real Windows behaviour (COM activation, Appx, DPAPI, ...).
+       They only run on Windows: CI runs them in the windows "app" job. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <!-- xUnit v3 test projects are executables. -->
+    <OutputType>Exe</OutputType>
+    <RootNamespace>UWPHook.Windows.Tests</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- UWPHook is a WPF app (its settings live in the Windows Desktop runtime), so the test host needs that runtime too. -->
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WPF projects leave System.Net.Http out of the implicit usings; the SteamGridDB fakes need it. -->
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="GitHubActionsTestLogger" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The hand-written binary VDF builder/reader, shared with the Core tests so seeds don't depend on the code under test. -->
+    <Compile Include="..\UWPHook.Core.Tests\Steam\BinaryVdf.cs" Link="Steam\BinaryVdf.cs" />
+    <Compile Include="..\UWPHook.Core.Tests\Diagnostics\RecordingLog.cs" Link="Diagnostics\RecordingLog.cs" />
+    <Compile Include="..\UWPHook.Core.Tests\Artwork\SteamGridDb\FakeHandler.cs" Link="Artwork\FakeHandler.cs" />
+    <!-- The ViewModels' fakes, so the XAML-load tests can build every window. -->
+    <Compile Include="..\UWPHook.Presentation.Tests\Fakes.cs" Link="Presentation\Fakes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UWPHook\UWPHook.csproj" />
+  </ItemGroup>
+
+</Project>

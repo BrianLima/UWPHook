@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The ViewModels behind UWPHook's windows. No WPF: they depend on Core and small interfaces only,
+       so they are tested on Linux in CI (UWPHook.Presentation.Tests). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>UWPHook.Presentation</RootNamespace>
+    <AssemblyName>UWPHook.Presentation</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- RowIcons is internal; its tests pick one icon at a time to check the order. -->
+    <InternalsVisibleTo Include="UWPHook.Presentation.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UWPHook.Core\UWPHook.Core.csproj" />
+  </ItemGroup>
+
+</Project>

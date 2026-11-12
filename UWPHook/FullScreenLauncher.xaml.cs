@@ -1,45 +1,24 @@
-﻿using MaterialDesignColors;
-using MaterialDesignThemes.Wpf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace UWPHook
 {
     /// <summary>
-    /// Interaction logic for FullScreenLauncher.xaml
+    /// Stream mode's splash: the only window a launch from Steam opens, shown while Steam's stream
+    /// catches up. It is always dark (ThemeMode="Dark" in its XAML), whatever the system theme.
+    /// <see cref="GameLauncher"/> switches WPF to software rendering before showing it.
     /// </summary>
     public partial class FullScreenLauncher : Window
     {
-        public PaletteHelper pallet;
         public FullScreenLauncher()
         {
             InitializeComponent();
             textLaunch.Text = GetLauncherText();
-            pallet = new PaletteHelper();
-
-            BaseTheme darkTheme = BaseTheme.Dark;
-
-            var theme = Theme.Create(darkTheme,
-            SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.DeepPurple],
-            SwatchHelper.Lookup[(MaterialDesignColor)SecondaryColor.Lime]);
-
-            pallet.SetTheme(theme);
         }
 
         private void Chip2_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ");
+            // .NET does not open URLs through the shell unless asked to.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9YPV3FHEFRAUQ") { UseShellExecute = true });
         }
 
         string GetLauncherText()

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="UWPHook.Core.Tests/UWPHook.Core.Tests.csproj" />
+  <Project Path="UWPHook.Core/UWPHook.Core.csproj" />
+  <Project Path="UWPHook.Presentation.Tests/UWPHook.Presentation.Tests.csproj" />
+  <Project Path="UWPHook.Presentation/UWPHook.Presentation.csproj" />
+  <Project Path="UWPHook.Windows.Tests/UWPHook.Windows.Tests.csproj" />
+  <Project Path="UWPHook/UWPHook.csproj" />
+</Solution>

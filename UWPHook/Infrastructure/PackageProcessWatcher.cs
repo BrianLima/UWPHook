@@ -1,0 +1,133 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+using Serilog;
+using UWPHook.Core.Catalog;
+using UWPHook.Core.Launch;
+using Windows.Management.Deployment;
+
+namespace UWPHook.Infrastructure
+{
+    /// <summary>
+    /// Finds running processes of a package family: processes with that package identity, and
+    /// unpackaged processes (GDK games) whose image lives under one of the package's folders: the installed one or,
+    /// for a moddable game, the effective one it runs from (e.g. <c>C:\XboxGames\&lt;Game&gt;\Content</c>).
+    /// Processes it may not open (system, other users, elevated) are skipped silently.
+    /// Make one per game session and use it from one thread at a time: it caches the package's
+    /// install location and reuses its buffers across polls.
+    /// </summary>
+    internal sealed class PackageProcessWatcher(WindowsPackageLocations packageLocations) : IPackageProcessWatcher
+    {
+        private const uint ProcessQueryLimitedInformation = 0x1000;
+        private const int ErrorSuccess = 0;
+        private const int ErrorInsufficientBuffer = 122;
+        // PACKAGE_FAMILY_NAME_MAX_LENGTH is 64 + 1 + 13; leave room for the terminator.
+        private const int FamilyNameCapacity = 128;
+        // Most image paths fit in MAX_PATH; grow (up to the longest NT path) only when one does not.
+        private const int InitialImagePathCapacity = 1024;
+        private const int MaxImagePathCapacity = 32768;
+
+        private readonly char[] familyNameBuffer = new char[FamilyNameCapacity];
+        private char[] imagePathBuffer = new char[InitialImagePathCapacity];
+
+        private readonly Dictionary<string, IReadOnlyList<PackageLocations>> installLocations = new(StringComparer.OrdinalIgnoreCase);
+
+        public bool AnyAlive(string packageFamilyName)
+        {
+            var locations = InstallLocationsOf(packageFamilyName);
+            var processes = Process.GetProcesses();
+            try
+            {
+                return processes.Any(process => BelongsTo(process.Id, packageFamilyName, locations));
+            }
+            finally
+            {
+                foreach (var process in processes) process.Dispose();
+            }
+        }
+
+        private bool BelongsTo(int processId, string packageFamilyName, IReadOnlyList<PackageLocations> locations)
+        {
+            using var handle = OpenProcess(ProcessQueryLimitedInformation, false, processId);
+            if (handle.IsInvalid) return false; // access denied, or it has already exited
+
+            return string.Equals(FamilyNameOf(handle), packageFamilyName, StringComparison.OrdinalIgnoreCase)
+                || (locations.Count > 0 && IsUnderAny(ImagePathOf(handle), locations));
+        }
+
+        private string? FamilyNameOf(SafeProcessHandle handle)
+        {
+            var length = (uint)familyNameBuffer.Length;
+            if (GetPackageFamilyName(handle, ref length, familyNameBuffer) != ErrorSuccess || length == 0) return null;
+            return new string(familyNameBuffer, 0, (int)length - 1); // length counts the terminator
+        }
+
+        private string? ImagePathOf(SafeProcessHandle handle)
+        {
+            while (true)
+            {
+                var length = (uint)imagePathBuffer.Length;
+                if (QueryFullProcessImageName(handle, 0, imagePathBuffer, ref length))
+                    return new string(imagePathBuffer, 0, (int)length);
+
+                if (Marshal.GetLastPInvokeError() != ErrorInsufficientBuffer || imagePathBuffer.Length >= MaxImagePathCapacity)
+                    return null;
+
+                imagePathBuffer = new char[Math.Min(imagePathBuffer.Length * 4, MaxImagePathCapacity)];
+            }
+        }
+
+        private static bool IsUnderAny(string? imagePath, IReadOnlyList<PackageLocations> locations) =>
+            imagePath is not null && locations.Any(package => package.Contains(imagePath));
+
+        private IReadOnlyList<PackageLocations> InstallLocationsOf(string packageFamilyName)
+        {
+            if (!installLocations.TryGetValue(packageFamilyName, out var locations))
+            {
+                locations = ReadInstallLocations(packageFamilyName);
+                installLocations[packageFamilyName] = locations;
+                Log.Debug("Install locations of {FamilyName}: {Locations}", packageFamilyName, locations);
+            }
+            return locations;
+        }
+
+        private IReadOnlyList<PackageLocations> ReadInstallLocations(string packageFamilyName)
+        {
+            try
+            {
+                return new PackageManager().FindPackagesForUser(string.Empty, packageFamilyName)
+                    .Select(LocationsOrNull)
+                    .OfType<PackageLocations>()
+                    .Where(locations => locations.All.Count > 0)
+                    .ToList();
+            }
+            catch (Exception e)
+            {
+                Log.Warning("Could not look up the install location of {FamilyName}: {Message}", packageFamilyName, e.Message);
+                return [];
+            }
+        }
+
+        private PackageLocations? LocationsOrNull(Windows.ApplicationModel.Package package)
+        {
+            try
+            {
+                return packageLocations.Of(package);
+            }
+            catch (Exception e)
+            {
+                Log.Debug("Package {FullName} has no readable install location: {Message}", package.Id.FullName, e.Message);
+                return null;
+            }
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern SafeProcessHandle OpenProcess(uint desiredAccess, bool inheritHandle, int processId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+        private static extern int GetPackageFamilyName(SafeProcessHandle process, ref uint packageFamilyNameLength, [Out] char[] packageFamilyName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "QueryFullProcessImageNameW", ExactSpelling = true, SetLastError = true)]
+        private static extern bool QueryFullProcessImageName(SafeProcessHandle process, uint flags, [Out] char[] exeName, ref uint size);
+    }
+}

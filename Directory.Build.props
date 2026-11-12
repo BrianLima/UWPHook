@@ -1,0 +1,16 @@
+<Project>
+  <!-- Shared metadata for every project. The version lives only here. -->
+  <PropertyGroup>
+    <Version>2.15.0</Version>
+    <Company>Briano</Company>
+    <Product>UWPHook</Product>
+    <Description>Add your UWP games and apps to Steam!</Description>
+    <Authors>Brian Lima</Authors>
+    <Copyright>Copyright © Brian Lima 2016-2026</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <LangVersion>latest</LangVersion>
+    <!-- Symbols live inside each DLL/EXE, so no .pdb files ship in the publish folder
+         (this also covers referenced projects such as UWPHook.Core). -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+</Project>

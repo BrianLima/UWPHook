@@ -8,9 +8,27 @@ If you want to add Windows Store or Xbox Game Pass Games to Steam, you need to d
 
 # To add UWP or XGP games to Steam #
 
-[Download the latest version of UWPHook](https://github.com/BrianLima/UWPHook/releases) and store it somewhere on your PC.
+Get UWPHook from the [latest release](https://github.com/BrianLima/UWPHook/releases/latest). Pick the files for your PC: `win-x64` for most PCs, `win-arm64` for ARM devices (Snapdragon and similar).
 
-Click on the 🔄 to load installed UWP Apps, we will find every UWP app and Xbox Game Pass game installed on your PC.
+- **Installer (recommended):** download and run `UWPHook-win-x64-Setup.exe` (or `UWPHook-win-arm64-Setup.exe`). It installs UWPHook for your Windows user only, into `%LocalAppData%\UWPHook`, without asking for administrator rights, and adds Start menu and desktop shortcuts. Updates keep your Steam shortcuts working because they always point at `%LocalAppData%\UWPHook\current\UWPHook.exe`, whose path never changes.
+- **Portable:** download `UWPHook-win-x64-Portable.zip` (or the `win-arm64` one), extract it to a folder that you won't move later (your Steam shortcuts point at it), and run `UWPHook.exe`.
+
+The `SHA256SUMS.txt` file in each release lists the checksums of every download.
+
+## Upgrading from 2.14 or older
+
+> **Do not run the 2.14 uninstaller** (not from its Start menu entry, and not from Windows Settings > Apps), **and do not delete the `%AppData%\Briano\UWPHook` folder.** The 2.14 installer put UWPHook *into* that folder, which is also where 2.15 keeps your settings, your `shortcuts.vdf` backups and the icons your Steam shortcuts use, and the 2.14 uninstaller deletes the whole `%AppData%\Briano` folder.
+
+1. Install 2.15 as above and open it once. Your settings (stream mode, check interval, SteamGridDB key and artwork choices, tags, log level) are imported from 2.14 the first time 2.15 starts. From then on they live in `%AppData%\Briano\UWPHook\settings.json`, next to your backups and logs, and updates no longer reset them. The SteamGridDB key in that file is encrypted for your Windows user, so after moving to another PC or Windows account you enter it again.
+2. **Export your games again from 2.15.** UWPHook updates its existing Steam shortcuts in place, so your playtime, artwork and app ids are kept. Until you do, your old shortcuts keep starting the old 2.14 `UWPHook.exe`.
+3. Only after that, if you want to remove 2.14, delete its program files by hand from `%AppData%\Briano\UWPHook`: `UWPHook.exe`, `UWPHook.exe.config`, `uninstall.exe`, `UWPHook website.url`, every `.dll` and `.xml` file, and the `Resources` folder. Also delete the `UWPHook` folder in the Start menu (it holds 2.14's "UWPHook", "Uninstall UWPHook" and "UWPHook Website" entries), and a desktop `UWPHook` shortcut if it still points at `%AppData%\Briano\UWPHook`. **Keep** `settings.json`, the `application*.log` files, and the `backups` and `icons` folders. If you extracted the 2.15 portable zip into `%AppData%\Briano\UWPHook` itself, skip this step: the `UWPHook.exe` there is now 2.15.
+4. 2.14 kept your settings, including the SteamGridDB key in plain text, in `user.config` files under `%LocalAppData%\Briano` (in `UWPHook.exe_Url_…` folders). Once 2.15 has started once and shows your settings, you can delete those `UWPHook.exe_Url_…` folders.
+
+If you used 2.14 as a portable exe, the same applies: **export your games again from 2.15**, then delete the old 2.14 copy. That is also needed when you extract the 2.15 portable zip over the old folder. The `UWPHook.exe` at the top of the 2.15 zip only starts the real app in the `current` folder and exits at once, so an old shortcut that points at it starts the game, but Steam stops showing you as playing and counts no playtime. Exporting again points your shortcuts at `current\UWPHook.exe`.
+
+## Using UWPHook
+
+When UWPHook opens, it lists every UWP app and Xbox Game Pass game installed on your PC. Press the 🔄 button to load the list again.
 
 ![](https://i.imgur.com/pjGfGHe.png)
 
@@ -18,7 +36,7 @@ Select every app you want to add to Steam, you can change the name by double cli
 
 ![](https://i.imgur.com/on46CMQ.png)
 
-Close UWPHook, restart Steam if prompted, click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
+If Steam is running, UWPHook asks before closing it, then writes the shortcuts and starts it again for you. Click play on your UWP game, and Steam will show your current game on your status as long as you are playing it!
 
 ----------
 
@@ -46,28 +64,57 @@ Special thanks to @FusRoDah061 for implementing the base feature!
   - Check the option "Streaming" mode inside the settings screen
 - **Steam Deck?**
   - This app is not compatible with the Steam Deck in any way.
-
- If you are facing an error of any kind, please check the contents of the file 
+- **"Value does not fall within the expected range", or the game doesn't start from Steam**
+  - Older versions wrote Steam shortcuts without quotes, which broke when UWPHook lived in a folder with spaces in its name (for example `C:\Program Files\...`). Since 2.15, shortcuts are quoted. Open UWPHook 2.15 and export your games again: shortcuts made by an older version keep pointing at the old `UWPHook.exe` until you do. This goes for the installer and for the portable zip, also when you put 2.15 into the folder the old version was in.
+- **My exported games don't show up in Steam**
+  - Steam only reads its shortcuts when it starts, and may write its own copy when it exits. So when Steam is running, UWPHook asks whether it may close Steam; if you say yes, it closes Steam, writes the shortcuts, and starts it again, and if you say no, it writes nothing. If Steam hasn't closed after a minute, UWPHook writes nothing and says so. Steam usually still closes a little later: wait for that, export again, and then start Steam yourself, because UWPHook does not start it again in that case. If Steam can't be started again after an export, the message says so too.
+  - UWPHook writes to the Steam install the Steam client last ran from (`HKCU\Software\Valve\Steam\SteamPath`), and falls back to the installer's path. If you moved Steam, start it once so it records the new folder.
+- **The tags from Settings don't show up in Steam / my games aren't in a collection**
+  - The Steam client stopped reading a shortcut's tags; it shows *collections*, which it keeps in `<Steam folder>\userdata\{userid}\config\cloudstorage\cloud-storage-namespace-1.json`. Since 2.15, the Settings box "Add games to Steam collections" (comma separated, for example `READY TO PLAY,XBOX`) adds every exported game to the collections with those names, and creates a collection that doesn't exist yet. Export your games again to get them into the collections.
+  - UWPHook only ever adds its own games to collections. It never removes a game from a collection, and never renames or deletes one, so after changing the names in Settings, tidy the old collections up in Steam.
+  - Before changing that file, UWPHook backs it up to `%AppData%\Briano\UWPHook\backups` as `{userid}_{yyyyMMddHHmmssfff}_collections.json` (the newest 20 per account are kept). To restore one, close Steam and copy it over the file above.
+  - "Remove UWPHook shortcuts" removes the shortcuts only. The collections UWPHook created stay (delete them in Steam if you don't want them).
+  - A game you removed by hand from a *dynamic* collection is not added to it again.
+  - If the export message says an account "has no Steam collections yet", that account has no such file: start Steam, sign in with it once, and export again. If it says the games "could not be added to your Steam collections", the file could not be read or written; `application.log` has the reason. Either way the games themselves were exported.
+- **The app list is empty or says "Error trying to get installed apps"**
+  - UWPHook lists your apps through Windows' own package manager (the apps that have a Start menu entry). Check `application.log` (see below) for the error; a package that can't be read is skipped and logged there.
+- **My Windows display language changed, or the language option is gone**
+  - The per-game language option was removed in 2.15. Windows only applies a display-language change after you sign out, so it never worked when launching a game. If a previous version left your Windows display language changed, set it back in Settings > Time & language > Language & region.
+- **A game is missing from the list**
+  - Since 2.15, every app with a Start menu entry is listed, including games whose executable UWPHook can't work out (their Executable column is empty; they still launch and track playtime). If a game you can start from the Start menu is still missing, tick "Show system apps", then in Settings set the Log level to DEBUG, press Load again, and send us `%AppData%\Briano\UWPHook\application.log`. It has a warning for each package UWPHook couldn't fully read (with the package's family name and why) and an "App list loaded" summary line. Set the log level back to ERROR afterwards.
 - **I have shortcuts from other application that broke when i used UWPHook**
-  - You can find a backup of your `shortcuts.vdf` file in `%appdata%\Roaming\Briano\UWPHook\backups`, each file in this directory is a backup of the original `shortcuts.vdf` before manipulation by UWPHook, the files are renamed `{userid}_{timestamp}_shortcut.vdf`, you can restore these files to their original location for usage.
+  - Since 2.15, exporting only adds or updates UWPHook's own shortcuts and leaves every other shortcut as it was.
+  - Before every change, UWPHook backs up your `shortcuts.vdf` to `%AppData%\Briano\UWPHook\backups`. Each file is named `{userid}_{yyyyMMddHHmmssfff}_shortcuts.vdf`, and the newest 20 of each Steam account are kept. To restore one, close Steam, copy it over `<Steam folder>\userdata\{userid}\config\shortcuts.vdf`, and start Steam again.
+  - Uninstalling UWPHook 2.15 or later does not delete this folder, so your backups, logs and settings stay where they are. The 2.14 uninstaller does delete it: see [Upgrading from 2.14 or older](#upgrading-from-214-or-older).
 - **My question isn't listed here!**
   - Drop by our subreddit and ask a question over there, maybe someone will help you, i surely will as soon as i can:
  **[https://www.reddit.com/r/uwphook](https://www.reddit.com/r/uwphook)**
-  - Please also paste the contents of the file `%appdata%Roaming\Briano\UWPHook\application.log` so i can try to understand better the problem.
+  - Please also paste the contents of the file `%AppData%\Briano\UWPHook\application.log` so i can try to understand better the problem.
 ----------
 
 # Building
 
-- Clone project or forked project.
-- Install Visual Studio 2022 with .NET Framework 4.8.
-- Install [SharpSteam by BrianLima](https://github.com/BrianLima/SharpSteam/releases/) and [VDFParser](https://github.com/brianlima/VDFParser) and build.
-- If the project asks for the references for VDFParser and Sharpsteam, point it to the most recent build.
-- Press run!
+- Clone the project (or your fork). No other repositories are needed: `shortcuts.vdf` is read and written with the ValveKeyValue NuGet package.
+- Install [Visual Studio 2026](https://visualstudio.microsoft.com/) with the ".NET desktop development" workload, **or** just the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). The SDK version is pinned in `global.json`.
+- Build from the repository root:
+  ```
+  dotnet build UWPHook.slnx
+  ```
+- Publish a self-contained, single-file `UWPHook.exe` (use `win-arm64` for ARM devices). The output folder holds `UWPHook.exe` plus the native runtime DLLs it loads from the same folder; nothing is extracted to `%TEMP%`:
+  ```
+  dotnet publish UWPHook/UWPHook.csproj -c Release -r win-x64
+  ```
+- Every push is built by GitHub Actions (`.github/workflows/ci.yml`), which uploads the `win-x64` and `win-arm64` builds as artifacts.
 
-## Installer 
+## Installer and releases
 
-The installer is built with [NSIS](https://nsis.sourceforge.io/Download), just run the script `UWPHook.nsi` and things **should** work. Modify any hardcoded paths to suit your setup.
-The installation consists of zipping the application and creating some of the paths for the user, since the application is mostly static/dynamic and does not depend a lot on where it is installed, the installer is made for convenience.
+The installer, the portable zip and the update feed are built with [Velopack](https://velopack.io) by `.github/workflows/release.yml`:
+
+- Pushing a tag `v<version>` (it must match `<Version>` in `Directory.Build.props`) publishes `win-x64` and `win-arm64`, packs each one with `vpk` on its own channel, and uploads everything, plus `SHA256SUMS.txt`, to a **draft** GitHub Release for review.
+- Running the workflow by hand only builds and packs, and keeps the files as a workflow artifact.
+- CI runs the same packing script (`.github/scripts/pack-release.ps1`) on every push, so packing problems show up before release day.
+
+To pack locally, install the `vpk` tool (`dotnet tool install -g vpk`, the same version as the `Velopack` package in `Directory.Packages.props`), publish as above into `publish/<rid>`, then run `pwsh .github/scripts/pack-release.ps1 -Version <version>`.
 
 ----------
 
