@@ -1,6 +1,6 @@
 # Packs already-published UWPHook builds with Velopack (vpk) and gathers the release assets.
-# Used by release.yml (tag builds) and by ci.yml (a smoke run on every push, so packing never
-# breaks silently between releases).
+# Used by release.yml (tag builds) and by ci.yml (every push, so packing never breaks silently
+# between releases and the installers can be tested from a branch).
 #
 #   pwsh .github/scripts/pack-release.ps1 -Version 2.15.0 [-PublishRoot publish] [-OutputRoot releases]
 #

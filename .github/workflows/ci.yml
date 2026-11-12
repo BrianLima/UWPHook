@@ -97,11 +97,12 @@ jobs:
             Write-Output "::notice title=publish $rid::$($files -join ', ')"
           }
 
-      # Smoke-test the release packaging (release.yml only runs on tags) without uploading it.
+      # Build the release packaging here too, so the installer can be tested from a branch:
+      # release.yml only runs on a tag, and its manual run needs the workflow on the default branch.
       - name: Install vpk
         run: dotnet tool install -g vpk --version 1.2.161
 
-      - name: Pack with Velopack (smoke)
+      - name: Pack with Velopack
         shell: pwsh
         env:
           DOTNET_ROLL_FORWARD: Major
@@ -121,3 +122,9 @@ jobs:
         with:
           name: UWPHook-win-arm64
           path: publish/win-arm64
+
+      # Setup.exe, the portable zip and the update feed, exactly as release.yml would upload them.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UWPHook-installers
+          path: releases/upload
