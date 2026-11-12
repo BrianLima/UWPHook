@@ -321,12 +321,19 @@ Audit result: no API UWPHook uses is deprecated on Windows 11. `IApplicationActi
 
 ---
 
+## Status (2026-11-12)
+- Tasks 1–13 are merged on `modernize/2.15-stabilize` (PR #185, draft), plus: the final fix wave, the fixes from Brian's Windows 11 test, Steam collections, the missing-apps hardening and the icon column.
+- Brian tested the portable x64 build on Windows 11: list, export, launch from Steam, settings, collections and icons work.
+- **Not tested:** upgrading from an installed 2.14, Windows 10, the Velopack `Setup.exe`, ARM64. `release.yml` has never run.
+- **Left for 2.15:** run `release.yml` by hand and try the installer; mark the PR ready and merge; push tag `v2.15.0`; close the triaged issues and PRs.
+- **Small follow-ups (not blocking):** a WARNING log level in Settings; the Settings window's fixed height; the main window doesn't know a "Remove" is running; `actions/checkout` and `upload-artifact` v4 → v5.
+
 ## Phase 3 — Features (plan separately, in this order)
-1. **Remove UWPHook shortcuts** (replaces "Clear all", D6) + **Steam user picker** (#76).
+1. ~~**Remove UWPHook shortcuts** (replaces "Clear all", D6) + **Steam user picker** (#76).~~ Done in 2.15 (Tasks 9b and 10c-2).
 2. **Sync mode + CLI**: `UWPHook.exe sync [--remove-missing] [--user <id>]`, also a Windows Scheduled Task option (#64).
 3. **Artwork picker** (from the dos-ise `SelectImagesWindow` draft) + per-game artwork override.
 4. **Launch mode per game**: Activate (default) / direct exe / URI.
-5. **Steam collection auto-assign** ("Xbox") with a backup of the cloud-storage json (see the acabtr fork).
+5. ~~**Steam collection auto-assign** ("Xbox") with a backup of the cloud-storage json (see the acabtr fork).~~ Done in 2.15 (add-only; removing from collections is still open).
 6. **Sunshine/Apollo `apps.json` export** (replaces PR #85): only touch own entries, back up before writing.
 7. **Resolution switch** reimplemented via `ChangeDisplaySettingsEx` and restored on game exit (#124).
 8. In-app updates via Velopack `UpdateManager` + GitHub source; install-date sort (#61); Xbox app pre-launch option (#161).
