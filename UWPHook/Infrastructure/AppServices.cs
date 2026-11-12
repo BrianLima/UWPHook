@@ -21,6 +21,13 @@ namespace UWPHook.Infrastructure
         private static readonly string AppDataFolder =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Briano", "UWPHook");
 
+        /// <summary>
+        /// How long a Steam that was asked to exit may take. Steam can be busy for a while (syncing cloud saves, a
+        /// large library); giving up early would leave it closed, because it still exits a little later with nobody
+        /// left to start it again. The wait ends as soon as Steam is gone, so the usual case is no slower.
+        /// </summary>
+        internal static readonly TimeSpan SteamExitTimeout = TimeSpan.FromSeconds(60);
+
         private readonly ILog _log = SerilogLog.Instance;
 
         public AppServices()
@@ -47,7 +54,9 @@ namespace UWPHook.Infrastructure
             var exporter = new ShortcutExporter(steam, restarter, backups, artwork, new CloudStorageCollections(backups, TimeProvider.System, _log), _log);
             var remover = new ShortcutRemover(steam, restarter, backups, _log);
 
-            var games = new GamesViewModel(new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities))), new ThumbnailingIconPicker(icons, IconThumbnails.Shared), exporter, Settings, dialogs, _log, StableExePath);
+            var catalog = new KnownAppsCatalog(new PackageManagerCatalog(new WindowsPackageLocations(WindowsOsVersion.Capabilities)));
+            var listIcons = new ThumbnailingIconPicker(icons, IconThumbnails.Shared);
+            var games = new GamesViewModel(catalog, listIcons, exporter, Settings, dialogs, _log, StableExePath);
             return new UWPHook.GamesWindow(games, () => new SettingsWindow(new SettingsViewModel(Settings, steam, remover, dialogs, new AppHost(), _log)));
         }
 
@@ -63,7 +72,7 @@ namespace UWPHook.Infrastructure
         /// </summary>
         private static SteamRestarter NewSteamRestarter(ISteamLocator steam) =>
             new SteamRestarter(new WindowsSteamProcess(steam), TimeProvider.System,
-                timeout: TimeSpan.FromSeconds(15), poll: TimeSpan.FromMilliseconds(500));
+                timeout: SteamExitTimeout, poll: TimeSpan.FromMilliseconds(500));
 
         private static SettingsStore NewStore() =>
             new SettingsStore(Path.Combine(AppDataFolder, "settings.json"), new DpapiSecretProtector())

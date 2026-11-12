@@ -14,7 +14,7 @@ namespace UWPHook.Infrastructure
 
         private readonly ISteamLocator _steam;
 
-        /// <param name="steam">The Steam install that export writes to, so the restart works on the same one (I5).</param>
+        /// <param name="steam">The Steam install that export writes to, so the restart works on the same one.</param>
         public WindowsSteamProcess(ISteamLocator steam)
         {
             _steam = steam;
