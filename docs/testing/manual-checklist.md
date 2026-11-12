@@ -32,10 +32,10 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] With a SteamGridDB key set, exporting a new game puts its images in `userdata/<id>/config/grid/` named after the entry's `appid` (`<id>.png`, `<id>p.png`, `<id>_hero.png`, `<id>_logo.png`; the extension follows the SteamGridDB URL, e.g. `.webp`/`.jpg`).
 
 ## Task 5
-- [ ] Export with Steam running: Steam closes and reopens within ~15 s, and the message says "Steam has been restarted." The app stays open.
+- [ ] Export with Steam running: Steam closes and reopens (normally within ~15 s; UWPHook waits up to 60 s), and the message says "Steam has been restarted." The app stays open.
 - [ ] Export with Steam closed: the message says the games will show up the next time Steam starts, and Steam is not launched. The app stays open.
 - [ ] Export with the SteamGridDB "animated" filter on: the grid images are saved with their original extension (e.g. `.webp`/`.png`), still animate, and Steam shows them. The app stays open.
-- [ ] If Steam does not exit within 15 s (e.g. a modal dialog is open in Steam), export finishes with "Steam did not close in time, so nothing was exported. Close Steam, then export again." instead of hanging.
+- [ ] If Steam does not exit within 60 s (e.g. a modal dialog is open in Steam), export finishes with "Steam is still closing, so nothing was exported. Wait until it has closed, then export again. UWPHook will not start Steam again after this, so start it yourself." instead of hanging.
 - [ ] Force an error during export (e.g. make `shortcuts.vdf` read-only): an error message box appears, the error is in `%AppData%\Briano\UWPHook\application.log`, and the window is re-enabled.
 
 ## Integration 4+5
@@ -106,12 +106,12 @@ Checks that need a real Windows machine (they cannot run in CI). Tick them off o
 - [ ] M5: after more than 20 exports, `%AppData%\Briano\UWPHook\backups` holds the newest 20 backups per Steam account; other accounts' backups are untouched.
 - [ ] M6: a `userdata\0` folder (or a non-numeric folder) gets no `config\shortcuts.vdf` or grid art after an export.
 - [ ] M7: export with Steam running: Steam closes first, then the shortcuts are written, then Steam starts and shows the games (check `application.log` at DEBUG: "Requesting Steam shutdown" before "Shortcuts written", "Starting Steam" after). Same for Settings → "Remove UWPHook shortcuts": the removed entries stay gone after Steam restarts.
-- [ ] M7: with a modal dialog open in Steam (so it doesn't exit within 15 s), export says "Steam did not close in time, so nothing was exported. Close Steam, then export again." and `shortcuts.vdf` is unchanged (no new backup).
+- [ ] M7: with a modal dialog open in Steam (so it doesn't exit within 60 s), export says "Steam is still closing, so nothing was exported. Wait until it has closed, then export again. UWPHook will not start Steam again after this, so start it yourself." and `shortcuts.vdf` is unchanged (no new backup).
 - [x] ~~M10: with the language option on and an invalid target language (edit `targetLanguage` in `settings.json`), the game still launches and `application.log` has "Setting the Windows UI language to ... failed; launching anyway".~~ *(superseded: language override removed in Task 13, R37)*
 - [ ] M12: a failure while loading the app list shows the error box in front of the UWPHook window.
 - [ ] M2: a game whose executable path has a space (e.g. a GDK game with `Some Game.exe`, or edit a shortcut's launch options to `<AUMID> "Bin\Some Game.exe"`) gets `LaunchOptions` `<AUMID> "…\Some Game.exe"` in `shortcuts.vdf`. Steam passes it to UWPHook as one argument: the game launches, Steam shows "Playing" for the whole session, and at DEBUG `application.log` names the full executable, not `Some`.
 - [ ] R33: with one account's `userdata\<id>\config\grid` made read-only (or a file there locked), export still says the apps were exported, adds "Artwork could not be copied for Steam account(s) <id>", and the other accounts get their art.
-- [ ] R33: when steam.exe can't be found while Steam runs (rename `HKCU\Software\Valve\Steam\SteamExe` and start Steam from a copied folder not named in the registry), export says UWPHook "could not find steam.exe to close and restart it", not "did not close in time", and Steam is left running.
+- [ ] R33: when steam.exe can't be found while Steam runs (rename `HKCU\Software\Valve\Steam\SteamExe` and start Steam from a copied folder not named in the registry), export says UWPHook "could not find steam.exe to close and restart it", not "Steam is still closing", and Steam is left running.
 
 ## Task 10c-1
 Export and "Remove UWPHook shortcuts" now run through the Core `ShortcutExporter` / `ShortcutRemover`; re-run the earlier export cases.
@@ -188,7 +188,7 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 ## Manual-test fix wave 1
 - [ ] Finding 1: Settings at 100%, 125% and 150% display scaling, at its default size and dragged to its minimum width: no label, combo box value ("5 seconds", "Any"), tags or API key box is cut off or overlaps another control; with two or more Steam accounts each is on its own row as `PersonaName (AccountName)`, all ticked by default; the SteamGridDB key shows as dots until the eye button is pressed, and a key typed in either state is the one saved.
 - [ ] Finding 2: in the Windows dark theme, toggle "Show system apps" and press Load: the games list dims under the dark background with a progress bar and never flashes white; the same during an export.
-- [ ] Finding 3: with Steam running, export: UWPHook asks "Steam must be closed to write your shortcuts. Close Steam now? It is started again afterwards." No: Steam keeps running and UWPHook says "Nothing was exported. Close Steam and export again."; Yes: Steam closes, the shortcuts are written and Steam starts again. The same for Settings > "Remove UWPHook shortcuts" ("Nothing was removed. Close Steam and try again."). With Steam closed, neither asks.
+- [ ] Finding 3: with Steam running, export: UWPHook asks "Steam must be closed to write your shortcuts. Close Steam now? UWPHook starts it again as soon as it is done, unless Steam takes more than a minute to close." No: Steam keeps running and UWPHook says "Nothing was exported. Close Steam and export again."; Yes: Steam closes, the shortcuts are written and Steam starts again. The same for Settings > "Remove UWPHook shortcuts" ("Nothing was removed. Close Steam and try again."). With Steam closed, neither asks.
 - [ ] Finding 4: launch a game from Steam (Big Picture and desktop): the game comes to the foreground in front of Steam; with stream mode on, the splash is gone before the game appears and never covers it. With the log level at DEBUG, `application.log` has no "CoAllowSetForegroundWindow failed" line (if it has, note the HRESULT).
 - [ ] While an export runs, Tab into the games list and try Space (tick) and F2 (rename): nothing changes until the export ends.
 
@@ -217,3 +217,18 @@ The windows now run on ViewModels (`UWPHook.Presentation`) built once by the com
 - [ ] With a large library ("Show system apps" ticked), the window stays responsive (scroll, type in the filter, tick apps) while the icons are still coming in; press Load again (or toggle "Show system apps") halfway: the new list fills in its icons, and no error appears. Once the icons are in, typing in the filter and scrolling feel as quick as with no icons (note roughly how long the icons took for how many apps).
 - [ ] Export a game, then in Steam look at the shortcut's icon: it is the same image the list showed for it (and `%AppData%\Briano\UWPHook\icons` has its copy). With the log level at DEBUG, any logo file UWPHook could not read is logged as "Skipped ... it is not a readable image", and the app is still listed.
 - [ ] While the list is shown, uninstall or update a game whose icon is showing (or rename one of its logo files): UWPHook does not hold the file open (the update/uninstall is not blocked by UWPHook).
+
+## Final fix wave 2
+- [ ] Rename `steam.exe` while UWPHook has Steam closed for an export (or point `HKCU\Software\Valve\Steam\SteamPath` at a copy and delete the copy's `steam.exe` right after answering Yes): the export message ends with "Steam could not be started again; start it yourself." (a warning), not "Steam has been restarted.", and the shortcuts are written.
+- [ ] Deny your own user read access to one game's logo folder (Properties > Security), then export that game and another: both are exported, the first without an icon, and `application.log` (WARN or lower) has "Could not pick the icon of ...".
+- [ ] In Steam, append `-mod "C:\My Mods"` to an exported shortcut's launch options and start it: the game receives `-mod` and `C:\My Mods` as two arguments, not three (check with a tool such as Process Explorer > Command line, or a game that shows its arguments).
+
+## Before tagging 2.15.0
+None of these has ever been run. They are the gate for the tag.
+- [ ] `Setup.exe` from a `workflow_dispatch` run of `release.yml`: installs without UAC, exports with `Exe` = `...\current\UWPHook.exe`, and Steam shows "Playing" for the whole session (see "Task 7").
+- [ ] `Portable.zip` from the same run, extracted over a 2.14 portable folder: launch an old shortcut that was not exported again and note whether Steam keeps "Playing". (The README and CHANGELOG tell every upgrader to export again because the root `UWPHook.exe` is Velopack's stub; if Steam does keep "Playing", that wording can be relaxed.) Then export again and check the shortcut now points at `current\UWPHook.exe` and Steam shows "Playing".
+- [ ] Upgrade on a PC with the NSIS 2.14 installed: settings are imported, exporting again updates the shortcuts in place with no duplicates, and `%AppData%\Briano\UWPHook\{settings.json,backups,icons}` are intact.
+- [ ] Collections after a second Steam restart and after signing out of Steam and in again (see "Tags / collections", items 4 and 13): the games are still in the collections. This is the only check that Steam's cloud sync keeps what UWPHook wrote.
+- [ ] An app listed without an executable: its launch options are `<AUMID> ""`, it launches, and ` -test` appended in Steam arrives as an extra argument (see "Missing apps", items 4 and 5).
+- [ ] Answer Yes with a Steam that is slow to exit (start a download or a cloud sync first). Within 60 s: Steam closes, the shortcuts are written, Steam starts again. Past 60 s: the message says Steam is still closing, that nothing was exported, and to start Steam yourself; Steam is then closed (or closes shortly after), and exporting again works without a question.
+- [ ] Set the release date in `CHANGELOG.md` (`## [2.15.0] - Unreleased`) when tagging.

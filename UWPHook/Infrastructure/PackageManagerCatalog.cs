@@ -63,27 +63,20 @@ namespace UWPHook.Infrastructure
             return new PackageSnapshot(
                 package.Id.FamilyName,
                 package.Id.Name,
-                DisplayNameOf(package),
+                ResolvedName.OrNull(() => package.DisplayName, _log, FamilyNameOf(package)),
                 folders.Preferred,
                 package.InstalledDate,
-                entries.Select(entry => new AppListEntrySnapshot(entry.AppUserModelId, entry.DisplayInfo.DisplayName)).ToList(),
+                entries.Select(entry => EntrySnapshotOf(entry)).ToList(),
                 await files.ReadFirstAsync(package.Id.FamilyName, folders.All, "AppxManifest.xml", ct),
                 await files.ReadFirstAsync(package.Id.FamilyName, folders.All, "MicrosoftGame.config", ct),
                 folders.All);
         }
 
-        // Resolving a package's display name can fail on its own; the entry and manifest names may still work.
-        private string? DisplayNameOf(Package package)
+        // An entry whose own name can't be resolved keeps its place: the manifest and package names can still name it.
+        private AppListEntrySnapshot EntrySnapshotOf(global::Windows.ApplicationModel.Core.AppListEntry entry)
         {
-            try
-            {
-                return package.DisplayName;
-            }
-            catch (Exception e)
-            {
-                _log.Write(LogLevel.Debug, e, "No display name for package {FamilyName}", FamilyNameOf(package));
-                return null;
-            }
+            var aumid = entry.AppUserModelId;
+            return new AppListEntrySnapshot(aumid, ResolvedName.OrNull(() => entry.DisplayInfo.DisplayName, _log, aumid));
         }
 
         // For log lines only: a package whose identity can't be read is still logged, as "(unknown package)".

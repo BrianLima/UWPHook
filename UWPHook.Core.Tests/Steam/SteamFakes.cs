@@ -33,11 +33,17 @@ public sealed class FakeSteamProcess(bool running, string? exePath = FakeSteamPr
         if (exitsWhenAsked) _running = false;
     }
 
-    public void Start(string path)
+    /// <summary>Set to make starting Steam again fail, like a steam.exe that is gone.</summary>
+    public bool StartFails { get; set; }
+
+    public bool Start(string path)
     {
         OnStart?.Invoke();
         Starts.Add(path);
+        if (StartFails) return false;
+
         _running = true;
+        return true;
     }
 }
 

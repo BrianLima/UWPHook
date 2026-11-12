@@ -6,7 +6,7 @@ namespace UWPHook.Core.Configuration;
 /// The app's settings for one run: loaded on first use and kept. When there is no settings file yet, the
 /// earlier UWPHook's settings are imported once and saved, unless a damaged settings file was moved aside:
 /// then the newer settings were lost, and bringing back 2.14's (and maybe an old key) would be worse than
-/// starting from the defaults (10b minor 3).
+/// starting from the defaults.
 /// </summary>
 /// <param name="importLegacy">2.14's settings, or null when there are none.</param>
 public sealed class SettingsService(SettingsStore store, Func<AppSettings?> importLegacy, ILog log) : ISettingsService

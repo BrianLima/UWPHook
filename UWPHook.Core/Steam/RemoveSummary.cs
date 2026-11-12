@@ -8,7 +8,7 @@ public enum RemoveStatus
     /// <summary>No account has a UWPHook shortcut, so nothing was changed (and Steam was left alone).</summary>
     NothingFound,
 
-    /// <summary>Steam did not close in time, so nothing was removed.</summary>
+    /// <summary>Steam was asked to exit and had not when the wait ran out, so nothing was removed (and nothing starts it again).</summary>
     SteamStillRunning,
 
     /// <summary>Steam is running and steam.exe could not be found to close it, so nothing was removed.</summary>
@@ -27,8 +27,6 @@ public enum RemoveStatus
 /// <summary>What "Remove UWPHook shortcuts" really did, worded for the user.</summary>
 public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFailed, int UsersUnreadable, StopOutcome Steam)
 {
-    private const string TryAgain = ", so nothing was removed. Close Steam, then try again.";
-
     public static RemoveSummary SteamNotFound() => new(RemoveStatus.SteamNotFound, 0, 0, 0, StopOutcome.NotRunning);
 
     /// <param name="unreadable">The accounts whose shortcuts.vdf could not be read.</param>
@@ -51,7 +49,7 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
     public MessageSeverity Severity => Status switch
     {
         RemoveStatus.NothingFound when UsersUnreadable > 0 => MessageSeverity.Warning,
-        RemoveStatus.Removed when UsersFailed > 0 => MessageSeverity.Warning,
+        RemoveStatus.Removed when UsersFailed > 0 || Steam == StopOutcome.NotStartedAgain => MessageSeverity.Warning,
         RemoveStatus.NothingFound or RemoveStatus.Removed or RemoveStatus.SteamLeftOpen => MessageSeverity.Information,
         RemoveStatus.SteamStillRunning or RemoveStatus.SteamPathUnknown => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
@@ -62,9 +60,9 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
         RemoveStatus.SteamNotFound => "Steam was not found, so nothing was changed.",
         RemoveStatus.NothingFound => "No UWPHook shortcuts were found, so nothing was changed." + UnreadableNote(),
         RemoveStatus.SteamLeftOpen => "Nothing was removed. Close Steam and try again.",
-        RemoveStatus.SteamStillRunning => "Steam did not close in time" + TryAgain,
-        RemoveStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it" + TryAgain,
-        RemoveStatus.Failed => $"Removing UWPHook's shortcuts failed for {UsersFailed} Steam account(s), so nothing was changed. Details are in application.log.",
+        RemoveStatus.SteamStillRunning => "Steam is still closing, so nothing was removed. Wait until it has closed, then try again." + StopOutcomes.NotStartedAfterTimeout,
+        RemoveStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it, so nothing was removed. Close Steam, then try again.",
+        RemoveStatus.Failed => $"Removing UWPHook's shortcuts failed for {UsersFailed} Steam account(s), so nothing was changed. Details are in application.log." + NotStartedNote(),
         _ => $"{Removed} UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept." + FailedNote() + SteamSentence(),
     };
 
@@ -76,7 +74,13 @@ public sealed record RemoveSummary(RemoveStatus Status, int Removed, int UsersFa
         ? ""
         : $" Removing failed for {UsersFailed} Steam account(s); details are in application.log.";
 
-    private string SteamSentence() => Steam == StopOutcome.Stopped
-        ? " Steam has been restarted."
-        : " The changes apply the next time you start Steam.";
+    private string SteamSentence() => Steam switch
+    {
+        StopOutcome.Stopped => " Steam has been restarted.",
+        StopOutcome.NotStartedAgain => StopOutcomes.StartItYourself,
+        _ => " The changes apply the next time you start Steam.",
+    };
+
+    /// <summary>Nothing changed, so Steam is only mentioned when the user has to start it.</summary>
+    private string NotStartedNote() => Steam == StopOutcome.NotStartedAgain ? StopOutcomes.StartItYourself : "";
 }

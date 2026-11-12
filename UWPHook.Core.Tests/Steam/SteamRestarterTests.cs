@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Time.Testing;
 using UWPHook.Core.Steam;
+using UWPHook.Core.Tests.Time;
 using Xunit;
 
 namespace UWPHook.Core.Tests.Steam;
@@ -11,6 +12,9 @@ public class SteamRestarterTests
     private const string SteamExe = @"C:\Program Files (x86)\Steam\steam.exe";
 
     private readonly FakeTimeProvider _time = new();
+    private readonly SteppedTime _stepped;
+
+    public SteamRestarterTests() => _stepped = new SteppedTime(_time);
 
     [Fact]
     public async Task WhileStopped_WhenSteamsPathIsUnknown_DoesNotWrite()
@@ -219,26 +223,90 @@ public class SteamRestarterTests
         Assert.Equal(new[] { "write" }, steam.Events);
     }
 
+    // The files are written by then, so a Steam that will not start is an outcome of its own, for the summary to say.
+    [Fact]
+    public async Task WhileStopped_WhenSteamCannotBeStartedAgain_SaysSo()
+    {
+        var steam = new FakeSteam(runningPolls: 3) { StartFails = true };
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("write");
+            return Task.CompletedTask;
+        }, Yes, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.NotStartedAgain, outcome);
+        Assert.Equal(new[] { "exit", "write", "start" }, steam.Events);
+    }
+
+    [Fact]
+    public async Task WhileStopped_WhenAskingSteamToExitThrows_DoesNotWrite_AndStartsNothing()
+    {
+        var failure = new InvalidOperationException("steam.exe -shutdown could not be started");
+        var steam = new FakeSteam(runningPolls: int.MaxValue) { ExitFailure = failure };
+        var wrote = false;
+
+        var run = NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            wrote = true;
+            return Task.CompletedTask;
+        }, Yes, TestContext.Current.CancellationToken);
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => Drive(run)));
+        Assert.False(wrote, "Steam was never asked to exit successfully, so it is still running");
+        Assert.Empty(steam.Starts);
+    }
+
+    // Steam finished exiting after the restarter gave up. The next run finds it gone: it writes without asking,
+    // and nobody starts Steam, which is why the timeout message tells the user to.
+    [Fact]
+    public async Task WhileStopped_AfterATimeout_TheNextRunDoesNotAskAgainOnceSteamIsGone()
+    {
+        var steam = new FakeSteam(runningPolls: int.MaxValue);
+        var restarter = NewRestarter(steam);
+        var asked = 0;
+        bool Ask()
+        {
+            asked++;
+            return true;
+        }
+
+        var first = await Drive(restarter.WhileStoppedAsync(() => Task.CompletedTask, Ask, TestContext.Current.CancellationToken));
+        steam.Exit();
+        var second = await Drive(restarter.WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("write");
+            return Task.CompletedTask;
+        }, Ask, TestContext.Current.CancellationToken));
+
+        Assert.Equal((StopOutcome.StillRunning, StopOutcome.NotRunning), (first, second));
+        Assert.Equal(1, asked);
+        Assert.Equal(new[] { "exit", "write" }, steam.Events);
+        Assert.Empty(steam.Starts);
+    }
+
+    // The wait ends with the first look that finds Steam gone, not with the timeout.
+    [Fact]
+    public async Task WhileStopped_WaitsOnlyUntilSteamIsGone()
+    {
+        // Running when first checked, when checked again after the question, and for two looks of the wait.
+        var steam = new FakeSteam(runningPolls: 4);
+        var startedAt = _time.GetUtcNow();
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() => Task.CompletedTask, Yes, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.Stopped, outcome);
+        Assert.Equal(Poll * 2, _time.GetUtcNow() - startedAt);
+    }
+
     private static bool Yes() => true;
 
     private static bool No() => false;
 
-    private SteamRestarter NewRestarter(ISteamProcess steam) => new(steam, _time, RestartTimeout, Poll);
+    private SteamRestarter NewRestarter(ISteamProcess steam) => new(steam, _stepped, RestartTimeout, Poll);
 
-    /// <summary>
-    /// Moves the fake clock forward one poll at a time until the restart finishes.
-    /// The iteration cap and the real-time guard stop a looping bug from hanging the run.
-    /// </summary>
-    private async Task<T> Drive<T>(Task<T> restart)
-    {
-        for (var i = 0; i < 1000 && !restart.IsCompleted; i++)
-        {
-            _time.Advance(Poll);
-            await Task.Delay(1, TestContext.Current.CancellationToken);
-        }
-
-        return await restart.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-    }
+    /// <summary>Moves the fake clock one poll forward each time the restarter waits for Steam, until it finishes.</summary>
+    private Task<T> Drive<T>(Task<T> restart) => _stepped.RunAsync(restart, Poll, TestContext.Current.CancellationToken);
 
     private sealed class FakeSteam(int runningPolls, string? exePath = SteamExe) : ISteamProcess
     {
@@ -250,6 +318,9 @@ public class SteamRestarterTests
         /// <summary>"exit" and "start" in the order they happened; tests add their own events.</summary>
         public List<string> Events { get; } = [];
 
+        /// <summary>Set to make asking Steam to exit fail, like a <c>steam.exe -shutdown</c> that cannot be started.</summary>
+        public Exception? ExitFailure { get; set; }
+
         public bool IsRunning()
         {
             if (_remainingRunning <= 0) return false;
@@ -257,18 +328,26 @@ public class SteamRestarterTests
             return true;
         }
 
+        /// <summary>Steam is gone from now on, however long it was set to run.</summary>
+        public void Exit() => _remainingRunning = 0;
+
         public string? ExecutablePath() => exePath;
 
         public void RequestExit()
         {
             ExitRequests++;
             Events.Add("exit");
+            if (ExitFailure is not null) throw ExitFailure;
         }
 
-        public void Start(string path)
+        /// <summary>Set to make starting Steam again fail.</summary>
+        public bool StartFails { get; set; }
+
+        public bool Start(string path)
         {
             Starts.Add(path);
             Events.Add("start");
+            return !StartFails;
         }
     }
 }

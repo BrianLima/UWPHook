@@ -42,7 +42,7 @@ public static class LoginUsers
 
     /// <summary>
     /// Keys are matched case-insensitively: older Steam builds wrote "mostrecent". A field that isn't text
-    /// (a nested object, whose cast reads "[Collection]") reads as missing, so it costs only that field, not the whole file (10c-1 minor 5).
+    /// (a nested object, whose cast reads "[Collection]") reads as missing, so it costs only that field, not the whole file.
     /// </summary>
     private static string? StringOf(KVObject entry, string key) =>
         KeyValueLookup.TryFind(entry, key, out var value) && value.ValueType != KVValueType.Collection ? (string?)value : null;

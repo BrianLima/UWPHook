@@ -1,6 +1,7 @@
 using System.IO;
 using UWPHook.Core.Catalog;
 using UWPHook.Infrastructure;
+using Windows.ApplicationModel;
 using Windows.Management.Deployment;
 using Xunit;
 
@@ -63,12 +64,39 @@ public class PackageManagerCatalogTests
         Assert.Empty(duplicates);
     }
 
+    // "Show system apps" off: the same list without the apps of the packages Windows signed as its own. On a machine
+    // that lists no such app the two lists are the same, which would prove nothing, so the test is skipped there.
     [Fact]
-    public async Task GetInstalledAppsAsync_WithoutSystemAppsReturnsASubset()
+    public async Task GetInstalledAppsAsync_WithoutSystemApps_LeavesOutTheSystemSignedPackages()
     {
-        var all = (await AllApps()).Select(app => app.Aumid).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var systemFamilies = SystemSignedFamilies();
+        var all = await AllApps();
+        Assert.SkipUnless(all.Any(app => systemFamilies.Contains(app.PackageFamilyName)),
+            "This machine lists no app of a system-signed package, so hiding system apps cannot be told from showing them.");
+
         var nonSystem = await Catalog().GetInstalledAppsAsync(includeSystem: false, TestContext.Current.CancellationToken);
 
-        Assert.All(nonSystem, app => Assert.Contains(app.Aumid, all));
+        Assert.DoesNotContain(nonSystem, app => systemFamilies.Contains(app.PackageFamilyName));
+        var allAumids = all.Select(app => app.Aumid).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.All(nonSystem, app => Assert.Contains(app.Aumid, allAumids));
+    }
+
+    /// <summary>Asks PackageManager directly, so the check does not depend on the code under test.</summary>
+    private static HashSet<string> SystemSignedFamilies()
+    {
+        var families = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var package in new PackageManager().FindPackagesForUser(string.Empty))
+        {
+            try
+            {
+                if (package.SignatureKind == PackageSignatureKind.System) families.Add(package.Id.FamilyName);
+            }
+            catch (Exception)
+            {
+                // A package that can't be read doesn't count.
+            }
+        }
+
+        return families;
     }
 }

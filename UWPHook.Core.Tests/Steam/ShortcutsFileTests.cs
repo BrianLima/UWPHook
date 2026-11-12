@@ -431,6 +431,68 @@ public class ShortcutsFileTests
         Assert.Equal("Heroic Game", Assert.Single(file.Entries).AppName);
     }
 
+    // An app exported without an executable has the launch options <AUMID> "": still UWPHook's, so Remove takes it.
+    [Fact]
+    public void RemoveWhere_UwpHookShortcuts_TakesAPlaceholderEntry()
+    {
+        static void Placeholder(BinaryVdf entry) => entry
+            .Int("appid", -3333)
+            .String("AppName", "Fallout 76")
+            .String("Exe", UwpHookExe)
+            .String("LaunchOptions", "BethesdaSoftworks.Fallout76-PC_3275kfvn8vcwc!Fallout76 \"\"");
+        var file = Load(BinaryVdf.Document("shortcuts", root => root.Object("0", ForeignEntry).Object("1", Placeholder)));
+
+        Assert.Equal(1, file.RemoveWhere(UwpHookShortcut.IsCreatedByUwpHook));
+        Assert.Equal(BinaryVdf.Document("shortcuts", root => root.Object("0", ForeignEntry)), Save(file));
+    }
+
+    // Steam's file is UTF-8: a name written by an export must come out as UTF-8 bytes, not only survive a round trip.
+    [Fact]
+    public void Apply_WritesANonAsciiNameAsUtf8()
+    {
+        const string name = "Pok\u00e9mon\u2122 \u4f1d\u8aac";
+        var file = ShortcutsFile.Empty();
+
+        file.Apply(new MergeResult([new MergedShortcut(-3333, Spec with { AppName = name }, null)]));
+        var saved = Save(file);
+
+        Assert.Equal(name, BinaryVdf.Parse(saved)["0"]["AppName"].Value);
+        var expected = System.Text.Encoding.UTF8.GetBytes("AppName\0" + name + "\0");
+        Assert.True(saved.AsSpan().IndexOf(expected) >= 0, "the name is not in the file as UTF-8");
+    }
+
+    // Steam writes one object per shortcut. A root child that is something else is not a file this code should
+    // rewrite: loading fails, so the caller leaves the file exactly as it is.
+    [Fact]
+    public void Load_ARootChildThatIsNotAnObject_IsRejected()
+    {
+        var bytes = BinaryVdf.Document("shortcuts", root => root.Object("0", UwpHookEntry).String("1", "not a shortcut"));
+
+        Assert.Throws<InvalidDataException>(() => Load(bytes));
+    }
+
+    // One key twice in an entry: the first is the one that is read, so it is the one that is updated; the second
+    // stays as it was, and no third is added.
+    [Fact]
+    public void Apply_AnEntryWithAKeyTwice_UpdatesTheFirst_AndKeepsTheSecond()
+    {
+        static void Doubled(BinaryVdf entry) => entry
+            .Int("appid", -1111)
+            .String("AppName", "Old Name")
+            .String("Exe", UwpHookExe)
+            .String("LaunchOptions", "Pfn_abc!App old.exe")
+            .String("LaunchOptions", "left over");
+        var file = Load(BinaryVdf.Document("shortcuts", root => root.Object("0", Doubled)));
+
+        file.Apply(new MergeResult([new MergedShortcut(-1111, Spec, 0)]));
+        var entry = BinaryVdf.Parse(Save(file))["0"];
+
+        Assert.Equal(
+            new[] { Spec.LaunchOptions, "left over" },
+            entry.Children.Where(child => child.Key == "LaunchOptions").Select(child => (string)child.Value));
+        Assert.Equal(Spec.LaunchOptions, file.Entries[0].LaunchOptions);
+    }
+
     [Fact]
     public void Apply_ToEmptyFile_WritesShortcutsRoot()
     {

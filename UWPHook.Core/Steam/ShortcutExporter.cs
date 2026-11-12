@@ -6,7 +6,7 @@ namespace UWPHook.Core.Steam;
 /// Exports the selected apps to every Steam account. Everything that can stop the export (nothing selected,
 /// no Steam, no account) is checked before Steam is touched; the artwork and icons are prepared once; then, if the
 /// user lets UWPHook close a running Steam, each account's shortcuts.vdf is backed up, merged and saved, and its
-/// artwork copied, while Steam is closed (M7). The Steam client no longer reads a shortcut's tags, so in that same
+/// artwork copied, while Steam is closed. The Steam client no longer reads a shortcut's tags, so in that same
 /// window the shortcuts are also added to the account's collections named after the tags.
 /// </summary>
 public sealed class ShortcutExporter(
@@ -52,11 +52,11 @@ public sealed class ShortcutExporter(
         var artworkFailed = await PrepareArtworkAsync(apps, ct).ConfigureAwait(false);
 
         // The same shortcuts go to every account, so each icon is persisted once, not once per account.
-        // UWPHook.exe is only looked for now that nothing can stop the export (10c-1 minor 1).
+        // UWPHook.exe is only looked for now that nothing can stop the export.
         var tags = request.Tags;
         var exe = request.FindUwpHookExe();
         var wanted = apps
-            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exe, artwork.IconFor(app), tags))
+            .Select(app => ShortcutSpec.ForApp(app.Name, app.Aumid, app.Executable, exe, IconOf(app), tags))
             .ToList();
 
         var folders = users.Select(user => user.FolderIn(installFolder)).ToList();
@@ -82,7 +82,7 @@ public sealed class ShortcutExporter(
     }
 
     /// <summary>
-    /// The names of the apps whose artwork could not be downloaded. Artwork is optional (R33): when preparing it
+    /// The names of the apps whose artwork could not be downloaded. Artwork is optional: when preparing it
     /// throws, every app is exported without it. Cancelling still stops the export.
     /// </summary>
     private async Task<IReadOnlyList<string>> PrepareArtworkAsync(IReadOnlyList<ExportApp> apps, CancellationToken ct)
@@ -95,6 +95,23 @@ public sealed class ShortcutExporter(
         {
             log.Error(e, "Preparing the artwork failed; the apps are exported without it");
             return [.. apps.Select(app => app.Name)];
+        }
+    }
+
+    /// <summary>
+    /// The app's icon path, or none when it can't be picked (a logo folder that can't be read, say): an icon is
+    /// optional like the rest of the artwork, so that app is exported without one instead of stopping the export.
+    /// </summary>
+    private string IconOf(ExportApp app)
+    {
+        try
+        {
+            return artwork.IconFor(app);
+        }
+        catch (Exception e)
+        {
+            log.Warning(e, "Could not pick an icon for {App}; it is exported without one", app.Name);
+            return "";
         }
     }
 
@@ -137,7 +154,7 @@ public sealed class ShortcutExporter(
         var collectionOutcomes = gridIdsByFolder
             .Select(account => (
                 User: Path.GetFileName(account.Folder),
-                Outcome: collections.AddShortcuts(account.Folder, tags, [.. account.GridIds.Values])))
+                Outcome: AddToCollections(account.Folder, tags, account.GridIds)))
             .ToList();
 
         return new AccountWrites(
@@ -151,7 +168,24 @@ public sealed class ShortcutExporter(
             [.. collectionOutcomes.Where(account => account.Outcome == outcome).Select(account => account.User)];
     }
 
-    /// <summary>The shortcuts are already written, so failed artwork is a note in the summary (R33), not a failed export.</summary>
+    /// <summary>
+    /// The collections promise not to throw. Should they anyway, the shortcuts are already written: the account is
+    /// reported as skipped, and the export goes on to the other accounts and to starting Steam again.
+    /// </summary>
+    private CollectionsOutcome AddToCollections(string folder, IReadOnlyList<string> tags, IReadOnlyDictionary<string, uint> gridIds)
+    {
+        try
+        {
+            return collections.AddShortcuts(folder, tags, [.. gridIds.Values]);
+        }
+        catch (Exception e)
+        {
+            log.Error(e, "Could not add the shortcuts of {User} to its Steam collections", folder);
+            return CollectionsOutcome.Skipped;
+        }
+    }
+
+    /// <summary>The shortcuts are already written, so failed artwork is a note in the summary, not a failed export.</summary>
     private bool TryInstallArtwork(string folder, IReadOnlyDictionary<string, uint> gridIds)
     {
         try

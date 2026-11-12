@@ -5,7 +5,7 @@ namespace UWPHook.Presentation.Settings;
 
 /// <summary>
 /// The Settings fields as the window edits them: combo boxes work with indexes, and nothing picked (-1) keeps the
-/// stored value. The language override is not here any more (R37; Task 13 removes it), so saving leaves it as it is.
+/// stored value.
 /// </summary>
 public sealed class SettingsForm : ObservableObject
 {

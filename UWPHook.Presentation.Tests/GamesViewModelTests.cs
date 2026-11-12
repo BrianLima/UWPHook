@@ -234,6 +234,23 @@ public sealed class GamesViewModelTests
         Assert.Equal(new[] { null, HaloIcon }, Assert.Single(_exporter.Requests).Apps.Select(app => app.Icon));
     }
 
+    // The export does not wait for the icon pass: a row whose icon is not in yet is sent without one, and the
+    // export picks it itself.
+    [Fact]
+    public async Task Export_BeforeTheIconsArrive_SendsNoIcon()
+    {
+        _icons.Icons[Halo.IconFolder] = HaloIcon;
+        _icons.Gate = new TaskCompletionSource();
+        var games = await LoadedWithSelected("Halo");
+
+        await games.ExportCommand.ExecuteAsync(null);
+
+        Assert.Null(Assert.Single(Assert.Single(_exporter.Requests).Apps).Icon);
+        _icons.Gate.SetResult();
+        await games.IconsLoaded;
+        Assert.Equal(HaloIcon, Row(games, "Halo").Icon);
+    }
+
     // Search and selection
 
     [Theory]
@@ -365,11 +382,12 @@ public sealed class GamesViewModelTests
     }
 
     [Fact]
-    public void CloseSteamQuestion_SaysWhyAndThatSteamComesBack()
+    public void CloseSteamQuestion_SaysWhyAndWhenSteamComesBack()
     {
         Assert.Contains("Steam must be closed to write your shortcuts.", CloseSteamQuestion.Text);
         Assert.Contains("Close Steam now?", CloseSteamQuestion.Text);
-        Assert.Contains("started again afterwards", CloseSteamQuestion.Text);
+        Assert.Contains("starts it again as soon as it is done", CloseSteamQuestion.Text);
+        Assert.Contains("unless Steam takes more than a minute to close", CloseSteamQuestion.Text);
     }
 
     public static TheoryData<ExportSummary, MessageSeverity> Summaries => new()

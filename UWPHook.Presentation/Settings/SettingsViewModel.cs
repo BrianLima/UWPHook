@@ -127,7 +127,7 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Whether the window may close now; when it may not, tells the user why. Not while removing (I1): the removal
+    /// Whether the window may close now; when it may not, tells the user why. Not while removing: the removal
     /// would go on with Steam possibly closed, behind a closed window.
     /// </summary>
     public bool ConfirmClose()

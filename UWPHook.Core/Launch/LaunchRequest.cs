@@ -8,7 +8,10 @@ namespace UWPHook.Core.Launch;
 /// </summary>
 /// <param name="Aumid">The app's Application User Model ID, e.g. <c>Microsoft.Forza_8wekyb3d8bbwe!App</c>.</param>
 /// <param name="Executable">The game's executable (backslash-separated), as the shortcut names it. Empty when Steam sent none.</param>
-/// <param name="ExtraArguments">Everything after the executable, joined with spaces.</param>
+/// <param name="ExtraArguments">
+/// Everything after the executable, joined with spaces. An argument with whitespace is quoted again (Windows took
+/// its quotes off), so the game still gets it as one argument.
+/// </param>
 public sealed partial record LaunchRequest(string Aumid, string Executable, string ExtraArguments)
 {
     /// <summary>The package family of the app: the AUMID before its <c>!</c>, e.g. <c>Microsoft.Forza_8wekyb3d8bbwe</c>.</summary>
@@ -32,7 +35,7 @@ public sealed partial record LaunchRequest(string Aumid, string Executable, stri
         request = new LaunchRequest(
             args[aumidIndex],
             NormalizeExecutable(args.ElementAtOrDefault(aumidIndex + 1) ?? ""),
-            string.Join(" ", args.Skip(aumidIndex + 2)));
+            string.Join(" ", args.Skip(aumidIndex + 2).Select(QuotedIfSpaced)));
         return true;
     }
 
@@ -44,6 +47,9 @@ public sealed partial record LaunchRequest(string Aumid, string Executable, stri
         }
         return -1;
     }
+
+    private static string QuotedIfSpaced(string argument) =>
+        argument.Any(char.IsWhiteSpace) ? $"\"{argument}\"" : argument;
 
     private static string NormalizeExecutable(string executable) => executable.Replace('/', '\\');
 

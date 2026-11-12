@@ -26,15 +26,48 @@ public class ExportSummaryTests
         Assert.DoesNotContain("success", summary.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    // Steam was asked to exit and usually still does, a little later: the user is not told to close it, and is told
+    // that nothing starts it again.
     [Fact]
-    public void SteamStillRunning_TellsTheUserToCloseSteamAndRetry()
+    public void SteamStillRunning_SaysSteamMayStillCloseAndIsNotStartedAgain()
     {
         var summary = ExportSummary.SteamStillRunning();
 
         Assert.Equal(ExportStatus.SteamStillRunning, summary.Status);
         Assert.Equal(MessageSeverity.Warning, summary.Severity);
-        Assert.Contains("nothing was exported", summary.Message);
-        Assert.Contains("Close Steam", summary.Message);
+        Assert.Equal(
+            "Steam is still closing, so nothing was exported. Wait until it has closed, then export again. UWPHook will not start Steam again after this, so start it yourself.",
+            summary.Message);
+    }
+
+    [Fact]
+    public void ForUsers_WhenSteamCouldNotBeStartedAgain_SaysToStartIt_AsAWarning()
+    {
+        var summary = ExportSummary.ForUsers(written: 2, failed: 0, StopOutcome.NotStartedAgain);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.Equal("Your apps were successfully exported! Steam could not be started again; start it yourself.", summary.Message);
+    }
+
+    [Fact]
+    public void ForUsers_WhenEveryUserFailed_AndSteamCouldNotBeStartedAgain_SaysToStartIt()
+    {
+        var summary = ExportSummary.ForUsers(written: 0, failed: 1, StopOutcome.NotStartedAgain);
+
+        Assert.Equal(ExportStatus.Failed, summary.Status);
+        Assert.EndsWith(" Steam could not be started again; start it yourself.", summary.Message);
+    }
+
+    [Fact]
+    public void ForUsers_WhenEveryUserFailed_AndSteamWasRestarted_SaysSo()
+    {
+        var summary = ExportSummary.ForUsers(written: 0, failed: 2, StopOutcome.Stopped);
+
+        Assert.Equal(ExportStatus.Failed, summary.Status);
+        Assert.Equal(MessageSeverity.Error, summary.Severity);
+        Assert.StartsWith("Your apps were not exported: it failed for all 2 Steam account(s).", summary.Message);
+        Assert.EndsWith(" Steam has been restarted.", summary.Message);
     }
 
     [Fact]

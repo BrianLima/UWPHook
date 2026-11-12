@@ -37,12 +37,13 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
     }
 
     /// <summary>Starts Steam again after <see cref="StopAsync"/> stopped it; otherwise does nothing.</summary>
-    private void Start()
+    /// <returns>False when Steam was stopped and could not be started again.</returns>
+    private bool Start()
     {
-        if (_stoppedExePath is not { } exePath) return;
+        if (_stoppedExePath is not { } exePath) return true;
 
         _stoppedExePath = null;
-        steam.Start(exePath);
+        return steam.Start(exePath);
     }
 
     /// <summary>
@@ -52,7 +53,7 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
     /// </summary>
     /// <param name="mayClose">
     /// Asked once, only when Steam is running (and could be started again): true lets this close Steam. The user's
-    /// say, so Steam is never closed without it (manual-test finding 3).
+    /// say, so Steam is never closed without it.
     /// </param>
     public async Task<StopOutcome> WhileStoppedAsync(Func<Task> write, Func<bool> mayClose, CancellationToken ct = default)
     {
@@ -72,16 +73,17 @@ public sealed class SteamRestarter(ISteamProcess steam, TimeProvider time, TimeS
         var outcome = await StopAsync(mayClose, ct).ConfigureAwait(false);
         if (outcome.LeftSteamRunning()) return outcome;
 
+        var startedAgain = false;
         try
         {
             await write().ConfigureAwait(false);
         }
         finally
         {
-            Start();
+            startedAgain = Start();
         }
 
-        return outcome;
+        return startedAgain ? outcome : StopOutcome.NotStartedAgain;
     }
 
     private async Task<bool> ExitedInTimeAsync(CancellationToken ct)

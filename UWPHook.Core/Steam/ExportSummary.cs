@@ -11,7 +11,7 @@ public enum ExportStatus
     /// <summary>Steam has no signed-in account folder, so there was nobody to export to.</summary>
     NoSteamUsers,
 
-    /// <summary>Steam did not close in time, so nothing was written.</summary>
+    /// <summary>Steam was asked to exit and had not when the wait ran out, so nothing was written (and nothing starts it again).</summary>
     SteamStillRunning,
 
     /// <summary>Steam is running and steam.exe could not be found to close it, so nothing was written.</summary>
@@ -99,18 +99,21 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
 
     public MessageSeverity Severity => Status switch
     {
-        ExportStatus.Exported when ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 || CollectionsSkippedUsers.Count > 0 => MessageSeverity.Warning,
+        ExportStatus.Exported when HasNotes || Steam == StopOutcome.NotStartedAgain => MessageSeverity.Warning,
         ExportStatus.NothingSelected or ExportStatus.Exported or ExportStatus.SteamLeftOpen => MessageSeverity.Information,
         ExportStatus.SteamStillRunning or ExportStatus.SteamPathUnknown or ExportStatus.PartiallyExported => MessageSeverity.Warning,
         _ => MessageSeverity.Error,
     };
+
+    /// <summary>Something the user should look at although the export worked.</summary>
+    private bool HasNotes => ArtworkFailedUsers.Count > 0 || ArtworkFailedApps.Count > 0 || CollectionsSkippedUsers.Count > 0;
 
     public string Message => Status switch
     {
         ExportStatus.NothingSelected => "Select at least one app to export.",
         ExportStatus.SteamNotFound => "Steam was not found, so nothing was exported. Make sure Steam is installed and has been started at least once, then try again.",
         ExportStatus.NoSteamUsers => "No Steam account was found, so nothing was exported. Sign in to Steam at least once, then try again.",
-        ExportStatus.SteamStillRunning => "Steam did not close in time, so nothing was exported. Close Steam, then export again.",
+        ExportStatus.SteamStillRunning => "Steam is still closing, so nothing was exported. Wait until it has closed, then export again." + StopOutcomes.NotStartedAfterTimeout,
         ExportStatus.SteamLeftOpen => "Nothing was exported. Close Steam and export again.",
         ExportStatus.SteamPathUnknown => "Steam is running, but UWPHook could not find steam.exe to close and restart it, so nothing was exported. Close Steam, then export again.",
         ExportStatus.Failed => $"Your apps were not exported: it failed for all {UsersFailed} Steam account(s)." + SeeLog + SteamSentence(),
@@ -141,6 +144,7 @@ public sealed record ExportSummary(ExportStatus Status, int UsersWritten, int Us
     private string SteamSentence() => (Status, Steam) switch
     {
         (_, StopOutcome.Stopped) => " Steam has been restarted.",
+        (_, StopOutcome.NotStartedAgain) => StopOutcomes.StartItYourself,
         (ExportStatus.Failed, _) => "",
         _ => " They will show up the next time you start Steam.",
     };

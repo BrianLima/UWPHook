@@ -21,8 +21,22 @@ namespace UWPHook.Infrastructure
         {
             if (TryPersist(app.Aumid, app.Icon) is { } shown) return shown;
 
-            string own = icons.Pick(app.IconFolder) ?? "";
+            string own = PickIn(app) ?? "";
             return TryPersist(app.Aumid, own) ?? TryPersist(app.Aumid, temp.DownloadedLogo(app.Aumid)) ?? own;
+        }
+
+        /// <summary>Null when the app's logo folder can't be read: the export goes on to the downloaded logo.</summary>
+        private string? PickIn(ExportApp app)
+        {
+            try
+            {
+                return icons.Pick(app.IconFolder);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                log.Warning(e, "Could not pick the icon of {App} in {Folder}", app.Name, app.IconFolder);
+                return null;
+            }
         }
 
         /// <summary>Copies <paramref name="source"/> to <c>icons\&lt;key&gt;&lt;ext&gt;</c>, overwritten on every export. Null when it can't.</summary>

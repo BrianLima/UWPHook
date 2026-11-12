@@ -53,7 +53,7 @@ namespace UWPHook.Infrastructure
                 [.. outcomes.Where(each => each.Outcome == Outcome.Failed).Select(each => each.App.Name)]);
         }
 
-        /// <summary>One app's failure is logged and costs only that app its artwork (review m3); cancelling still stops.</summary>
+        /// <summary>One app's failure is logged and costs only that app its artwork; cancelling still stops.</summary>
         private async Task<Outcome> DownloadOrLogAsync(ExportApp app, CancellationToken ct)
         {
             log.Debug("Downloading grid images for app {App}", app.Name);
@@ -80,7 +80,7 @@ namespace UWPHook.Infrastructure
             if (search.Status == SgdbStatus.InvalidApiKey) return true;
             if (search.Status == SgdbStatus.Failed)
             {
-                // 10a: a failed search is worth a Warning, unlike a search that simply found nothing
+                // A failed search is worth a Warning, unlike a search that simply found nothing
                 log.Warning("Searching SteamGridDB for {App} failed ({Result}); it gets no artwork", app.Name, search);
                 return false;
             }
