@@ -29,6 +29,10 @@ public sealed class ShortcutsFile
     public static ShortcutsFile Empty() => new(DefaultRootName, []);
 
     /// <summary>Reads a shortcuts.vdf. An empty stream is a file with no shortcuts.</summary>
+    /// <exception cref="InvalidDataException">
+    /// A child of the root is not an object. Saving renumbers the root's children as shortcuts, which would rename
+    /// such a value's key, so a file like that is not one to rewrite.
+    /// </exception>
     public static ShortcutsFile Load(Stream s)
     {
         using var buffer = new MemoryStream();
@@ -40,7 +44,13 @@ public sealed class ShortcutsFile
 
         buffer.Position = 0;
         var document = Serializer().Deserialize(buffer);
-        return new ShortcutsFile(document.Name ?? DefaultRootName, [.. document.Root.Select(pair => pair.Value)]);
+        List<KVObject> entries = [.. document.Root.Select(pair => pair.Value)];
+        if (entries.Any(entry => entry.ValueType != KVValueType.Collection))
+        {
+            throw new InvalidDataException("shortcuts.vdf holds something that is not a shortcut, so it is left as it is.");
+        }
+
+        return new ShortcutsFile(document.Name ?? DefaultRootName, entries);
     }
 
     /// <summary>

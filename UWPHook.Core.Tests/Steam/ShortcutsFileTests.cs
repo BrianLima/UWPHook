@@ -468,7 +468,7 @@ public class ShortcutsFileTests
     {
         var bytes = BinaryVdf.Document("shortcuts", root => root.Object("0", UwpHookEntry).String("1", "not a shortcut"));
 
-        Assert.ThrowsAny<Exception>(() => Load(bytes));
+        Assert.Throws<InvalidDataException>(() => Load(bytes));
     }
 
     // One key twice in an entry: the first is the one that is read, so it is the one that is updated; the second
