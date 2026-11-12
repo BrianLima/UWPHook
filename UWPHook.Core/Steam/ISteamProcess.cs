@@ -11,5 +11,7 @@ public interface ISteamProcess
     /// <summary>Asks Steam to shut down. Returns immediately; Steam exits on its own time.</summary>
     void RequestExit();
 
-    void Start(string exePath);
+    /// <summary>Starts Steam from <paramref name="exePath"/>. Never throws.</summary>
+    /// <returns>False when Steam could not be started.</returns>
+    bool Start(string exePath);
 }

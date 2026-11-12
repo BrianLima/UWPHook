@@ -45,17 +45,22 @@ namespace UWPHook.Infrastructure
             using var _ = Process.Start(new ProcessStartInfo(exePath, "-shutdown") { UseShellExecute = false });
         }
 
-        /// <summary>Never throws: the shortcuts are already written, so a Steam that won't start is only logged.</summary>
-        public void Start(string exePath)
+        /// <summary>
+        /// Never throws: the shortcuts are already written, so a Steam that won't start is logged and reported
+        /// as false, for the summary to tell the user to start it.
+        /// </summary>
+        public bool Start(string exePath)
         {
             Log.Debug("Starting Steam");
             try
             {
                 using var _ = Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+                return true;
             }
             catch (Exception exception)
             {
                 Log.Error(exception, "Could not start Steam from {Path}", exePath);
+                return false;
             }
         }
 

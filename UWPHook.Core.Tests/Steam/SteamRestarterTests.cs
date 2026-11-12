@@ -219,6 +219,22 @@ public class SteamRestarterTests
         Assert.Equal(new[] { "write" }, steam.Events);
     }
 
+    // The files are written by then, so a Steam that will not start is an outcome of its own, for the summary to say.
+    [Fact]
+    public async Task WhileStopped_WhenSteamCannotBeStartedAgain_SaysSo()
+    {
+        var steam = new FakeSteam(runningPolls: 3) { StartFails = true };
+
+        var outcome = await Drive(NewRestarter(steam).WhileStoppedAsync(() =>
+        {
+            steam.Events.Add("write");
+            return Task.CompletedTask;
+        }, Yes, TestContext.Current.CancellationToken));
+
+        Assert.Equal(StopOutcome.NotStartedAgain, outcome);
+        Assert.Equal(new[] { "exit", "write", "start" }, steam.Events);
+    }
+
     private static bool Yes() => true;
 
     private static bool No() => false;
@@ -265,10 +281,14 @@ public class SteamRestarterTests
             Events.Add("exit");
         }
 
-        public void Start(string path)
+        /// <summary>Set to make starting Steam again fail.</summary>
+        public bool StartFails { get; set; }
+
+        public bool Start(string path)
         {
             Starts.Add(path);
             Events.Add("start");
+            return !StartFails;
         }
     }
 }

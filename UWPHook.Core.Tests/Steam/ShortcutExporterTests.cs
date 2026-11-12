@@ -424,6 +424,51 @@ public sealed class ShortcutExporterTests : IDisposable
         Assert.Contains(_log.At(LogLevel.Error), entry => entry.Exception is IOException);
     }
 
+    // One logo folder that can't be read costs that app its icon, not everyone the export.
+    [Fact]
+    public async Task Export_WhenAnIconCannotBePicked_StillExportsTheApp()
+    {
+        _artwork.IconFailure = (Halo.Aumid, new UnauthorizedAccessException("Access to the logo folder is denied"));
+
+        var summary = await Exporter(NotRunning(), Alice).ExportAsync(Request(Halo, Forza), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        var entries = Written(Alice).Children;
+        Assert.Equal(new[] { "Halo", "Forza" }, entries.Select(entry => (string)entry["AppName"].Value));
+        Assert.Equal("", entries[0]["icon"].Value);
+        Assert.Equal(FakeArtwork.IconPathFor(Forza), entries[1]["icon"].Value);
+        Assert.Contains(_log.At(LogLevel.Warning), entry => entry.Exception is UnauthorizedAccessException);
+    }
+
+    // The collections promise never to throw. Should they anyway, the shortcuts are written by then: the export
+    // stands, the account is named, and Steam is started again.
+    [Fact]
+    public async Task Export_WhenTheCollectionsThrow_StillStartsSteam()
+    {
+        _collections = new FakeCollections { Failure = new InvalidOperationException("collections broke their promise") };
+        var steam = new FakeSteamProcess(running: true);
+
+        var summary = await Exporter(steam, Alice).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ExportStatus.Exported, summary.Status);
+        Assert.Equal(new[] { "111" }, summary.CollectionsSkippedUsers);
+        Assert.Equal("Halo", Assert.Single(Written(Alice).Children)["AppName"].Value);
+        Assert.Equal(FakeSteamProcess.SteamExe, Assert.Single(steam.Starts));
+        Assert.Contains(_log.At(LogLevel.Error), entry => entry.Exception is InvalidOperationException);
+    }
+
+    [Fact]
+    public async Task Export_WhileSteamRuns_WhenItCannotBeStartedAgain_SaysToStartIt()
+    {
+        var steam = new FakeSteamProcess(running: true) { StartFails = true };
+
+        var summary = await Exporter(steam, Alice).ExportAsync(Request(Halo), TestContext.Current.CancellationToken);
+
+        Assert.Equal((ExportStatus.Exported, StopOutcome.NotStartedAgain), (summary.Status, summary.Steam));
+        Assert.EndsWith("Steam could not be started again; start it yourself.", summary.Message);
+        Assert.True(File.Exists(ShortcutsOf(Alice)));
+    }
+
     [Fact]
     public async Task Export_NotesTheAppsWhoseArtworkCouldNotBeDownloaded()
     {
@@ -552,9 +597,13 @@ public sealed class ShortcutExporterTests : IDisposable
         public string? SkipFor { get; set; }
         public string? MissingFor { get; set; }
 
+        /// <summary>Set to make adding throw, which the real collections never do.</summary>
+        public Exception? Failure { get; set; }
+
         public CollectionsOutcome AddShortcuts(string userFolder, IReadOnlyList<string> collectionNames, IReadOnlyCollection<uint> appIds)
         {
             Calls.Add((userFolder, collectionNames, appIds));
+            if (Failure is not null) throw Failure;
             if (userFolder == MissingFor) return CollectionsOutcome.NotFound;
             return userFolder == SkipFor ? CollectionsOutcome.Skipped : CollectionsOutcome.Updated;
         }
@@ -578,9 +627,13 @@ public sealed class ShortcutExporterTests : IDisposable
             return PrepareFailure is null ? Task.FromResult(FailedToPrepare) : Task.FromException<IReadOnlyList<string>>(PrepareFailure);
         }
 
+        /// <summary>The AUMID of the app whose icon cannot be picked, with what picking it throws.</summary>
+        public (string Aumid, Exception Failure)? IconFailure { get; set; }
+
         public string IconFor(ExportApp app)
         {
             IconsAskedFor.Add(app.Aumid);
+            if (IconFailure is { } failing && failing.Aumid == app.Aumid) throw failing.Failure;
             return IconPathFor(app);
         }
 

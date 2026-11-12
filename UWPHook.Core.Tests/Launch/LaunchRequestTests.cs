@@ -65,6 +65,15 @@ public class LaunchRequestTests
         Assert.Equal(new LaunchRequest(Fallout, "", "-foo"), request);
     }
 
+    // Windows strips the quotes of -mod "C:\My Mods"; passed on without them the game would get two arguments.
+    [Fact]
+    public void Parse_KeepsAnExtraArgumentWithSpacesAsOneArgument()
+    {
+        var request = Parse(Exe, Forza, "forza.exe", "-mod", "C:\\My Mods", "-windowed");
+
+        Assert.Equal("-mod \"C:\\My Mods\" -windowed", request.ExtraArguments);
+    }
+
     [Theory]
     [InlineData(new object[] { new[] { Exe } })]
     [InlineData(new object[] { new[] { Exe, "foo" } })]

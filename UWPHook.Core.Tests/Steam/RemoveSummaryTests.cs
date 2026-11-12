@@ -48,14 +48,39 @@ public class RemoveSummaryTests
         Assert.Equal("Nothing was removed. Close Steam and try again.", summary.Message);
     }
 
+    // Steam was asked to exit and usually still does, a little later: the user is not told to close it, and is told
+    // that nothing starts it again.
     [Fact]
-    public void SteamNotStopped_AfterATimeout_SaysSteamDidNotClose()
+    public void SteamNotStopped_AfterATimeout_SaysSteamMayStillCloseAndIsNotStartedAgain()
     {
         var summary = RemoveSummary.SteamNotStopped(StopOutcome.StillRunning);
 
         Assert.Equal(RemoveStatus.SteamStillRunning, summary.Status);
         Assert.Equal(MessageSeverity.Warning, summary.Severity);
-        Assert.Equal("Steam did not close in time, so nothing was removed. Close Steam, then try again.", summary.Message);
+        Assert.Equal(
+            "Steam is still closing, so nothing was removed. Wait until it has closed, then try again. UWPHook will not start Steam again after this, so start it yourself.",
+            summary.Message);
+    }
+
+    [Fact]
+    public void ForUsers_WhenSteamCouldNotBeStartedAgain_SaysToStartIt_AsAWarning()
+    {
+        var summary = RemoveSummary.ForUsers(removed: 3, failed: 0, StopOutcome.NotStartedAgain);
+
+        Assert.Equal(RemoveStatus.Removed, summary.Status);
+        Assert.Equal(MessageSeverity.Warning, summary.Severity);
+        Assert.Equal(
+            "3 UWPHook shortcut(s) removed. Shortcuts from Steam and other tools were kept. Steam could not be started again; start it yourself.",
+            summary.Message);
+    }
+
+    [Fact]
+    public void ForUsers_WhenNothingWasRemoved_AndSteamCouldNotBeStartedAgain_SaysToStartIt()
+    {
+        var summary = RemoveSummary.ForUsers(removed: 0, failed: 1, StopOutcome.NotStartedAgain);
+
+        Assert.Equal(RemoveStatus.Failed, summary.Status);
+        Assert.EndsWith(" Steam could not be started again; start it yourself.", summary.Message);
     }
 
     [Fact]

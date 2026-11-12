@@ -143,6 +143,20 @@ public sealed class SteamGridArtworkTests : IDisposable
         Assert.Equal("logo", File.ReadAllText(icon));
     }
 
+    // A logo folder that can't be read is like one without an icon: the next choice is used.
+    [Fact]
+    public void IconFor_WhenPickingThrows_UsesTheDownloadedLogo()
+    {
+        _icons.Failing.Add(LogoFolder);
+        WriteFile(Path.Combine(TempGridOf(Aumid), "appid_logo.png"), "downloaded");
+
+        var icon = Artwork().IconFor(App());
+
+        Assert.Equal(Path.Combine(IconsFolder, Aumid + ".png"), icon);
+        Assert.Equal("downloaded", File.ReadAllText(icon));
+        Assert.Contains(_log.At(LogLevel.Warning), entry => entry.Exception is IOException);
+    }
+
     [Fact]
     public void IconFor_WithNothingToCopy_KeepsTheAppsOwnPath()
     {

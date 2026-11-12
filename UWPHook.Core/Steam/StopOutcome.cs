@@ -19,6 +19,9 @@ public enum StopOutcome
 
     /// <summary>Steam is running and the user chose to keep it open, so it was left alone (never asked to exit).</summary>
     Declined,
+
+    /// <summary>Steam exited and the files were written, but Steam could not be started again.</summary>
+    NotStartedAgain,
 }
 
 public static class StopOutcomes
